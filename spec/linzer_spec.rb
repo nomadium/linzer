@@ -5,7 +5,14 @@ RSpec.describe Linzer do
     expect(Linzer::VERSION).not_to be nil
   end
 
-  # to-do: fix this
-  # xit "has a verify method aliased to Linzer::Verifier#verify method" do
-  # end
+  it "has a ::verify method aliased to Linzer::Verifier#verify" do
+    verifier = instance_double(Linzer::Verifier)
+    pubkeys = {}
+    message = Linzer::Message.new({})
+
+    allow(Linzer::Verifier).to receive(:new).with(pubkeys).and_return(verifier)
+    expect(verifier).to receive(:verify).with(message)
+
+    Linzer.verify(pubkeys, message)
+  end
 end
