@@ -1,6 +1,11 @@
 ## [Unreleased]
 
+## [0.2.0] - 2024-02-23
+
+- Add signature signing functionality. RSASSA-PSS using SHA-512 is still the only
+  supported algorithm.
+
 ## [0.1.0] - 2024-02-18
 
 - Initial release
-- It barely passes unit tests to verify signatures with RSASSA-PSS Using SHA-512.
+- It barely passes unit tests to verify signatures with RSASSA-PSS using SHA-512.

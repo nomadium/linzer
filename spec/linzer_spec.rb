@@ -5,14 +5,26 @@ RSpec.describe Linzer do
     expect(Linzer::VERSION).not_to be nil
   end
 
-  it "has a ::verify method aliased to Linzer::Verifier#verify" do
-    verifier = instance_double(Linzer::Verifier)
-    pubkeys = {}
-    message = Linzer::Message.new({})
+  it "has a ::verify method aliased to Linzer::Verifier::verify" do
+    pubkey    = :some_key
+    message   = Linzer::Message.new(headers: {})
+    signature = :some_signature
 
-    allow(Linzer::Verifier).to receive(:new).with(pubkeys).and_return(verifier)
-    expect(verifier).to receive(:verify).with(message)
+    expect(Linzer::Verifier).to receive(:verify)
+      .with(pubkey, message, signature)
 
-    Linzer.verify(pubkeys, message)
+    Linzer.verify(pubkey, message, signature)
+  end
+
+  it "has a ::sign method aliased to Linzer::Signer::sign" do
+    key = Linzer::Key.new(material: OpenSSL::PKey::RSA.generate(2048))
+    message    = :message
+    components = []
+    options    = {}
+
+    expect(Linzer::Signer).to receive(:sign)
+      .with(key, message, components, options)
+
+    Linzer.sign(key, message, components, options)
   end
 end

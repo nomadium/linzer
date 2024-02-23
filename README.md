@@ -14,11 +14,57 @@ Or just `gem install linzer`.
 
 ## Usage
 
-TODO: Write usage instructions here
+### To sign a HTTP message:
 
-For now just take a look at the unit tests.
+```ruby
+key = Linzer::Key.new(material: OpenSSL::PKey::RSA.generate(2048), key_id: "my-test-key-rsa-pss")
+# => #<struct Struct::Key material=#<OpenSSL::PKey::RSA:...
 
-It's still early days, so only signatures RSASSA-PSS Using SHA-512 like ones described in the RFC are supported. I'll be expanding the library to cover more functionality specified in the RFC in subsequent releases.
+message = Linzer::Message.new(headers: {"date" => "Fri, 23 Feb 2024 17:57:23 GMT", "x-custom-header" => "foo"})
+# => #<Linzer::Message:0x0000000111b592a0 @headers={"date"=>"Fri, 23 Feb 2024 17:57:23 GMT", ...
+
+fields = %w[date x-custom-header])
+signature = Linzer.sign(key, message, fields)
+# => #<Linzer::Signature:0x0000000111f77ad0 ...
+
+puts signature.to_h
+{"signature"=>
+  "sig1=:XQQnm4qyOdIa9yTebXzCQ4f7sXXnoe76D2g1gbFFc1DeqH...",
+ "signature-input"=>"sig1=(\"date\" \"x-custom-header\");created=1708690868;keyid=\"my-test-key-rsa-pss\""}
+```
+
+### To verify a valid signature:
+
+```ruby
+pubkey = Linzer::Key.new(key_id: "some-key-rsa-pss", material: OpenSSL::PKey::RSA.new(test_key_rsa_pss))
+# => #<struct Struct::Key material=#<OpenSSL::PKey::RSA:0x0000000106eade48 oid=rsaEncryption>, key_id="some-key-rsa-pss">
+
+headers = {"signature-input" => "...", signature => "...", "date" => "Fri, 23 Feb 2024 13:18:15 GMT", "x-custom-header" => "bar"})
+
+message = Linzer::Message.new(headers)
+# => #<Linzer::Message:0x0000000111b592a0 @headers={"date"=>"Fri, 23 Feb 2024 13:18:15 GMT", ...
+
+signature = Linzer::Signature.build(headers)
+# => #<Linzer::Signature:0x0000000112396008 ...
+
+Linzer.verify(pubkey, message, signature)
+# => true
+```
+
+### What if an invalid signature if verified?
+
+```ruby
+result = Linzer.verify(pubkey, message, signature)
+linzer/lib/linzer/verifier.rb:14:in `verify': Failed to verify message: Invalid signature. (Linzer::Error)
+```
+
+For now, to consult additional details, just take a look at source code and/or the unit tests.
+
+Please note that is still early days, so only signatures RSASSA-PSS using SHA-512 like ones
+described in the RFC are supported.
+
+I'll be expanding the library to cover more functionality specified in the RFC
+in subsequent releases.
 
 
 ## Development
