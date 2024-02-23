@@ -1,0 +1,14 @@
+check component parameters (see section 2)
+support all component names
+
+review section 2.1
+   The field value
+   MUST be taken from the named header field of the target message
+   unless this behavior is overridden by additional parameters and
+   rules, such as the req and tr flags, below.  For most fields, the
+   field value is an ASCII string as recommended by [HTTP], and the
+   component value is exactly that string.  Other encodings could exist
+   in some implementations, and all non-ASCII field values MUST be
+   encoded to ASCII before being added to the signature base.  The bs
+   parameter, as described in Section 2.1.3, provides a method for
+   wrapping such problematic field values.
