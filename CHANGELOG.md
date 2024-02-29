@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+## [0.3.0] - 2024-02-28
+
+- Add support for the following algorithms: Ed25519, HMAC-SHA256 and
+  ECDSA (P-256 and P-384 curves).
+
 ## [0.2.0] - 2024-02-23
 
 - Add signature signing functionality. RSASSA-PSS using SHA-512 is still the only

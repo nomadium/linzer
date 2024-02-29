@@ -5,13 +5,15 @@ module Linzer
     DEFAULT_LABEL = "sig1"
 
     class << self
+      include Common
+
       def sign(key, message, components, options = {})
         validate key, message, components
 
         parameters = populate_parameters(key, options)
-        signature_base = message.signature_base(components, parameters)
+        signature_base = signature_base(message, components, parameters)
 
-        signature = _sign(key, signature_base, options)
+        signature = key.sign(signature_base)
         label = options[:label] || DEFAULT_LABEL
 
         Linzer::Signature.build(serialize(signature, components, parameters, label))
@@ -24,17 +26,12 @@ module Linzer
       private
 
       def validate(key, message, components)
-        raise Error.new "Message to sign cannot be null"           if message.nil?
-        raise Error.new "Message cannot be signed with a null key" if key.nil?
+        msg = "Message cannot be signed with null %s"
+        raise Error.new msg % "value"     if message.nil?
+        raise Error.new msg % "key"       if key.nil?
+        raise Error.new msg % "component" if components.nil?
 
-        if components.include?("@signature-params")
-          raise Error.new "Invalid component in signature input"
-        end
-
-        component_missing = 'Cannot sign message: component "%s" is not present in message'
-        components.each do |c|
-          raise Error.new component_missing % c unless message.field? c
-        end
+        validate_components message, components
       end
 
       def populate_parameters(key, options)
@@ -48,11 +45,6 @@ module Linzer
         (options.keys - %i[created keyid label]).each { |k| parameters[k] = options[k] }
 
         parameters
-      end
-
-      def _sign(key, data, options)
-        # signature = key.sign_pss("SHA512", signature_base, salt_length: 64, mgf1_hash: "SHA512")
-        key.sign("SHA512", data)
       end
 
       def serialize(signature, components, parameters, label)

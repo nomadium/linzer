@@ -3,16 +3,17 @@
 module Linzer
   module Verifier
     class << self
+      include Common
+
       def verify(key, message, signature)
         validate message, key, signature
 
         parameters = signature.parameters
         components = signature.components
 
-        signature_base = message.signature_base(components, parameters)
+        signature_base = signature_base(message, components, parameters)
 
-        return true if _verify(key, signature.value, signature_base)
-        raise Error.new "Failed to verify message: Invalid signature."
+        verify_or_fail key, signature.value, signature_base
       end
 
       private
@@ -28,12 +29,13 @@ module Linzer
 
         raise Error.new "Signature raw value to cannot be null" if signature.value.nil?
         raise Error.new "Components cannot be null"             if signature.components.nil?
+
+        validate_components message, signature.components
       end
 
-      def _verify(key, signature, data)
-        # XXX to-do: get rid of this hard-coded SHA512 values, support more algs
-        return true if key.material.verify_pss("SHA512", signature, data, salt_length: :auto, mgf1_hash: "SHA512")
-        false
+      def verify_or_fail(key, signature, data)
+        return true if key.verify(signature, data)
+        raise Error.new "Failed to verify message: Invalid signature."
       end
     end
   end

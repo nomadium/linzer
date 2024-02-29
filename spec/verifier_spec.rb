@@ -1,19 +1,8 @@
 # frozen_string_literal: true
 
 RSpec.describe Linzer::Verifier do
-  let(:test_key_rsa_pss) do
-    <<~EOS
-      -----BEGIN PUBLIC KEY-----
-      MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAr4tmm3r20Wd/PbqvP1s2
-      +QEtvpuRaV8Yq40gjUR8y2Rjxa6dpG2GXHbPfvMs8ct+Lh1GH45x28Rw3Ry53mm+
-      oAXjyQ86OnDkZ5N8lYbggD4O3w6M6pAvLkhk95AndTrifbIFPNU8PPMO7OyrFAHq
-      gDsznjPFmTOtCEcN2Z1FpWgchwuYLPL+Wokqltd11nqqzi+bJ9cvSKADYdUAAN5W
-      Utzdpiy6LbTgSxP7ociU4Tn0g5I6aDZJ7A8Lzo0KSyZYoA485mqcO0GVAdVw9lq4
-      aOT9v6d+nb4bnNkQVklLQ3fVAvJm+xdDOp9LCNCN48V2pnDOkFV6+U9nV5oyc6XI
-      2wIDAQAB                                                    
-      -----END PUBLIC KEY-----            
-    EOS
-  end
+  let(:request_data)         { Linzer::RFC9421::Examples.test_request_data     }
+  let(:test_key_rsa_pss_pub) { Linzer::RFC9421::Examples.test_key_rsa_pss_pub  }
 
   it "cannot verify a null message" do
     expect { described_class.verify(:key, nil, :signature) }
@@ -32,80 +21,65 @@ RSpec.describe Linzer::Verifier do
 
   it "cannot verify a message with a missing component" do
     missing_component = "missing-component"
-    request_data = {
-      headers: {
-        "content-digest"  => "sha-512=:WZDPaVn/7XgHaAy8pmojAkGWoRx2UFChF41A2svX+TaPm+AbwAgBWnrIiYllu7BNNyealdVLvRwEmTHWXvJwew==:",
-        "content-type"    => "application/json",
-        "content-length"  => "18",
-        "signature-input" => "sig1=(\"#{missing_component}\" \"content-digest\" \"content-length\" \"content-type\");created=1618884473;keyid=\"test-key-rsa-pss\"",
-        "signature" => "sig1=:HIbjHC5rS0BYaa9v4QfD4193TORw7u9edguPh0AW3dMq9WImrlFrCGUDih47vAxi4L2YRZ3XMJc1uOKk/J0ZmZ+wcta4nKIgBkKq0rM9hs3CQyxXGxHLMCy8uqK488o+9jrptQ+xFPHK7a9sRL1IXNaagCNN3ZxJsYapFj+JXbmaI5rtAdSfSvzPuBCh+ARHBmWuNo1UzVVdHXrl8ePL4cccqlazIJdC4QEjrF+Sn4IxBQzTZsL9y9TP5FsZYzHvDqbInkTNigBcE9cKOYNFCn4D/WM7F6TNuZO9EgtzepLWcjTymlHzK7aXq6Am6sfOrpIC49yXjj3ae6HRalVc/g==:"
-      }
+    signature_with_missing_component = {
+      "signature-input" => "sig1=(\"#{missing_component}\" \"content-digest\" \"content-length\" \"content-type\");created=1618884473;keyid=\"test-key-rsa-pss\"",
+      "signature"       => "sig1=:1ol7oGscodPV7z/4FuUerzklskHHz7M2VSaE+xBF5aUeAdzMp5eMBDl5cM+CVMO+x6svIEZj67/EBkicjeenSVF0JLF9pxc8FLJxUJyM6Ku3G/KQ+J4Kih4dd9DKl5s2ux2a5tdKtDNuL7GgAkLXRCoQwcEmCMMbt+CPTuW57rXtPm2Vd1MZzJHuwr37GSgj7tZ6EQJZPaZicxclRT7RrihFTEasTomAgSg0W4AFkBsELzYKGMGRSz8GdDZIAK2JQJs4/l21hHPSvu2zuAbWiQ22t9GwBQW3I3G7i1mMtNxcy7sJ9FbOM5SM96j9BI6LCtkZNsmU3ZnyPvZsPR4axA==:"
     }
-    signature = Linzer::Signature.build(request_data[:headers])
-    message = Linzer::Message.new(request_data)
+
+    test_request_data = request_data.dup
+    test_request_data[:headers].merge!(signature_with_missing_component)
+
+    signature = Linzer::Signature.build(test_request_data[:headers])
+    message = Linzer::Message.new(test_request_data)
 
     expect { described_class.verify(:key, message, signature) }
       .to raise_error(Linzer::Error, /Missing component.+#{missing_component}.*/)
   end
 
   it "cannot verify a message with duplicated component" do
-    request_data = {
-      headers: {
-        "content-digest"  => "sha-512=:WZDPaVn/7XgHaAy8pmojAkGWoRx2UFChF41A2svX+TaPm+AbwAgBWnrIiYllu7BNNyealdVLvRwEmTHWXvJwew==:",
-        "content-type"    => "application/json",
-        "content-length"  => "18",
-        "x-dup"           => "duplicated value",
-        "signature-input" => "sig1=(\"content-digest\" \"content-length\" \"x-dup\" \"x-dup\" \"content-type\");created=1618884473;keyid=\"test-key-rsa-pss\"",
-        "signature" => "sig1=:HIbjHC5rS0BYaa9v4QfD4193TORw7u9edguPh0AW3dMq9WImrlFrCGUDih47vAxi4L2YRZ3XMJc1uOKk/J0ZmZ+wcta4nKIgBkKq0rM9hs3CQyxXGxHLMCy8uqK488o+9jrptQ+xFPHK7a9sRL1IXNaagCNN3ZxJsYapFj+JXbmaI5rtAdSfSvzPuBCh+ARHBmWuNo1UzVVdHXrl8ePL4cccqlazIJdC4QEjrF+Sn4IxBQzTZsL9y9TP5FsZYzHvDqbInkTNigBcE9cKOYNFCn4D/WM7F6TNuZO9EgtzepLWcjTymlHzK7aXq6Am6sfOrpIC49yXjj3ae6HRalVc/g==:"
-      }
+    signature_with_duplicated_component = {
+      "signature-input" => "sig1=(\"content-digest\" \"content-length\" \"content-type\" \"content-type\");created=1618884473;keyid=\"test-key-rsa-pss\"",
+      "signature"       => "sig1=:rBqsUrhky+qXVie2Q7ydrKOiq3MIMQdajc7qU+urk4nD8ziUkdcfpWQVGNOazsgBeORRF7C1AxQcp9AjS9sYNxD22eSIrPm1pXroLs5wWc25uVIzKhYBrCPs/lW0xEZDGRyj/Bi8GkNxImJkDrvBApIAmQgASMOqafdEMafbnlIbHQ3+K5dn3vxBOkNpL8on34YB9pWrv9Ghv2ZWkBqqYikaIub3nS4zhj+HpD14M9cnDHjwsN+iDbbcwnKC2wBz48YUvYxE/4FEJP4VU/D5ID7Q3h1vKJTX9Xo2XMqIW40I/rbj5kT2Wp4Q56XmXZpcsNUzwHNVa3Q2HR+0Q/ziyw==:"
     }
-    pubkey = Linzer::Key.new(key_id: "foo-key-rsa-pss", material: OpenSSL::PKey::RSA.generate(2048))
-    signature = Linzer::Signature.build(request_data[:headers])
-    message = Linzer::Message.new(request_data)
+    test_request_data = request_data.dup
+    test_request_data[:headers].merge!(signature_with_duplicated_component)
+
+    pubkey = Linzer.generate_rsa_pss_sha512_key(2048, "foo-key-rsa-pss")
+    signature = Linzer::Signature.build(test_request_data[:headers])
+    message = Linzer::Message.new(test_request_data)
 
     expect { described_class.verify(pubkey, message, signature) }
       .to raise_error(Linzer::Error, /[dD]uplicated component/)
   end
 
   it "cannot verify a message with @signature-params component" do
-    request_data = {
-      headers: {
-        "content-digest"  => "sha-512=:WZDPaVn/7XgHaAy8pmojAkGWoRx2UFChF41A2svX+TaPm+AbwAgBWnrIiYllu7BNNyealdVLvRwEmTHWXvJwew==:",
-        "content-type"    => "application/json",
-        "content-length"  => "18",
-        "x-dup"           => "duplicated value",
-        "signature-input" => "sig1=(\"content-digest\" \"content-length\" \"@signature-params\" \"content-type\");created=1618884473;keyid=\"test-key-rsa-pss\"",
-        "signature" => "sig1=:HIbjHC5rS0BYaa9v4QfD4193TORw7u9edguPh0AW3dMq9WImrlFrCGUDih47vAxi4L2YRZ3XMJc1uOKk/J0ZmZ+wcta4nKIgBkKq0rM9hs3CQyxXGxHLMCy8uqK488o+9jrptQ+xFPHK7a9sRL1IXNaagCNN3ZxJsYapFj+JXbmaI5rtAdSfSvzPuBCh+ARHBmWuNo1UzVVdHXrl8ePL4cccqlazIJdC4QEjrF+Sn4IxBQzTZsL9y9TP5FsZYzHvDqbInkTNigBcE9cKOYNFCn4D/WM7F6TNuZO9EgtzepLWcjTymlHzK7aXq6Am6sfOrpIC49yXjj3ae6HRalVc/g==:"
-      }
+    signature_with_invalid_component = {
+      "signature-input" => "sig1=(\"content-digest\" \"content-length\" \"@signature-params\" \"content-type\");created=1618884473;keyid=\"test-key-rsa-pss\"",
+      "signature"       => "sig1=:kRAeUug8ffLM6RE5FfnH9mwQ+1zAJK9ORBp/rbO6u2HXuZbfQP863xo3texBklxWrgOAudCS4I3/7jkEhqEjP7vEJGI0tRSb1q7+PlnTtbANO1HDz2lSXn5KRVfELk+r5054V2IdvF1yYxstgkO8eYxkokkTyp+3v86xqpmP2DRPcVoG8b1jjSh8LraLD8jEBlDkprxdprRBhHVVMCFVmK+/y3/BrDVVpMJ/MdrjOkaNHjk8ASWXw2Imc+Gi/ZeTu26j+aqp295kaG3qyjiPnY93hcgZNo2J/x6Q4tdzBt3ljuN/OtYCL/PegCr3XpQMDrmGpfG1M8kVIph2z/aGig==:"
     }
-    pubkey = Linzer::Key.new(key_id: "foo-key-rsa-pss", material: OpenSSL::PKey::RSA.generate(2048))
-    signature = Linzer::Signature.build(request_data[:headers])
-    message = Linzer::Message.new(request_data)
+    test_request_data = request_data.dup
+    test_request_data[:headers].merge!(signature_with_invalid_component)
+
+    pubkey = Linzer.generate_rsa_pss_sha512_key(2048, "foo-key-rsa-pss")
+    signature = Linzer::Signature.build(test_request_data[:headers])
+    message = Linzer::Message.new(test_request_data)
 
     expect { described_class.verify(pubkey, message, signature) }
       .to raise_error(Linzer::Error, /[iI]nvalid component/)
   end
 
   it "fails to verify an invalid signature" do
-    pubkey = Linzer::Key.new(key_id: "test-key-rsa-pss", material: OpenSSL::PKey::RSA.new(test_key_rsa_pss))
-    request_data = {
-      http: {
-        "method" => "POST",
-        "host"   => "example.com",
-        "path"   => "/foo"
-      },
-      headers: {
-        "host"            => "example.com",
-        "date"            => "Tue, 20 Apr 2021 02:07:55 GMT",
-        "content-type"    => "application/json",
-        "content-digest"  => "sha-512=:WZDPaVn/7XgHaAy8pmojAkGWoRx2UFChF41A2svX+TaPm+AbwAgBWnrIiYllu7BNNyealdVLvRwEmTHWXvJwew==:",
-        "content-length"  => "18",
-        "signature-input" => "sig1=(\"@method\" \"@authority\" \"@path\" \"content-digest\" \"content-length\" \"content-type\");created=1618884473;keyid=\"test-key-rsa-pss\"",
-        "signature"       => "sig1=:pjVHGLiUCUEWQRfHoTIojBC/RdqV2EvaCbugKjHfFjj/YLMQfvjQOu2OPUdjNIRHwIuE+H+mdxcBUwBdamFuYvHWGC15l5ImSa0RFoqrhno+n51pK++FtRbkdyvqRnvPPOFIbDuaL//NETFHqO1aPuWoAeiEptNTKBbK2aej0LOaBJjGKYikpnAsK0A/4Yq0h3RpcOe09f1dLalM24ijcRGF7VzRuJwTgswNn9Sr1Tmg+0badt4NQHgMlsHHrAvLYfGueKggypRISgvAdnBpmYqgPWArqqNTVOHqzd3H+4tPUVFrt7AdeHevmIAsh9e2WzwUCnpSd73ZZGFQbWHqsQ==:"
-      }
+    invalid_signature = {
+      "signature-input" => "sig1=(\"@method\" \"@authority\" \"@path\" \"content-digest\" \"content-length\" \"content-type\");created=1618884473;keyid=\"test-key-rsa-pss\"",
+      "signature"       => "sig1=:O4NY94ZQb05YXnyJg8Jj2MiSWuq3Sthf/ii0EDbcn9PAyHapz56a5G4MXBkq4HDEcreY6BodYghaBMHblqXpS0CriibHPc6HcEmYB1ZX2VogtzIkLiv9qr6DGYWhdwkozGe6kt1tFr2PmXoV4GSt6Jl7BFYOGgTYHnUWaVHM+EVnJMUvx/Tu5fhXJE6bvXMfI2fWj8ecwXl+fA/pJSL2QhvwfDkLyTGR9UWkzlEmNLn27I0Y+XQAK/djzhQJ+tMHjtzgNx6qt/IRmsVr8LSUSZGh7A0kUmusVHu5DPydwScmBFDAvd/Jv+8RZLsW3ayAVR0Rqhkaqse5h9O/fP7Ieg==:"
     }
-    signature = Linzer::Signature.build(request_data[:headers])
-    message   = Linzer::Message.new(request_data)
+    test_request_data = request_data.dup
+    test_request_data[:headers].merge!(invalid_signature)
+
+    pubkey = Linzer.new_rsa_pss_sha512_public_key(test_key_rsa_pss_pub, "test-key-rsa-pss")
+
+    signature = Linzer::Signature.build(test_request_data[:headers])
+    message   = Linzer::Message.new(test_request_data)
 
     expect { described_class.verify(pubkey, message, signature) }
       .to raise_error(Linzer::Error, /Invalid signature/)
@@ -113,25 +87,16 @@ RSpec.describe Linzer::Verifier do
 
   # Example from section 3.2 Verifying a Signature
   it "verifies a valid signature" do
-    pubkey = Linzer::Key.new(key_id: "test-key-rsa-pss", material: OpenSSL::PKey::RSA.new(test_key_rsa_pss))
-    request_data = {
-      http: {
-        "method" => "POST",
-        "host"   => "example.com",
-        "path"   => "/foo"
-      },
-      headers: {
-        "host"            => "example.com",
-        "date"            => "Tue, 20 Apr 2021 02:07:55 GMT",
-        "content-type"    => "application/json",
-        "content-digest"  => "sha-512=:WZDPaVn/7XgHaAy8pmojAkGWoRx2UFChF41A2svX+TaPm+AbwAgBWnrIiYllu7BNNyealdVLvRwEmTHWXvJwew==:",
-        "content-length"  => "18",
-        "signature-input" => "sig1=(\"@method\" \"@authority\" \"@path\" \"content-digest\" \"content-length\" \"content-type\");created=1618884473;keyid=\"test-key-rsa-pss\"",
-        "signature" => "sig1=:HIbjHC5rS0BYaa9v4QfD4193TORw7u9edguPh0AW3dMq9WImrlFrCGUDih47vAxi4L2YRZ3XMJc1uOKk/J0ZmZ+wcta4nKIgBkKq0rM9hs3CQyxXGxHLMCy8uqK488o+9jrptQ+xFPHK7a9sRL1IXNaagCNN3ZxJsYapFj+JXbmaI5rtAdSfSvzPuBCh+ARHBmWuNo1UzVVdHXrl8ePL4cccqlazIJdC4QEjrF+Sn4IxBQzTZsL9y9TP5FsZYzHvDqbInkTNigBcE9cKOYNFCn4D/WM7F6TNuZO9EgtzepLWcjTymlHzK7aXq6Am6sfOrpIC49yXjj3ae6HRalVc/g==:"
-      }
+    valid_signature = {
+      "signature-input" => "sig1=(\"@method\" \"@authority\" \"@path\" \"content-digest\" \"content-length\" \"content-type\");created=1618884473;keyid=\"test-key-rsa-pss\"",
+      "signature" => "sig1=:HIbjHC5rS0BYaa9v4QfD4193TORw7u9edguPh0AW3dMq9WImrlFrCGUDih47vAxi4L2YRZ3XMJc1uOKk/J0ZmZ+wcta4nKIgBkKq0rM9hs3CQyxXGxHLMCy8uqK488o+9jrptQ+xFPHK7a9sRL1IXNaagCNN3ZxJsYapFj+JXbmaI5rtAdSfSvzPuBCh+ARHBmWuNo1UzVVdHXrl8ePL4cccqlazIJdC4QEjrF+Sn4IxBQzTZsL9y9TP5FsZYzHvDqbInkTNigBcE9cKOYNFCn4D/WM7F6TNuZO9EgtzepLWcjTymlHzK7aXq6Am6sfOrpIC49yXjj3ae6HRalVc/g==:"
     }
-    signature = Linzer::Signature.build(request_data[:headers])
-    message = Linzer::Message.new(request_data)
+    test_request_data = request_data.dup
+    test_request_data[:headers].merge!(valid_signature)
+
+    pubkey = Linzer.new_rsa_pss_sha512_public_key(OpenSSL::PKey::RSA.new(test_key_rsa_pss_pub), "test-key-rsa-pss")
+    signature = Linzer::Signature.build(test_request_data[:headers])
+    message = Linzer::Message.new(test_request_data)
 
     expect(described_class.verify(pubkey, message, signature)).to eq(true)
   end

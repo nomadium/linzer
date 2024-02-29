@@ -17,7 +17,7 @@ RSpec.describe Linzer do
   end
 
   it "has a ::sign method aliased to Linzer::Signer::sign" do
-    key = Linzer::Key.new(material: OpenSSL::PKey::RSA.generate(2048))
+    key = Linzer.generate_rsa_pss_sha512_key(2048)
     message    = :message
     components = []
     options    = {}
