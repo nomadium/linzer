@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+## [0.3.1] - 2024-03-02
+
+- Fix incorrect signing and verifying for ECDSA P-256 and P-384 curves.
+
 ## [0.3.0] - 2024-02-28
 
 - Add support for the following algorithms: Ed25519, HMAC-SHA256 and

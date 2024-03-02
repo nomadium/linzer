@@ -36,7 +36,9 @@ module Linzer
         signature = parse_field(headers, "signature")
         fail_with_signature_not_found label unless signature.key?(label)
 
-        raw_signature = signature[label].value
+        raw_signature =
+          signature[label].value
+            .force_encoding(Encoding::ASCII_8BIT)
 
         fail_due_invalid_components unless input[label].value.respond_to?(:each)
 
