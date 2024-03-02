@@ -63,7 +63,7 @@ module Linzer
       # https://www.rfc-editor.org/rfc/rfc4492.html#appendix-A
       # Table 6: Equivalent curves defined by SECG, ANSI, and NIST
       # secp384r1   |               |   NIST P-384
-      def generate_ecdsa_p384_sha256_key(key_id = nil)
+      def generate_ecdsa_p384_sha384_key(key_id = nil)
         material = OpenSSL::PKey::EC.generate("secp384r1")
         Linzer::ECDSA::Key.new(material, id: key_id, digest: "SHA384")
       end

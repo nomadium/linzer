@@ -60,7 +60,7 @@ lib/linzer/verifier.rb:34:in `verify_or_fail': Failed to verify message: Invalid
 
 For now, to consult additional details, just take a look at source code and/or the unit tests.
 
-Please note that is still early days and extensive testing is still ongoing. For now only the following algorithms are supported: RSASSA-PSS using SHA-512, HMAC-SHA256, Ed25519 and ECDSA P-256 curve. ECDSA P-384 curve was also added but not tested yet.
+Please note that is still early days and extensive testing is still ongoing. For now only the following algorithms are supported: RSASSA-PSS using SHA-512, HMAC-SHA256, Ed25519 and ECDSA (P-256 and P-384 curves).
 
 I'll be expanding the library to cover more functionality specified in the RFC
 in subsequent releases.
