@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe Linzer::Signature do
+RSpec.describe Linzer::Signer do
   context "with Ed25519" do
     let(:request_data) { Linzer::RFC9421::Examples.test_request_data }
 

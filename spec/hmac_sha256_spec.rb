@@ -2,7 +2,7 @@
 
 require "base64"
 
-RSpec.describe Linzer::Signature do
+RSpec.describe Linzer::Signer do
   context "with HMAC using SHA-256" do
     let(:request_data) { Linzer::RFC9421::Examples.test_request_data }
 

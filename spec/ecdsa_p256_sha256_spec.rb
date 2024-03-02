@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe Linzer::Signature do
+RSpec.describe Linzer::Signer do
   context "with ECDSA using Curve P-256 and SHA-256" do
     let(:response_data) { Linzer::RFC9421::Examples.test_response_data }
 
