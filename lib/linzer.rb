@@ -15,12 +15,16 @@ require_relative "linzer/ecdsa"
 require_relative "linzer/key/helper"
 require_relative "linzer/signer"
 require_relative "linzer/verifier"
+require_relative "linzer/self_test"
 
 module Linzer
   class Error < StandardError; end
 
+  class SelfTestFailure < Error; end
+
   class << self
     include Key::Helper
+    include SelfTest
 
     def verify(pubkey, message, signature)
       Linzer::Verifier.verify(pubkey, message, signature)
@@ -31,3 +35,6 @@ module Linzer
     end
   end
 end
+
+# Automatically run self-test when library loads
+Linzer.self_test
