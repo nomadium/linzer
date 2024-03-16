@@ -27,6 +27,8 @@ module Linzer
       private :new
 
       def build(headers, options = {})
+        basic_validate headers
+        headers.transform_keys!(&:downcase)
         validate headers
 
         input = parse_field(headers, "signature-input")
@@ -51,9 +53,12 @@ module Linzer
 
       private
 
-      def validate(headers)
+      def basic_validate(headers)
         raise Error.new "Cannot build signature: Request headers cannot be null"      if headers.nil?
         raise Error.new "Cannot build signature: No request headers found"            if headers.empty?
+      end
+
+      def validate(headers)
         raise Error.new "Cannot build signature: No \"signature-input\" header found" unless headers.key?("signature-input")
         raise Error.new "Cannot build signature: No \"signature\" header found"       unless headers.key?("signature")
       end

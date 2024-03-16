@@ -3,8 +3,10 @@
 module Linzer
   class Message
     def initialize(request_data)
-      @headers = Hash(request_data[:headers].clone).freeze
       @http    = Hash(request_data[:http].clone).freeze
+      @headers = Hash(request_data.fetch(:headers, {})
+                        .transform_keys(&:downcase)
+                        .clone).freeze
       freeze
     end
 

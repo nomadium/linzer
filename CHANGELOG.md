@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+## [0.4.0] - 2024-03-16
+
+- Add support for capitalized HTTP header names.
+
 ## [0.3.2] - 2024-03-16
 
 - Force signature component name strings to be encoded as ASCII.

@@ -100,4 +100,27 @@ RSpec.describe Linzer::Verifier do
 
     expect(described_class.verify(pubkey, message, signature)).to eq(true)
   end
+
+  # Example from section 3.2 Verifying a Signature
+  # but with capitalized header names
+  # XXX: to-do: fix code duplication for this test
+  it "verifies a valid signature" do
+    valid_signature = {
+      "Signature-Input" => "sig1=(\"@method\" \"@authority\" \"@path\" \"content-digest\" \"content-length\" \"content-type\");created=1618884473;keyid=\"test-key-rsa-pss\"",
+      "Signature" => "sig1=:HIbjHC5rS0BYaa9v4QfD4193TORw7u9edguPh0AW3dMq9WImrlFrCGUDih47vAxi4L2YRZ3XMJc1uOKk/J0ZmZ+wcta4nKIgBkKq0rM9hs3CQyxXGxHLMCy8uqK488o+9jrptQ+xFPHK7a9sRL1IXNaagCNN3ZxJsYapFj+JXbmaI5rtAdSfSvzPuBCh+ARHBmWuNo1UzVVdHXrl8ePL4cccqlazIJdC4QEjrF+Sn4IxBQzTZsL9y9TP5FsZYzHvDqbInkTNigBcE9cKOYNFCn4D/WM7F6TNuZO9EgtzepLWcjTymlHzK7aXq6Am6sfOrpIC49yXjj3ae6HRalVc/g==:"
+    }
+
+    test_request_data = request_data.dup
+    # example with capitalized header names
+    test_request_data[:headers]      # => {"Host"=>"example.com",
+      .transform_keys!(&:capitalize) #     "Date"=>"Tue, 20 Apr 2021 ...",
+      .transform_keys! { |k| k.gsub(/-([a-z]{1})/) { |s| s.upcase } }
+      .merge!(valid_signature)       #     "Content-Type"=>"application/json",
+
+    pubkey = Linzer.new_rsa_pss_sha512_public_key(OpenSSL::PKey::RSA.new(test_key_rsa_pss_pub), "test-key-rsa-pss")
+    signature = Linzer::Signature.build(test_request_data[:headers])
+    message = Linzer::Message.new(test_request_data)
+
+    expect(described_class.verify(pubkey, message, signature)).to eq(true)
+  end
 end
