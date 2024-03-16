@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+## [0.3.2] - 2024-03-16
+
+- Force signature component name strings to be encoded as ASCII.
+  Otherwise in some scenarios, this could to signature verification errors
+  for valid signatures.
+
 ## [0.3.1] - 2024-03-02
 
 - Fix incorrect signing and verifying for ECDSA P-256 and P-384 curves.

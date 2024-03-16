@@ -42,7 +42,8 @@ module Linzer
 
         fail_due_invalid_components unless input[label].value.respond_to?(:each)
 
-        components = input[label].value.map(&:value)
+        ascii = Encoding::US_ASCII
+        components = input[label].value.map { |c| c.value.encode(ascii) }
         parameters = input[label].parameters
 
         new(components, raw_signature, label, parameters)
