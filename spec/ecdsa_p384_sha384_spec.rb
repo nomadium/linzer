@@ -2,7 +2,12 @@
 
 RSpec.describe Linzer::Signer do
   context "with ECDSA using Curve P-384 and SHA-384" do
-    let(:request_data) { Linzer::RFC9421::Examples.test_request_data }
+    let(:request) do
+      request_data = Linzer::RFC9421::Examples.test_request_data
+      path = request_data[:http]["path"]
+      Linzer.new_request(:post, path, {}, request_data[:headers])
+    end
+
     let(:key_id)       { "test-key-ecc-p384" }
 
     let(:test_key_ecc_p384) do
@@ -17,7 +22,7 @@ RSpec.describe Linzer::Signer do
     it "signs message with valid signature" do
       key = test_key_ecc_p384
 
-      message    = Linzer::Message.new(request_data)
+      message    = Linzer::Message.new(request)
       components = %w[@method @authority content-type content-digest content-length]
       timestamp  = 1618884473
       label      = "sig384"
@@ -41,7 +46,12 @@ end
 
 RSpec.describe Linzer::Verifier do
   context "with ECDSA using Curve P-384 and SHA-384" do
-    let(:request_data) { Linzer::RFC9421::Examples.test_request_data }
+    let(:request) do
+      request_data = Linzer::RFC9421::Examples.test_request_data
+      path = request_data[:http]["path"]
+      Linzer.new_request(:post, path, {}, request_data[:headers])
+    end
+
     let(:key_id)       { "test-key-ecc-p384" }
 
     let(:test_key_ecc_p384) do
@@ -56,7 +66,7 @@ RSpec.describe Linzer::Verifier do
     let(:example_valid_signature) do
       key = test_key_ecc_p384
 
-      message    = Linzer::Message.new(request_data)
+      message    = Linzer::Message.new(request)
       components = %w[@method @authority content-type content-digest content-length]
       timestamp  = 1618884473
       label      = "sig384"
@@ -67,7 +77,7 @@ RSpec.describe Linzer::Verifier do
 
     it "fails to verify an invalid signature" do
       pubkey = test_key_ecc_p384_pub
-      message = Linzer::Message.new(request_data)
+      message = Linzer::Message.new(request)
 
       label      = "sig384"
       timestamp  = 1618884473
@@ -90,7 +100,7 @@ RSpec.describe Linzer::Verifier do
 
     it "verifies a valid signature" do
       pubkey = test_key_ecc_p384_pub
-      message = Linzer::Message.new(request_data)
+      message = Linzer::Message.new(request)
 
       label      = "sig384"
       timestamp  = 1618884473

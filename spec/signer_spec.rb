@@ -3,7 +3,13 @@
 RSpec.describe Linzer::Signer do
   let(:verifier) { Linzer::Verifier }
 
-  let(:request_data)         { Linzer::RFC9421::Examples.test_request_data     }
+  let(:request_data) { Linzer::RFC9421::Examples.test_request_data }
+
+  let(:request) do
+    path = request_data[:http]["path"]
+    Linzer.new_request(:post, path, {}, request_data[:headers])
+  end
+
   let(:test_key_rsa_pss)     { Linzer::RFC9421::Examples.test_key_rsa_pss      }
   let(:test_key_rsa_pss_pub) { Linzer::RFC9421::Examples.test_key_rsa_pss_pub  }
 
@@ -24,22 +30,32 @@ RSpec.describe Linzer::Signer do
 
   it "cannot sign a message with a missing component" do
     request_data = {headers: {"header1" => "foo", "header2" => 10}}
-    message      = Linzer::Message.new(request_data)
+    path         = "/foo"
+    request      = Linzer.new_request(:post, path, {}, request_data[:headers])
+    message      = Linzer::Message.new(request)
+
     expect { described_class.sign(:key, message, %w[header1 header2 missing]) }
       .to raise_error(Linzer::Error, /[Mm]issing component in message/)
   end
 
   it "cannot sign a message with a duplicated component" do
     request_data = {headers: {"header1" => "foo", "header2" => 10}}
-    message      = Linzer::Message.new(request_data)
+    path         = "/foo"
+    request      = Linzer.new_request(:post, path, {}, request_data[:headers])
+    message      = Linzer::Message.new(request)
+
     expect { described_class.sign(:key, message, %w[header1 header2 header2]) }
       .to raise_error(Linzer::Error, /[dD]uplicated component/)
   end
 
   it "cannot sign a message with a @signature-params component" do
     request_data = {headers: {"header1" => "foo", "header2" => 10}}
-    message      = Linzer::Message.new(request_data)
-    expect { described_class.sign(:key, message, %w[header1 header2 @signature-params]) }
+    path         = "/foo"
+    request      = Linzer.new_request(:post, path, {}, request_data[:headers])
+    components   = %w[header1 header2 @signature-params]
+    message      = Linzer::Message.new(request)
+
+    expect { described_class.sign(:key, message, components) }
       .to raise_error(Linzer::Error, /[iI]nvalid component/)
   end
 
@@ -47,7 +63,7 @@ RSpec.describe Linzer::Signer do
     key_id = "test-key-rsa-pss"
     key = Linzer.new_rsa_pss_sha512_key(test_key_rsa_pss, key_id)
 
-    message        = Linzer::Message.new(request_data)
+    message        = Linzer::Message.new(request)
     components     = %w[@method @authority @path content-digest content-length content-type].freeze
     unix_timestamp = 1618884473
     label          = Linzer::Signer.default_label
@@ -87,8 +103,10 @@ RSpec.describe Linzer::Signer do
     updated_request_data = {}
     updated_request_data[:http]    = request_data[:http]
     updated_request_data[:headers] = headers
+    path = updated_request_data[:http]["path"]
+    request = Linzer.new_request(:post, path, {}, updated_request_data[:headers])
 
-    message        = Linzer::Message.new(updated_request_data)
+    message        = Linzer::Message.new(request)
     components     = %w[@method @authority @path content-digest content-length content-type].freeze
     unix_timestamp = 1618884473
     label          = Linzer::Signer.default_label

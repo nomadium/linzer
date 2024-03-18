@@ -2,7 +2,13 @@
 
 RSpec.describe Linzer::Signer do
   context "with ECDSA using Curve P-256 and SHA-256" do
-    let(:response_data) { Linzer::RFC9421::Examples.test_response_data }
+    let(:response) do
+      response_data = Linzer::RFC9421::Examples.test_response_data
+      body          = response_data[:body]
+      status        = response_data[:http]["status"]
+      headers       = response_data[:headers]
+      Linzer.new_response(body, status, headers)
+    end
 
     let(:test_key_ecc_p256)     { Linzer::RFC9421::Examples.test_key_ecc_p256 }
     let(:test_key_ecc_p256_pub) { Linzer::RFC9421::Examples.test_key_ecc_p256_pub }
@@ -12,7 +18,7 @@ RSpec.describe Linzer::Signer do
     it "signs message with valid signature" do
       key = Linzer.new_ecdsa_p256_sha256_key(test_key_ecc_p256, key_id)
 
-      message    = Linzer::Message.new(response_data)
+      message    = Linzer::Message.new(response)
       components = %w[@status content-type content-digest content-length]
       timestamp  = 1618884473
       label      = "sig-b26"
@@ -36,7 +42,13 @@ end
 
 RSpec.describe Linzer::Verifier do
   context "with ECDSA using Curve P-256 and SHA-256" do
-    let(:response_data) { Linzer::RFC9421::Examples.test_response_data }
+    let(:response) do
+      response_data = Linzer::RFC9421::Examples.test_response_data
+      body          = response_data[:body]
+      status        = response_data[:http]["status"]
+      headers       = response_data[:headers]
+      Linzer.new_response(body, status, headers)
+    end
 
     let(:test_key_ecc_p256_pub) { Linzer::RFC9421::Examples.test_key_ecc_p256_pub }
 
@@ -44,7 +56,7 @@ RSpec.describe Linzer::Verifier do
 
     it "fails to verify an invalid signature" do
       pubkey = Linzer.new_ecdsa_p256_sha256_key(test_key_ecc_p256_pub, key_id)
-      message = Linzer::Message.new(response_data)
+      message = Linzer::Message.new(response)
 
       label      = "sig1"
       timestamp  = 1618884473
@@ -67,7 +79,7 @@ RSpec.describe Linzer::Verifier do
 
     it "verifies a valid signature" do
       pubkey = Linzer.new_ecdsa_p256_sha256_key(test_key_ecc_p256_pub, key_id)
-      message = Linzer::Message.new(response_data)
+      message = Linzer::Message.new(response)
 
       label      = "sig-b24"
       timestamp  = 1618884473

@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
 RSpec.describe Linzer::Verifier do
-  let(:request_data)         { Linzer::RFC9421::Examples.test_request_data     }
+  let(:request_data) { Linzer::RFC9421::Examples.test_request_data }
+
   let(:test_key_rsa_pss_pub) { Linzer::RFC9421::Examples.test_key_rsa_pss_pub  }
 
   it "cannot verify a null message" do
@@ -28,9 +29,11 @@ RSpec.describe Linzer::Verifier do
 
     test_request_data = request_data.dup
     test_request_data[:headers].merge!(signature_with_missing_component)
+    path = request_data[:http]["path"]
+    request = Linzer.new_request(:post, path, {}, test_request_data[:headers])
 
     signature = Linzer::Signature.build(test_request_data[:headers])
-    message = Linzer::Message.new(test_request_data)
+    message = Linzer::Message.new(request)
 
     expect { described_class.verify(:key, message, signature) }
       .to raise_error(Linzer::Error, /Missing component.+#{missing_component}.*/)
@@ -43,10 +46,12 @@ RSpec.describe Linzer::Verifier do
     }
     test_request_data = request_data.dup
     test_request_data[:headers].merge!(signature_with_duplicated_component)
+    path = request_data[:http]["path"]
+    request = Linzer.new_request(:post, path, {}, test_request_data[:headers])
 
     pubkey = Linzer.generate_rsa_pss_sha512_key(2048, "foo-key-rsa-pss")
     signature = Linzer::Signature.build(test_request_data[:headers])
-    message = Linzer::Message.new(test_request_data)
+    message = Linzer::Message.new(request)
 
     expect { described_class.verify(pubkey, message, signature) }
       .to raise_error(Linzer::Error, /[dD]uplicated component/)
@@ -59,10 +64,12 @@ RSpec.describe Linzer::Verifier do
     }
     test_request_data = request_data.dup
     test_request_data[:headers].merge!(signature_with_invalid_component)
+    path = request_data[:http]["path"]
+    request = Linzer.new_request(:post, path, {}, test_request_data[:headers])
 
     pubkey = Linzer.generate_rsa_pss_sha512_key(2048, "foo-key-rsa-pss")
     signature = Linzer::Signature.build(test_request_data[:headers])
-    message = Linzer::Message.new(test_request_data)
+    message = Linzer::Message.new(request)
 
     expect { described_class.verify(pubkey, message, signature) }
       .to raise_error(Linzer::Error, /[iI]nvalid component/)
@@ -75,11 +82,13 @@ RSpec.describe Linzer::Verifier do
     }
     test_request_data = request_data.dup
     test_request_data[:headers].merge!(invalid_signature)
+    path = request_data[:http]["path"]
+    request = Linzer.new_request(:post, path, {}, test_request_data[:headers])
 
     pubkey = Linzer.new_rsa_pss_sha512_public_key(test_key_rsa_pss_pub, "test-key-rsa-pss")
 
     signature = Linzer::Signature.build(test_request_data[:headers])
-    message   = Linzer::Message.new(test_request_data)
+    message   = Linzer::Message.new(request)
 
     expect { described_class.verify(pubkey, message, signature) }
       .to raise_error(Linzer::Error, /Invalid signature/)
@@ -93,10 +102,12 @@ RSpec.describe Linzer::Verifier do
     }
     test_request_data = request_data.dup
     test_request_data[:headers].merge!(valid_signature)
+    path = request_data[:http]["path"]
+    request = Linzer.new_request(:post, path, {}, test_request_data[:headers])
 
     pubkey = Linzer.new_rsa_pss_sha512_public_key(OpenSSL::PKey::RSA.new(test_key_rsa_pss_pub), "test-key-rsa-pss")
     signature = Linzer::Signature.build(test_request_data[:headers])
-    message = Linzer::Message.new(test_request_data)
+    message = Linzer::Message.new(request)
 
     expect(described_class.verify(pubkey, message, signature)).to eq(true)
   end
@@ -117,9 +128,12 @@ RSpec.describe Linzer::Verifier do
       .transform_keys! { |k| k.gsub(/-([a-z]{1})/) { |s| s.upcase } }
       .merge!(valid_signature)       #     "Content-Type"=>"application/json",
 
+    path = request_data[:http]["path"]
+    request = Linzer.new_request(:post, path, {}, test_request_data[:headers])
+
     pubkey = Linzer.new_rsa_pss_sha512_public_key(OpenSSL::PKey::RSA.new(test_key_rsa_pss_pub), "test-key-rsa-pss")
     signature = Linzer::Signature.build(test_request_data[:headers])
-    message = Linzer::Message.new(test_request_data)
+    message = Linzer::Message.new(request)
 
     expect(described_class.verify(pubkey, message, signature)).to eq(true)
   end

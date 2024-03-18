@@ -31,7 +31,8 @@ module Linzer
               "content-type"   => "application/json",
               "content-digest" => "sha-512=:mEWXIS7MaLRuGgxOBdODa3xqM1XdEvxoYhvlCFJ41QJgJc4GTsPp29l5oGX69wWdXymyU0rjJuahq4l5aGgfLQ==:",
               "content-length" => 23
-            }
+            },
+            body: '{"message": "good dog"}'
           }
         end
 
