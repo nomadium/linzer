@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+## [0.4.1] - 2024-03-25
+
+- Fix one-off error on ECDSA P-256 and P-384 curve signature generation.
+  In some cases, an invalid signature of 63 or 95 bytes could be generated.
+
 ## [0.4.0] - 2024-03-16
 
 - Add support for capitalized HTTP header names.
