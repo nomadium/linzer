@@ -2,9 +2,12 @@
 
 require "starry"
 require "openssl"
+require "rack"
 
 require_relative "linzer/version"
 require_relative "linzer/common"
+require_relative "linzer/request"
+require_relative "linzer/response"
 require_relative "linzer/message"
 require_relative "linzer/signature"
 require_relative "linzer/key"
@@ -21,6 +24,11 @@ module Linzer
 
   class << self
     include Key::Helper
+    include Response
+
+    def new_request(verb, uri = "/", params = {}, headers = {})
+      Linzer::Request.build(verb, uri, params, headers)
+    end
 
     def verify(pubkey, message, signature)
       Linzer::Verifier.verify(pubkey, message, signature)

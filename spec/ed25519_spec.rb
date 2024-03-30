@@ -2,7 +2,11 @@
 
 RSpec.describe Linzer::Signer do
   context "with Ed25519" do
-    let(:request_data) { Linzer::RFC9421::Examples.test_request_data }
+    let(:request) do
+      request_data = Linzer::RFC9421::Examples.test_request_data
+      path = request_data[:http]["path"]
+      Linzer.new_request(:post, path, {}, request_data[:headers])
+    end
 
     # B.1.4. Example Ed25519 Test Key
     #
@@ -37,7 +41,7 @@ RSpec.describe Linzer::Signer do
 
       key = Linzer.new_ed25519_key(test_key_ed25519, key_id)
 
-      message    = Linzer::Message.new(request_data)
+      message    = Linzer::Message.new(request)
       components = %w[date @method @path @authority content-type content-length]
       timestamp  = 1618884473
       label      = "sig-b26"
@@ -53,7 +57,11 @@ end
 
 RSpec.describe Linzer::Verifier do
   context "with Ed25519" do
-    let(:request_data) { Linzer::RFC9421::Examples.test_request_data }
+    let(:request) do
+      request_data = Linzer::RFC9421::Examples.test_request_data
+      path = request_data[:http]["path"]
+      Linzer.new_request(:post, path, {}, request_data[:headers])
+    end
 
     # $ openssl pkey -pubin -inform pem -in public.pem -noout -text
     # ED25519 Public-Key:
@@ -77,7 +85,7 @@ RSpec.describe Linzer::Verifier do
 
     it "fails to verify an invalid signature" do
       key = Linzer.generate_ed25519_key(key_id)
-      message = Linzer::Message.new(request_data)
+      message = Linzer::Message.new(request)
 
       label      = "sig1"
       timestamp  = 1618884473
@@ -99,7 +107,7 @@ RSpec.describe Linzer::Verifier do
 
     it "verifies a valid signature" do
       key = Linzer.new_ed25519_public_key(test_key_ed25519_pub, key_id)
-      message = Linzer::Message.new(request_data)
+      message = Linzer::Message.new(request)
 
       label      = "sig-b26"
       timestamp  = 1618884473

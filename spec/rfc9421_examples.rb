@@ -17,7 +17,8 @@ module Linzer
               "content-type"   => "application/json",
               "content-digest" => "sha-512=:WZDPaVn/7XgHaAy8pmojAkGWoRx2UFChF41A2svX+TaPm+AbwAgBWnrIiYllu7BNNyealdVLvRwEmTHWXvJwew==:",
               "content-length" => "18"
-            }
+            },
+            body: '{"hello": "world"}'
           }
         end
 
@@ -31,7 +32,8 @@ module Linzer
               "content-type"   => "application/json",
               "content-digest" => "sha-512=:mEWXIS7MaLRuGgxOBdODa3xqM1XdEvxoYhvlCFJ41QJgJc4GTsPp29l5oGX69wWdXymyU0rjJuahq4l5aGgfLQ==:",
               "content-length" => 23
-            }
+            },
+            body: '{"message": "good dog"}'
           }
         end
 

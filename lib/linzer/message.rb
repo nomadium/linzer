@@ -2,20 +2,23 @@
 
 module Linzer
   class Message
-    def initialize(request_data)
-      @http    = Hash(request_data[:http].clone).freeze
-      @headers = Hash(request_data.fetch(:headers, {})
-                        .transform_keys(&:downcase)
-                        .clone).freeze
+    def initialize(operation)
+      @operation = operation
       freeze
     end
 
-    def empty?
-      @headers.empty?
+    def request?
+      @operation.is_a?(Rack::Request) || @operation.respond_to?(:request_method)
     end
 
-    def header?(header)
-      @headers.key?(header)
+    def response?
+      @operation.is_a?(Rack::Response) || @operation.respond_to?(:status)
+    end
+
+    def headers
+      return @operation.headers if response? || @operation.respond_to?(:headers)
+
+      Request.headers(@operation)
     end
 
     def field?(f)
@@ -23,13 +26,16 @@ module Linzer
     end
 
     def [](field_name)
-      return @headers[field_name] if !field_name.start_with?("@")
+      if !field_name.start_with?("@")
+        return @operation.env[Request.rack_header_name(field_name)] if request?
+        return @operation.headers[field_name]                     # if response?
+      end
 
       case field_name
-      when "@method"    then @http["method"]
-      when "@authority" then @http["host"]
-      when "@path"      then @http["path"]
-      when "@status"    then @http["status"]
+      when "@method"    then @operation.request_method
+      when "@authority" then @operation.authority
+      when "@path"      then @operation.path_info
+      when "@status"    then @operation.status
       else # XXX: improve this and add support for all fields in the RFC
         raise Error.new "Unknown/unsupported field: \"#{field_name}\""
       end

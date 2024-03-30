@@ -17,35 +17,94 @@ Or just `gem install linzer`.
 ### To sign a HTTP message:
 
 ```ruby
-irb(main):001:0> key = Linzer.generate_ed25519_key
+key = Linzer.generate_ed25519_key
 # => #<Linzer::Ed25519::Key:0x00000fe13e9bd208
 
-message = Linzer::Message.new(headers: {"date" => "Fri, 23 Feb 2024 17:57:23 GMT", "x-custom-header" => "foo"})
-# => #<Linzer::Message:0x0000000111b592a0 @headers={"date"=>"Fri, 23 Feb 2024 17:57:23 GMT", ...
+headers = {
+  "date" => "Fri, 23 Feb 2024 17:57:23 GMT",
+  "x-custom-header" => "foo"
+}
 
-fields = %w[date x-custom-header]
+request = Linzer.new_request(:post, "/some_uri", {}, headers)
+# => #<Rack::Request:0x0000000104c1c8c0
+#       @env={"HTTP_DATE"=>"Fri, 23 Feb 2024 17:57:23 GMT", "HTTP_X_CUSTOM..."
+#       @params=nil>
+
+message = Linzer::Message.new(request)
+# => #<Linzer::Message:0x0000000104afa960
+#       @operation=#<Rack::Request:0x00000001049754a0
+#       @env={"HTTP_DATE"=>"Fri, 23 Feb 2024 17:57:23 GMT", "HTTP_X_CUSTOM..."
+#       @params=nil>>
+
+fields = %w[date x-custom-header @method @path]
+
 signature = Linzer.sign(key, message, fields)
 # => #<Linzer::Signature:0x0000000111f77ad0 ...
 
-puts signature.to_h
-{"signature"=>
-  "sig1=:8rLY3nFtezwwsK+sqZEMe7wzbNHojZJGEnvp3suKichgwH...",
- "signature-input"=>"sig1=(\"date\" \"x-custom-header\");created=1709075013;keyid=\"test-key-ed25519\""}
+pp signature.to_h
+# => {"signature"=>"sig1=:Cv1TUCxUpX+5SVa7pH0Xh...",
+#  "signature-input"=>"sig1=(\"date\" \"x-custom-header\" ..."}
+```
+
+### Use the message signature with any HTTP client:
+
+```ruby
+require "net/http"
+
+http = Net::HTTP.new("localhost", 9292)
+http.set_debug_output($stderr)
+response = http.post("/some_uri", "data", headers.merge(signature.to_h))
+# opening connection to localhost:9292...
+# opened
+# <- "POST /some_uri HTTP/1.1\r\n
+# <- Date: Fri, 23 Feb 2024 17:57:23 GMT\r\n
+# <- X-Custom-Header: foo\r\n
+# <- Signature: sig1=:Cv1TUCxUpX+5SVa7pH0X...
+# <- Signature-Input: sig1=(\"date\" \"x-custom-header\" \"@method\"...
+# <- Accept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\n
+# <- Accept: */*\r\n
+# <- User-Agent: Ruby\r\n
+# <- Connection: close\r\n
+# <- Host: localhost:9292
+# <- Content-Length: 4\r\n
+# <- Content-Type: application/x-www-form-urlencoded\r\n\r\n"
+# <- "data"
+#
+# -> "HTTP/1.1 200 OK\r\n"
+# -> "Content-Type: text/html;charset=utf-8\r\n"
+# -> "Content-Length: 0\r\n"
+# -> "X-Xss-Protection: 1; mode=block\r\n"
+# -> "X-Content-Type-Options: nosniff\r\n"
+# -> "X-Frame-Options: SAMEORIGIN\r\n"
+# -> "Server: WEBrick/1.8.1 (Ruby/3.2.0/2022-12-25)\r\n"
+# -> "Date: Thu, 28 Mar 2024 17:19:21 GMT\r\n"
+# -> "Connection: close\r\n"
+# -> "\r\n"
+# reading 0 bytes...
+# -> ""
+# read 0 bytes
+# Conn close
+# => #<Net::HTTPOK 200 OK readbody=true>
 ```
 
 ### To verify a valid signature:
 
 ```ruby
+test_ed25519_key_pub = Base64.strict_encode64(key.material.verify_key.to_bytes)
+# => "EUra7KsJ8B/lSZJVhDaopMycmZ6T7KtJqKVNJTHKIw0="
+
 pubkey = Linzer.new_ed25519_public_key(test_ed25519_key_pub, "some-key-ed25519")
 # => #<Linzer::Ed25519::Key:0x00000fe19b9384b0
 
-headers = {"signature-input" => "...", signature => "...", "date" => "Fri, 23 Feb 2024 13:18:15 GMT", "x-custom-header" => "bar"})
+# if you have to, there is a helper method to build a request object on the server side
+# although any standard Ruby web server or framework (Sinatra, Rails, etc) should expose
+# a request object and this should not be required for most cases.
+#
+# request = Linzer.new_request(:post, "/some_uri", {}, headers)
 
-message = Linzer::Message.new(headers)
-# => #<Linzer::Message:0x0000000111b592a0 @headers={"date"=>"Fri, 23 Feb 2024 13:18:15 GMT", ...
+message = Linzer::Message.new(request)
 
-signature = Linzer::Signature.build(headers)
-# => #<Linzer::Signature:0x0000000112396008 ...
+signature = Linzer::Signature.build(message.headers)
 
 Linzer.verify(pubkey, message, signature)
 # => true
@@ -55,10 +114,35 @@ Linzer.verify(pubkey, message, signature)
 
 ```ruby
 result = Linzer.verify(pubkey, message, signature)
-lib/linzer/verifier.rb:34:in `verify_or_fail': Failed to verify message: Invalid signature. (Linzer::Error)
+lib/linzer/verifier.rb:38:in `verify_or_fail': Failed to verify message: Invalid signature. (Linzer::Error)
 ```
 
-For now, to consult additional details, just take a look at source code and/or the unit tests.
+### HTTP responses are also supported
+
+HTTP responses can also be signed and verified in the same way as requests.
+
+```ruby
+headers = {
+  "date" => "Sat, 30 Mar 2024 21:40:13 GMT",
+  "x-response-custom" => "bar"
+}
+
+response = Linzer.new_response("request body", 200, headers)
+# or just use the response object exposed by your HTTP framework
+
+message = Linzer::Message.new(response)
+fields  = %w[@status date x-response-custom]
+
+signature = Linzer.sign(key, message, fields)
+
+pp signature.to_h
+# => {"signature"=>
+#   "sig1=:tCldwXqbISktyABrmbhszo...",
+#  "signature-input"=>"sig1=(\"@status\" \"date\" ..."}
+
+```
+
+For now, to consult additional details just take a look at source code and/or the unit tests.
 
 Please note that is still early days and extensive testing is still ongoing. For now only the following algorithms are supported: RSASSA-PSS using SHA-512, HMAC-SHA256, Ed25519 and ECDSA (P-256 and P-384 curves).
 

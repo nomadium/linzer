@@ -1,5 +1,13 @@
 ## [Unreleased]
 
+## [0.5.0] - 2024-03-30
+
+- Build Linzer::Message instances from Rack request and response objects
+  instead of unspecified/ad-hoc hashes with HTTP request and
+  response parameters.
+
+- Update README examples.
+
 ## [0.4.1] - 2024-03-25
 
 - Fix one-off error on ECDSA P-256 and P-384 curve signature generation.

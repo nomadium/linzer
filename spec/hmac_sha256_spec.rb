@@ -4,7 +4,11 @@ require "base64"
 
 RSpec.describe Linzer::Signer do
   context "with HMAC using SHA-256" do
-    let(:request_data) { Linzer::RFC9421::Examples.test_request_data }
+    let(:request) do
+      request_data = Linzer::RFC9421::Examples.test_request_data
+      path = request_data[:http]["path"]
+      Linzer.new_request(:post, path, {}, request_data[:headers])
+    end
 
     let(:test_shared_secret_key_material) do
       secret = Linzer::RFC9421::Examples.test_shared_secret
@@ -19,7 +23,7 @@ RSpec.describe Linzer::Signer do
 
       key = Linzer.new_hmac_sha256_key(test_shared_secret_key_material, key_id)
 
-      message    = Linzer::Message.new(request_data)
+      message    = Linzer::Message.new(request)
       components = %w[date @authority content-type]
       timestamp  = 1618884473
       label      = "sig-b25"
@@ -35,7 +39,11 @@ end
 
 RSpec.describe Linzer::Verifier do
   context "with HMAC using SHA-256" do
-    let(:request_data) { Linzer::RFC9421::Examples.test_request_data }
+    let(:request) do
+      request_data = Linzer::RFC9421::Examples.test_request_data
+      path = request_data[:http]["path"]
+      Linzer.new_request(:post, path, {}, request_data[:headers])
+    end
 
     let(:test_shared_secret_key_material) do
       secret = Linzer::RFC9421::Examples.test_shared_secret
@@ -46,7 +54,7 @@ RSpec.describe Linzer::Verifier do
 
     it "fails to verify an invalid signature" do
       key = Linzer.new_hmac_sha256_key(test_shared_secret_key_material, key_id)
-      message = Linzer::Message.new(request_data)
+      message = Linzer::Message.new(request)
 
       label      = "sig3"
       timestamp  = 1618884473
@@ -68,7 +76,7 @@ RSpec.describe Linzer::Verifier do
 
     it "verifies a valid signature" do
       key = Linzer.new_hmac_sha256_key(test_shared_secret_key_material, key_id)
-      message = Linzer::Message.new(request_data)
+      message = Linzer::Message.new(request)
 
       label      = "sig-b25"
       timestamp  = 1618884473

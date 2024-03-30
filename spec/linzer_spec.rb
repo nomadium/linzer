@@ -27,4 +27,22 @@ RSpec.describe Linzer do
 
     Linzer.sign(key, message, components, options)
   end
+
+  it "has a ::new_request method aliased to Linzer::Request::build" do
+    uri     = "/some_uri"
+    params  = {}
+    headers = {"foo" => "bar"}
+
+    expect(Linzer::Request).to receive(:build)
+      .with(:get, uri, params, headers)
+
+    Linzer.new_request(:get, uri, params, headers)
+  end
+
+  it "has a ::new_response method aliased to Rack::Response::initialize" do
+    expect(Rack::Response).to receive(:new)
+      .with(:body, :status, :headers)
+
+    Linzer.new_response(:body, :status, :headers)
+  end
 end
