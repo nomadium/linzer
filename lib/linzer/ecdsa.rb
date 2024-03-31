@@ -18,23 +18,25 @@ module Linzer
 
       private
 
+      DIGEST_PARAMS = {
+        "SHA256" => {hex_format: "%.64x", hex_length: 64},
+        "SHA384" => {hex_format: "%.96x", hex_length: 96}
+      }
+      private_constant :DIGEST_PARAMS
+
       def der_signature(sig)
         digest = @params[:digest]
         msg = "Cannot verify invalid signature."
+        raise Linzer::Error.new(msg) unless DIGEST_PARAMS.key?(digest)
+        digest_params = DIGEST_PARAMS[digest]
 
-        case digest
-        when "SHA256"
-          raise Linzer::Error.new(msg) if sig.length != 64
-          r_bn = OpenSSL::BN.new(sig[0..31].unpack1("H64").to_i(16))
-          s_bn = OpenSSL::BN.new(sig[32..63].unpack1("H64").to_i(16))
-        when "SHA384"
-          raise Linzer::Error.new(msg) if sig.length != 96
-          r_bn = OpenSSL::BN.new(sig[0..47].unpack1("H96").to_i(16))
-          s_bn = OpenSSL::BN.new(sig[48..95].unpack1("H96").to_i(16))
-        else
-          msg = "Cannot verify signature, unsupported digest algorithm: '%s'" % digest
-          raise Linzer::Error.new(msg)
-        end
+        l   = digest_params[:hex_length]
+        raise Linzer::Error.new(msg) if sig.length != l
+        h   = l / 2
+        fmt = "H#{l}"
+
+        r_bn = OpenSSL::BN.new(sig[0..(h - 1)].unpack1(fmt).to_i(16))
+        s_bn = OpenSSL::BN.new(sig[h..(l - 1)].unpack1(fmt).to_i(16))
 
         r = OpenSSL::ASN1::Integer(r_bn)
         s = OpenSSL::ASN1::Integer(s_bn)
@@ -46,17 +48,15 @@ module Linzer
       def decode_der_signature(der_sig)
         digest = @params[:digest]
         msg = "Unsupported digest algorithm: '%s'" % digest
+        raise Linzer::Error.new(msg) unless DIGEST_PARAMS.key?(digest)
+        digest_params = DIGEST_PARAMS[digest]
+        fmt = "H#{digest_params[:hex_length]}"
+
         OpenSSL::ASN1
           .decode(der_sig)
           .value
-          .map do |n|
-            case digest
-            when "SHA256" then "%.64x" % n.value
-            when "SHA384" then "%.96x" % n.value
-            else raise Linzer::Error.new(msg)
-            end
-          end
-          .map { |s| [s].pack("H#{s.length}") }
+          .map { |bn| digest_params[:hex_format] % bn.value }
+          .map { |hex| [hex].pack(fmt) }
           .reduce(:<<)
           .encode(Encoding::ASCII_8BIT)
       end
