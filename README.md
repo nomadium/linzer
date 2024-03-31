@@ -1,4 +1,11 @@
-# Linzer
+# Linzer [![Latest Version][gem-badge]][gem-link] [![License: MIT][license-image]][license-link] [![CI Status][ci-image]][ci-link]
+
+[gem-badge]: https://badge.fury.io/rb/linzer.svg
+[gem-link]: https://rubygems.org/gems/linzer
+[license-image]: https://img.shields.io/badge/license-MIT-blue.svg
+[license-link]: https://github.com/nomadium/linzer/blob/master/LICENSE.txt
+[ci-image]: https://github.com/nomadium/linzer/actions/workflows/main.yml/badge.svg?branch=master
+[ci-link]: https://github.com/nomadium/linzer/actions/workflows/main.yml
 
 Linzer is a Ruby library for [HTTP Message Signatures (RFC 9421)](https://www.rfc-editor.org/rfc/rfc9421.html).
 
