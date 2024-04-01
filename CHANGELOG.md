@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+## [0.5.2] - 2024-04-02
+
+- Make all unit tests pass on Ruby 3.0:
+  * Set minimum required version on openssl and uri gems.
+- Small refactor on ECDSA module.
+
 ## [0.5.1] - 2024-04-01
 
 - Add support for additional derived components:
