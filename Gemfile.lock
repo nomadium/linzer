@@ -5,6 +5,7 @@ PATH
       ed25519 (~> 1.3, >= 1.3.0)
       rack (~> 3.0)
       starry (~> 0.1)
+      uri (>= 0.12.0)
 
 GEM
   remote: https://rubygems.org/
@@ -69,6 +70,7 @@ GEM
       rubocop-performance (~> 1.20.2)
     starry (0.1.0)
     unicode-display_width (2.5.0)
+    uri (0.13.0)
 
 PLATFORMS
   arm64-darwin-21
