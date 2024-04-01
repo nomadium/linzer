@@ -43,6 +43,90 @@ RSpec.describe Linzer::Message do
       expect(message["@status"]).to eq(202)
     end
 
+    it "returns the full target URI for a request" do
+      server = "www.example.org"
+      scheme = "http"
+      path = "/target/example"
+      headers = {"Host" => server}
+      request = Linzer.new_request(:get, path, {}, headers)
+      request.env["rack.url_scheme"] = scheme
+      expected_target_uri = "#{scheme}://#{server}#{path}"
+      message = described_class.new(request)
+      expect(message["@target-uri"]).to eq(expected_target_uri)
+    end
+
+    it "returns the scheme of the target URI for a request" do
+      scheme = "https"
+      path = "/target/example2"
+      request = Linzer.new_request(:get, path, {}, {})
+      request.env["rack.url_scheme"] = scheme
+      message = described_class.new(request)
+      expect(message["@scheme"]).to eq(scheme)
+    end
+
+    it "returns the request target" do
+      path = "/path"
+      request = Linzer.new_request(:post, path, {}, {})
+      query_string = "param=value"
+      request.env["QUERY_STRING"] = query_string
+      message = described_class.new(request)
+      expected_target = "#{path}?#{query_string}"
+      expect(message["@request-target"]).to eq(expected_target)
+    end
+
+    it "returns the query portion of the target URI for a request, example 1" do
+      path = "/path"
+      request = Linzer.new_request(:get, path, {}, {})
+      query_string = "param=value&foo=bar&baz=bat%2Dman"
+      request.env["QUERY_STRING"] = query_string
+      message = described_class.new(request)
+      expected_query = "?#{query_string}"
+      expect(message["@query"]).to eq(expected_query)
+    end
+
+    it "returns the query portion of the target URI for a request, example 2" do
+      path = "/path"
+      request = Linzer.new_request(:get, path, {}, {})
+      query_string = "queryString"
+      request.env["QUERY_STRING"] = query_string
+      message = described_class.new(request)
+      expected_query = "?#{query_string}"
+      expect(message["@query"]).to eq(expected_query)
+    end
+
+    it "returns the query portion of the target URI for a request, example 3" do
+      path = "/path"
+      request = Linzer.new_request(:get, path, {}, {})
+      message = described_class.new(request)
+      expected_query = "?"
+      expect(message["@query"]).to eq(expected_query)
+    end
+
+    it "returns query parameter of the request target URI" do
+      path = "/path"
+      query_string = "param=value&foo=bar&baz=batman&qux="
+      request = Linzer.new_request(:get, path, {}, {})
+      request.env["QUERY_STRING"] = query_string
+      message = described_class.new(request)
+      expect(message["@query-param;name=\"baz\""]).to    eq("batman")
+      expect(message["@query-param;name=\"qux\""]).to    eq("")
+      expect(message["@query-param;name=\"param\""]).to  eq("value")
+    end
+
+    it "returns parsed and encoded query parameter of the request target URI" do
+      path = "/parameters"
+      query_string = "var=this%20is%20a%20big%0Amultiline%20value&bar=with+plus+whitespace&fa%C3%A7ade%22%3A%20=something"
+      request = Linzer.new_request(:get, path, {}, {})
+      request.env["QUERY_STRING"] = query_string
+      message = described_class.new(request)
+      expected_var_value    = "this%20is%20a%20big%0Amultiline%20value"
+      expected_bar_value    = "with%20plus%20whitespace"
+      expected_facade_value = "something"
+      expect(message["@query-param;name=\"var\""]).to eq(expected_var_value)
+      expect(message["@query-param;name=\"bar\""]).to eq(expected_bar_value)
+      expect(message["@query-param;name=\"fa%C3%A7ade%22%3A%20\""]).to eq(expected_facade_value)
+    end
+
     it "returns null on undefined field on request" do
       request = Linzer.new_request(:put, "/bar", {}, {"x-foo" => "baz"})
       message = described_class.new(request)

@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+## [0.5.1] - 2024-04-01
+
+- Add support for additional derived components:
+  @target-uri, @scheme, @request-target, @query and @query-param.
+
 ## [0.5.0] - 2024-03-30
 
 - Build Linzer::Message instances from Rack request and response objects
