@@ -19,3 +19,5 @@ if Linzer.ruby_dev?
   gem "starry", github: "nomadium/starry",
                 branch: "add-base64-gem-to-dependencies"
 end
+
+gem "simplecov", require: false, group: :test
