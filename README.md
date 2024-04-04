@@ -159,6 +159,9 @@ Please note that is still early days and extensive testing is still ongoing. For
 I'll be expanding the library to cover more functionality specified in the RFC
 in subsequent releases.
 
+## Ruby version compatibility
+
+linzer is built in [Continuous Integration](https://github.com/nomadium/linzer/actions/workflows/main.yml) on Ruby 3.0+.
 
 ## Development
 
