@@ -20,6 +20,11 @@ RSpec.describe Linzer::Verifier do
       .to raise_error(Linzer::Error, /Signature.+cannot be null/)
   end
 
+  it "cannot verify with an unexpected or invalid signature object" do
+    expect { described_class.verify(:key, :message, :signature) }
+      .to raise_error(Linzer::Error, /Signature is invalid/)
+  end
+
   it "cannot verify a message with a missing component" do
     missing_component = "missing-component"
     signature_with_missing_component = {

@@ -1,5 +1,14 @@
 # frozen_string_literal: true
 
+RSpec.describe Linzer do
+  context "with ECDSA using Curve P-256 and SHA-256" do
+    it "creates a HMAC SHA256 key" do
+      key = Linzer.generate_ecdsa_p256_sha256_key
+      expect(key.sign("data").to_str.bytes.length).to eq(64)
+    end
+  end
+end
+
 RSpec.describe Linzer::Signer do
   context "with ECDSA using Curve P-256 and SHA-256" do
     let(:response) do

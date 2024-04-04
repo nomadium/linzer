@@ -2,6 +2,16 @@
 
 require "base64"
 
+RSpec.describe Linzer do
+  context "with HMAC using SHA256" do
+    it "creates a HMAC SHA256 key" do
+      key = Linzer.generate_hmac_sha256_key
+      expect(key.material.to_str.bytes.length).to     eq(64)
+      expect(key.sign("data").to_str.bytes.length).to eq(32)
+    end
+  end
+end
+
 RSpec.describe Linzer::Signer do
   context "with HMAC using SHA-256" do
     let(:request) do

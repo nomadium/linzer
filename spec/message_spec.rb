@@ -127,6 +127,12 @@ RSpec.describe Linzer::Message do
       expect(message["@query-param;name=\"fa%C3%A7ade%22%3A%20\""]).to eq(expected_facade_value)
     end
 
+    it "returns null on invalid field on request" do
+      request = Linzer.new_request(:put, "/bar", {}, {"x-foo" => "baz"})
+      message = described_class.new(request)
+      expect(message["@query-param;name=%20"]).to eq(nil)
+    end
+
     it "returns null on undefined field on request" do
       request = Linzer.new_request(:put, "/bar", {}, {"x-foo" => "baz"})
       message = described_class.new(request)

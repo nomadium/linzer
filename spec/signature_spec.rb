@@ -28,13 +28,22 @@ RSpec.describe Linzer::Signature do
       .to raise_error(Linzer::Error, /No "signature-input" header found/)
   end
 
-  it "cannot build signature from a message with invalid signature-input field" do
+  it "cannot build signature from invalid signature-input field" do
     headers = {
       "signature-input" => "...",
       "signature" => "sig1=:HIbjHC5rS0BYaa9v4QfD4193TORw7u9edguPh0AW3dMq9WImrlFrCGUDih47vAxi4L2YRZ3XMJc1uOKk/J0ZmZ+wcta4nKIgBkKq0rM9hs3CQyxXGxHLMCy8uqK488o+9jrptQ+xFPHK7a9sRL1IXNaagCNN3ZxJsYapFj+JXbmaI5rtAdSfSvzPuBCh+ARHBmWuNo1UzVVdHXrl8ePL4cccqlazIJdC4QEjrF+Sn4IxBQzTZsL9y9TP5FsZYzHvDqbInkTNigBcE9cKOYNFCn4D/WM7F6TNuZO9EgtzepLWcjTymlHzK7aXq6Am6sfOrpIC49yXjj3ae6HRalVc/g==:"
     }
     expect { described_class.build(headers) }
       .to raise_error(Linzer::Error, /Cannot parse .+signature-input.+ field/)
+  end
+
+  it "cannot build signature from unexpected signature-input field" do
+    headers = {
+      "signature-input" => "sig1=\"foo\"",
+      "signature" => "sig1=:HIbjHC5rS0BYaa9v4QfD4193TORw7u9edguPh0AW3dMq9WImrlFrCGUDih47vAxi4L2YRZ3XMJc1uOKk/J0ZmZ+wcta4nKIgBkKq0rM9hs3CQyxXGxHLMCy8uqK488o+9jrptQ+xFPHK7a9sRL1IXNaagCNN3ZxJsYapFj+JXbmaI5rtAdSfSvzPuBCh+ARHBmWuNo1UzVVdHXrl8ePL4cccqlazIJdC4QEjrF+Sn4IxBQzTZsL9y9TP5FsZYzHvDqbInkTNigBcE9cKOYNFCn4D/WM7F6TNuZO9EgtzepLWcjTymlHzK7aXq6Am6sfOrpIC49yXjj3ae6HRalVc/g==:"
+    }
+    expect { described_class.build(headers) }
+      .to raise_error(Linzer::Error, /Unexpected value for covered components/)
   end
 
   it "cannot build signature from a message with invalid signature field" do
