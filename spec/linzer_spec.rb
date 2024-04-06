@@ -7,7 +7,7 @@ RSpec.describe Linzer do
 
   it "has a ::verify method aliased to Linzer::Verifier::verify" do
     pubkey    = :some_key
-    message   = Linzer::Message.new(headers: {})
+    message   = Linzer::Message.new(Linzer.new_request(:get))
     signature = :some_signature
 
     expect(Linzer::Verifier).to receive(:verify)
@@ -41,8 +41,8 @@ RSpec.describe Linzer do
 
   it "has a ::new_response method aliased to Rack::Response::initialize" do
     expect(Rack::Response).to receive(:new)
-      .with(:body, :status, :headers)
+      .with(:body, :status, {})
 
-    Linzer.new_response(:body, :status, :headers)
+    Linzer.new_response(:body, :status, {})
   end
 end

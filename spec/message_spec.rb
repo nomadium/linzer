@@ -133,10 +133,99 @@ RSpec.describe Linzer::Message do
       expect(message["@query-param;name=%20"]).to eq(nil)
     end
 
+    it "returns null on not found query-param field on request" do
+      request = Linzer.new_request(:get, "/", {}, {"x-not-found" => "missing"})
+      message = described_class.new(request)
+      expect(message['@query-param;name="not_found"']).to eq(nil)
+    end
+
     it "returns null on undefined field on request" do
       request = Linzer.new_request(:put, "/bar", {}, {"x-foo" => "baz"})
       message = described_class.new(request)
       expect(message["x-not-in-message"]).to eq(nil)
+    end
+
+    context "HTTP component names with parameters" do
+      it "returns serialized component value" do
+        example_dictionary = " a=1,    b=2;x=1;y=2,   c=(a   b   c)"
+        serialized_dictionary = "a=1, b=2;x=1;y=2, c=(a b c)"
+        headers = {"Example-Dict" => example_dictionary, "X-Baz" => "bar"}
+        request = Linzer.new_request(:put, "/bar", {}, headers)
+        message = described_class.new(request)
+        expect(message["x-baz"]).to           eq("bar")
+        expect(message["example-dict"]).to    eq(example_dictionary.strip)
+        expect(message["example-dict;sf"]).to eq(serialized_dictionary)
+      end
+
+      it "returns a single member value from a dictionary structured field" do
+        example_dictionary = " a=1, b=2;x=1;y=2, c=(a   b    c), d"
+        headers = {"Example-Dict" => example_dictionary, "X-Foo" => "ok"}
+        request = Linzer.new_request(:post, "/foo", {}, headers)
+        message = described_class.new(request)
+        expect(message["x-foo"]).to eq("ok")
+        expect(message['example-dict;key="a"']).to eq("1")
+        expect(message['example-dict;key="d"']).to eq("?1")
+        expect(message['example-dict;key="b"']).to eq("2;x=1;y=2")
+        expect(message['example-dict;key="c"']).to eq("(a b c)")
+      end
+
+      it "returns field values encoded using byte sequence data structures" do
+        value_with_commas = "value, with, lots, of, commas"
+        encoded_value = ":dmFsdWUsIHdpdGgsIGxvdHMsIG9mLCBjb21tYXM=:"
+        headers = {"Example-Header" => value_with_commas}
+        request = Linzer.new_request(:get, "/something", {}, headers)
+        message = described_class.new(request)
+        expect(message["example-header;bs"]).to eq(encoded_value)
+      end
+
+      it "returns field value is from the trailers" do
+        headers = {"Trailer" => "Expires"}
+        body = ["Hello", "World"]
+        expire_date = "Wed, 9 Nov 2022 07:28:00 GMT"
+        def body.trailers
+          {"expires" => "Wed, 9 Nov 2022 07:28:00 GMT"}
+        end
+        response = Linzer.new_response(body, 200, headers)
+        message = described_class.new(response)
+        expect(message["@status"]).to    eq(200)
+        expect(message["trailer"]).to    eq("Expires")
+        expect(message["expires;tr"]).to eq(expire_date)
+      end
+
+      it "returns null on invalid field name" do
+        request = Linzer.new_request(:get, "/", {}, {})
+        message = described_class.new(request)
+        expect(message["%20"]).to eq(nil)
+      end
+
+      it "returns component value derived from the request" do
+        req_content_digest = "sha-512=:WZDPaVn/7XgHaAy8pmojAkGWoRx2UFChF41A2svX+TaPm+AbwAgBWnrIiYllu7BNNyealdVLvRwEmTHWXvJwew==:"
+        req_headers = {
+          "Host" => "example.com",
+          "Date" => "Tue, 20 Apr 2021 02:07:55 GMT",
+          "Content-Digest" => req_content_digest,
+          "Content-Type" => "application/json",
+          "Content-Length" => 18
+        }
+        request = Linzer.new_request(:post, "/foo", {}, req_headers)
+        query_string = "param=Value&Pet=dog"
+        request.env["QUERY_STRING"] = query_string
+
+        resp_headers = {
+          "Date"           => "Tue, 20 Apr 2021 02:07:56 GMT",
+          "Content-Type"   => "application/json",
+          "Content-Length" => 62,
+          "Content-Digest" => "sha-512=:0Y6iCBzGg5rZtoXS95Ijz03mslf6KAMCloESHObfwnHJDbkkWWQz6PhhU9kxsTbARtY2PTBOzq24uJFpHsMuAg==:"
+        }
+        body = '{"busy": true, "message": "Your call is very important to us"}'
+        response = Linzer.new_response(body, 503, resp_headers)
+
+        message = described_class.new(response, attached_request: request)
+        expect(message["@authority;req"]).to     eq("example.com")
+        expect(message["@method;req"]).to        eq("POST")
+        expect(message["@path;req"]).to          eq("/foo")
+        expect(message["content-digest;req"]).to eq(req_content_digest)
+      end
     end
   end
 

@@ -84,6 +84,7 @@ module Linzer
     def build_rack_env(headers)
       headers
         .to_hash
+        .transform_values(&:to_s)
         .transform_keys { |k| k.upcase.tr("-", "_") }
         .transform_keys do |k|
           %w[CONTENT_TYPE CONTENT_LENGTH].include?(k) ? k : "HTTP_#{k}"
