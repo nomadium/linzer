@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Linzer
-  VERSION = "0.5.2"
+  VERSION = "0.6.0"
 
   def self.ruby_dev?
     RUBY_ENGINE == "ruby" && RUBY_PATCHLEVEL == -1 && /\Aruby 3.[0-9].0dev/ =~ RUBY_DESCRIPTION

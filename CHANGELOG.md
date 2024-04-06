@@ -1,5 +1,13 @@
 ## [Unreleased]
 
+## [0.6.0] - 2024-04-06
+
+- Support parameters on HTTP field component identifiers.
+
+- Add a work-around for failed unit-tests in ruby HEAD CI jobs.
+
+- Set up simplecov and improve unit-tests coverage.
+
 ## [0.5.2] - 2024-04-02
 
 - Make all unit tests pass on Ruby 3.0:
