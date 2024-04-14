@@ -35,9 +35,9 @@ module Linzer
           .partition { |c| c.start_with?("@") }
           .flat_map
           .with_index do |group, idx|
-            group.map do |comp|
-              Starry.parse_item(idx.zero? ? comp[1..] : comp)
-            end.uniq { |comp| [comp.value, comp.parameters] }
+            group
+              .map  { |comp| Starry.parse_item(idx.zero? ? comp[1..] : comp) }
+              .uniq { |comp| [comp.value, comp.parameters] }
           end
 
       raise Error.new msg if components.count != uniq_components.count
