@@ -13,11 +13,8 @@ gem "rspec", "~> 3.0"
 
 gem "standard", "~> 1.3"
 
-# XXX: to-do: drop this when starry bug in ruby-dev is fixed (LoadError)
+# XXX: to-do: drop this when a new starry release happens including the fix for:
 # https://github.com/takemar/starry/pull/1
-if Linzer.ruby_dev?
-  gem "starry", github: "nomadium/starry",
-                branch: "add-base64-gem-to-dependencies"
-end
+gem "starry", github: "takemar/starry", ref: "4f25b56" if Linzer.ruby_dev?
 
 gem "simplecov", require: false, group: :test
