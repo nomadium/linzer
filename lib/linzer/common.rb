@@ -18,10 +18,29 @@ module Linzer
       if components.include?("@signature-params")
         raise Error.new "Invalid component in signature input"
       end
+
       msg = "Cannot verify signature. Missing component in message: %s"
-      components.each { |c| raise Error.new msg % "\"#{c}\"" unless message.field?(c)  }
+      components.each do |c|
+        raise Error.new msg % "\"#{c}\"" unless message.field?(c)
+      end
+
+      validate_uniqueness components
+    end
+
+    def validate_uniqueness(components)
       msg = "Invalid signature. Duplicated component in signature input."
-      raise Error.new msg if components.size != components.uniq.size
+
+      uniq_components =
+        components
+          .partition { |c| c.start_with?("@") }
+          .flat_map
+          .with_index do |group, idx|
+            group.map do |comp|
+              Starry.parse_item(idx.zero? ? comp[1..] : comp)
+            end.uniq { |comp| [comp.value, comp.parameters] }
+          end
+
+      raise Error.new msg if components.count != uniq_components.count
     end
   end
 end

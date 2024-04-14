@@ -38,13 +38,26 @@ RSpec.describe Linzer::Signer do
       .to raise_error(Linzer::Error, /[Mm]issing component in message/)
   end
 
-  it "cannot sign a message with a duplicated component" do
+  it "cannot sign a message with a duplicated component, example 1" do
     request_data = {headers: {"header1" => "foo", "header2" => 10}}
     path         = "/foo"
     request      = Linzer.new_request(:post, path, {}, request_data[:headers])
     message      = Linzer::Message.new(request)
 
     expect { described_class.sign(:key, message, %w[header1 header2 header2]) }
+      .to raise_error(Linzer::Error, /[dD]uplicated component/)
+  end
+
+  it "cannot sign a message with a duplicated component, example 2" do
+    example_dictionary = " a=1, b=2;x=1;y=2, c=(a   b    c), d"
+    request_headers = {"Header1" => "foo", "Header2" => example_dictionary}
+    request_data = {headers: request_headers}
+    path         = "/foo"
+    request      = Linzer.new_request(:post, path, {}, request_data[:headers])
+    response     = Linzer.new_response(nil, 200, {"Header3" => "three"})
+    message      = Linzer::Message.new(response, attached_request: request)
+
+    expect { described_class.sign(:key, message, %w[header3 header2;bs;req header2;req;bs]) }
       .to raise_error(Linzer::Error, /[dD]uplicated component/)
   end
 

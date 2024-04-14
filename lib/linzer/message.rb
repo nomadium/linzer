@@ -47,7 +47,6 @@ module Linzer
       return nil if name.nil?
 
       if field_name.start_with?("@")
-        return nil if name.parameters["tr"]
         retrieve(name, :derived)
       else
         retrieve(name, :field)
@@ -79,12 +78,47 @@ module Linzer
       nil
     end
 
+    def validate_parameters(name, method)
+      has_unknown = name.parameters.any? { |p, _| !KNOWN_PARAMETERS.include?(p) }
+      return nil if has_unknown
+
+      has_name = name.parameters["name"]
+      has_req  = name.parameters["req"]
+      has_sf   = name.parameters["sf"] || name.parameters.key?("key")
+      has_bs   = name.parameters["bs"]
+      value    = name.value
+
+      # Section 2.2.8 of RFC 9421
+      return nil if has_name && value != :"query-param"
+
+      # No derived values come from trailers section
+      return nil if method == :derived && name.parameters["tr"]
+
+      # From: 2.1. HTTP Fields:
+      # The bs parameter, which requires the raw bytes of the field values
+      # from the message, is not compatible with the use of the sf or key
+      # parameters, which require the parsed data structures of the field
+      # values after combination
+      return nil if has_sf && has_bs
+
+      # req param only makes sense on responses with an associated request
+      return nil if has_req && (!response? || !attached_request?)
+
+      name
+    end
+
+    KNOWN_PARAMETERS = %w[sf key bs req tr name]
+    private_constant :KNOWN_PARAMETERS
+
     def retrieve(name, method)
+      if !name.parameters.empty?
+        valid_params = validate_parameters(name, method)
+        return nil if !valid_params
+      end
+
       has_req = name.parameters["req"]
       has_sf  = name.parameters["sf"] || name.parameters.key?("key")
       has_bs  = name.parameters["bs"]
-
-      return nil if has_req && (!response? || !attached_request?)
 
       if has_req
         name.parameters.delete("req")
@@ -93,10 +127,13 @@ module Linzer
 
       value = send(method, name)
 
-      key = name.parameters["key"]
-      value = sf(value, key) if has_sf
-      value = bs(value)      if has_bs
-      value
+      case
+      when has_sf
+        key = name.parameters["key"]
+        sf(value, key)
+      when has_bs then bs(value)
+      else value
+      end
     end
 
     def derived(name)
@@ -128,7 +165,8 @@ module Linzer
     def derive(operation, method)
       return nil unless operation.respond_to?(method)
       value = operation.public_send(method)
-      return "?" + value if method == :query_string
+      return "?" + value    if method == :query_string
+      return value.downcase if %i[authority scheme].include?(method)
       value
     end
 
@@ -144,10 +182,12 @@ module Linzer
     def sf(value, key = nil)
       dict = Starry.parse_dictionary(value)
 
-      obj = dict[key] if key
-      return Starry.serialize(obj.is_a?(Starry::InnerList) ? [obj] : obj) if key
-
-      Starry.serialize(dict)
+      if key
+        obj = dict[key]
+        Starry.serialize(obj.is_a?(Starry::InnerList) ? [obj] : obj)
+      else
+        Starry.serialize(dict)
+      end
     end
 
     def bs(value)

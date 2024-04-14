@@ -226,6 +226,12 @@ RSpec.describe Linzer::Message do
         expect(message["@path;req"]).to          eq("/foo")
         expect(message["content-digest;req"]).to eq(req_content_digest)
       end
+
+      it "returns null on component name with unsupported parameter" do
+        request = Linzer.new_request(:get)
+        message = described_class.new(request)
+        expect(message["@method;wrong"]).to eq(nil)
+      end
     end
   end
 

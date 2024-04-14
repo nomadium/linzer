@@ -7,3 +7,4 @@ ignore:
     - Layout/ExtraSpacing
     - Layout/HashAlignment
     - Layout/ArgumentAlignment
+    - Style/EmptyCaseCondition
