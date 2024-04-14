@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+- Switch to pre-release starry version on ruby-head.
+- Add more validation checks on HTTP field component identifiers and parameters.
+
 ## [0.6.0] - 2024-04-06
 
 - Support parameters on HTTP field component identifiers.
