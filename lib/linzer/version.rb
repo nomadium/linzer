@@ -2,8 +2,4 @@
 
 module Linzer
   VERSION = "0.6.0"
-
-  def self.ruby_dev?
-    RUBY_ENGINE == "ruby" && RUBY_PATCHLEVEL == -1 && /\Aruby 3.[0-9].0dev/ =~ RUBY_DESCRIPTION
-  end
 end
