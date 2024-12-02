@@ -3,6 +3,8 @@
 require "simplecov"
 SimpleCov.start
 
+require "securerandom"
+
 require "linzer"
 require_relative "rfc9421_examples"
 

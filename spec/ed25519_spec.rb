@@ -1,26 +1,5 @@
 # frozen_string_literal: true
 
-def decode_asn1_blob_from_rfc_examples(key)
-  Linzer::RFC9421::Examples
-    .public_send(key)
-    .lines
-    .reject { |l| l.start_with?("-----") }
-    .shift
-    .chomp
-    .yield_self { |str| Base64.strict_decode64(str) }
-    .yield_self { |str| OpenSSL::ASN1.decode(str)   }
-end
-
-def load_ed25519_pubkey_from_rfc_examples
-  asn_seq = decode_asn1_blob_from_rfc_examples(:test_key_ed25519_pub)
-  asn_seq.value[1].value
-end
-
-def load_ed25519_private_key_from_rfc_examples
-  asn_seq = decode_asn1_blob_from_rfc_examples(:test_key_ed25519)
-  asn_seq.value[2].value[2..]
-end
-
 RSpec.describe Linzer::Signer do
   context "with Ed25519" do
     let(:request) do
@@ -29,31 +8,8 @@ RSpec.describe Linzer::Signer do
       Linzer.new_request(:post, path, {}, request_data[:headers])
     end
 
-    # B.1.4. Example Ed25519 Test Key
-    #
-    # -----BEGIN PUBLIC KEY-----
-    # MCowBQYDK2VwAyEAJrQLj5P/89iXES9+vFgrIy29clF9CC/oPPsw3c5D0bs=
-    # -----END PUBLIC KEY-----
-    #
-    # -----BEGIN PRIVATE KEY-----
-    # MC4CAQAwBQYDK2VwBCIEIJ+DYvh6SEqVTm50DFtMDoQikTmiCqirVv9mWG9qfSnF
-    # -----END PRIVATE KEY-----
-    #
-    # ed25519 ruby library works with raw byte strings, so you have
-    # to extract them from the PKCS #8 encoded file PEM format.
-    #
-    # XXX: should I write a helper method for that?
-    # XXX: if such a helper is needed, the helper method above
-    # XXX: decode_asn1_blob_from_rfc_examples can be used as starting point.
-    #
-    # $ openssl asn1parse -in private.pem -offset 14
-    #     0:d=0  hl=2 l=  32 prim: OCTET STRING      [HEX DUMP]:9F8362F87A484A954E6E740C5B4C0E84229139A20AA8AB56FF66586F6A7D29C5
-    #
-    # %w[9F8362F87A484A954E6E740C5B4C0E84229139A20AA8AB56FF66586F6A7D29C5].pack("H*")
-    # => "\x9F\x83b\xF8zHJ\x95Nnt\f[L\x0E\x84\"\x919\xA2\n\xA8\xABV\xFFfXoj})\xC5"
-    #
     let(:test_key_ed25519) do
-      load_ed25519_private_key_from_rfc_examples
+      Linzer::RFC9421::Examples.test_key_ed25519
     end
 
     let(:key_id) { "test-key-ed25519" }
@@ -77,8 +33,8 @@ RSpec.describe Linzer::Signer do
     end
 
     it "derives public key from private key" do
-      pubkey = key.material.verify_key.to_bytes
-      expect(pubkey).to eq(load_ed25519_pubkey_from_rfc_examples)
+      pubkey = key.material.public_to_pem
+      expect(pubkey).to eq(Linzer::RFC9421::Examples.test_key_ed25519_pub)
     end
   end
 end
@@ -91,22 +47,7 @@ RSpec.describe Linzer::Verifier do
       Linzer.new_request(:post, path, {}, request_data[:headers])
     end
 
-    # $ openssl pkey -pubin -inform pem -in public.pem -noout -text
-    # ED25519 Public-Key:
-    # pub:
-    #     26:b4:0b:8f:93:ff:f3:d8:97:11:2f:7e:bc:58:2b:
-    #     23:2d:bd:72:51:7d:08:2f:e8:3c:fb:30:dd:ce:43:
-    #     d1:bb
-    #
-    # %w[26B40B8F93FFF3D897112F7EBC582B232DBD72517D082FE83CFB30DDCE43D1BB].pack("H*")
-    # => "&\xB4\v\x8F\x93\xFF\xF3\xD8\x97\x11/~\xBCX+#-\xBDrQ}\b/\xE8<\xFB0\xDD\xCEC\xD1\xBB"
-    #
-    # public key can also be derived from private key object,
-    # as is shown above in the examples:
-    # key.material.verify_key.to_bytes
-    # => "&\xB4\v\x8F\x93\xFF\xF3\xD8\x97\x11/~\xBCX+#-\xBDrQ}\b/\xE8<\xFB0\xDD\xCEC\xD1\xBB"
-
-    let(:test_key_ed25519_pub) { load_ed25519_pubkey_from_rfc_examples }
+    let(:test_key_ed25519_pub) { Linzer::RFC9421::Examples.test_key_ed25519_pub }
 
     let(:key_id) { "test-key-ed25519" }
 

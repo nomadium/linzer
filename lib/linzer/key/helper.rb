@@ -33,18 +33,17 @@ module Linzer
       end
 
       def generate_ed25519_key(key_id = nil)
-        material = ::Ed25519::SigningKey.generate
+        material = OpenSSL::PKey.generate_key("ed25519")
         Linzer::Ed25519::Key.new(material, id: key_id)
       end
 
       def new_ed25519_key(material, key_id = nil)
-        key = ::Ed25519::SigningKey.new(material)
+        key = OpenSSL::PKey.read(material)
         Linzer::Ed25519::Key.new(key, id: key_id)
       end
 
       def new_ed25519_public_key(material, key_id = nil)
-        key = ::Ed25519::VerifyKey.new(material)
-        Linzer::Ed25519::Key.new(key, id: key_id)
+        new_ed25519_key(material, key_id)
       end
 
       # https://www.rfc-editor.org/rfc/rfc4492.html#appendix-A
