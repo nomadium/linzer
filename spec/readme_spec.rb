@@ -8,9 +8,8 @@ RSpec.describe "README usage" do
   let(:key) { Linzer.generate_ed25519_key }
 
   let(:pubkey) do
-    exported_pubkey = Base64.strict_encode64(key.material.verify_key.to_bytes)
-    raw_pubkey      = Base64.strict_decode64(exported_pubkey)
-    Linzer.new_ed25519_public_key(raw_pubkey, "some-key-ed25519")
+    exported_pubkey = key.material.public_to_pem
+    Linzer.new_ed25519_public_key(exported_pubkey, "some-key-ed25519")
   end
 
   describe "HTTP request examples" do

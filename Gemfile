@@ -11,6 +11,8 @@ gem "rake", "~> 13.0"
 
 gem "rspec", "~> 3.0"
 
+gem "securerandom"
+
 gem "standard", "~> 1.3"
 
 gem "simplecov", require: false, group: :test
