@@ -1,7 +1,12 @@
 ## [Unreleased]
 
-- Switch to pre-release starry version on ruby-head.
+## [0.6.1] - 2024-12-02
+
 - Add more validation checks on HTTP field component identifiers and parameters.
+
+- Relax rack version requirements.
+
+- Update uri dependency to the latest version.
 
 ## [0.6.0] - 2024-04-06
 
