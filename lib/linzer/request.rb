@@ -11,7 +11,8 @@ module Linzer
       request_method = Rack.const_get(verb.upcase)
       args = {
         "REQUEST_METHOD" => request_method,
-        "PATH_INFO"      => uri.to_str
+        "PATH_INFO"      => uri.to_str,
+        "rack.input"     => StringIO.new
       }
 
       Rack::Request.new(build_rack_env(headers).merge(args))
