@@ -32,6 +32,6 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency "openssl", "~> 3.0", ">= 3.0.0"
   spec.add_runtime_dependency "ed25519", "~> 1.3", ">= 1.3.0"
   spec.add_runtime_dependency "starry", "~> 0.2"
-  spec.add_runtime_dependency "rack", "~> 3.0"
+  spec.add_runtime_dependency "rack", ">= 2.2", "< 4.0"
   spec.add_runtime_dependency "uri", "~> 0.12", ">= 0.12.0"
 end
