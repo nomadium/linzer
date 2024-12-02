@@ -97,13 +97,10 @@ response = http.post("/some_uri", "data", headers.merge(signature.to_h))
 ### To verify a valid signature:
 
 ```ruby
-test_ed25519_key_pub = Base64.strict_encode64(key.material.verify_key.to_bytes)
-# => "EUra7KsJ8B/lSZJVhDaopMycmZ6T7KtJqKVNJTHKIw0="
+test_ed25519_key_pub = key.material.public_to_pem
+# => "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAK1ZrC4JqC356pRsUiLVJdFZ3dAjo909VfWs1li33MCQ=\n-----END PUBLIC KEY-----\n"
 
-raw_pubkey = Base64.strict_decode64(test_ed25519_key_pub)
-# => "\xB1rM\xFFR\x1F\xDDw\x00\x89\..."
-
-pubkey = Linzer.new_ed25519_public_key(raw_pubkey, "some-key-ed25519")
+pubkey = Linzer.new_ed25519_public_key(test_ed25519_key_pub, "some-key-ed25519")
 # => #<Linzer::Ed25519::Key:0x00000fe19b9384b0
 
 # if you have to, there is a helper method to build a request object on the server side
