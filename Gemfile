@@ -11,7 +11,7 @@ gem "rake", "~> 13.0"
 
 gem "rspec", "~> 3.0"
 
-gem "securerandom"
+gem "securerandom", "~> 0.3.2" # securerandom-0.4.0 requires ruby >= 3.1.0
 
 gem "standard", "~> 1.3"
 
