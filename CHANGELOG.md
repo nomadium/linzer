@@ -6,6 +6,8 @@
   [#5](https://github.com/nomadium/linzer/pull/5) by
   [oneiros](https://github.com/oneiros).
 
+- Run unit tests against Ruby 3.4.
+
 ## [0.6.1] - 2024-12-02
 
 - Add more validation checks on HTTP field component identifiers and parameters.
