@@ -1,12 +1,22 @@
 ## [Unreleased]
 
+## [0.6.2] - 2024-12-10
+
+- Remove dependency on ed25519 gem. Pull request
+  [#5](https://github.com/nomadium/linzer/pull/5) by
+  [oneiros](https://github.com/oneiros).
+
 ## [0.6.1] - 2024-12-02
 
 - Add more validation checks on HTTP field component identifiers and parameters.
 
-- Relax rack version requirements.
+- Relax rack version requirements. Pull request
+  [#4](https://github.com/nomadium/linzer/pull/4) by
+  [oneiros](https://github.com/oneiros).
 
-- Update uri dependency to the latest version.
+- Update uri dependency to the latest version. Pull request
+  [#3](https://github.com/nomadium/linzer/pull/3) by
+  [oneiros](https://github.com/oneiros).
 
 ## [0.6.0] - 2024-04-06
 
