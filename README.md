@@ -117,6 +117,15 @@ Linzer.verify(pubkey, message, signature)
 # => true
 ```
 
+To mitigate the risk of "replay attacks" (i.e. an attacker capturing a message with a valid signature and re-sending it at a later point) applications may want to validate the `created` parameter of the signature. Linzer can do this automatically when given the optional `no_older_than` keyword argument:
+
+```ruby
+Linzer.verify(pubkey, message, signature, no_older_than: 500)
+```
+
+`no_older_than` expects a number of seconds, but you can pass anything that to responds to `#to_i`, including an `ActiveSupport::Duration`.
+`::verify` will raise if the `created` parameter of the signature is older than the given number of seconds.
+
 ### What if an invalid signature if verified?
 
 ```ruby

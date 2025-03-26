@@ -32,8 +32,8 @@ module Linzer
       Linzer::Request.build(verb, uri, params, headers)
     end
 
-    def verify(pubkey, message, signature)
-      Linzer::Verifier.verify(pubkey, message, signature)
+    def verify(pubkey, message, signature, no_older_than: nil)
+      Linzer::Verifier.verify(pubkey, message, signature, no_older_than: no_older_than)
     end
 
     def sign(key, message, components, options = {})

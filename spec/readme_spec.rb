@@ -41,6 +41,14 @@ RSpec.describe "README usage" do
       expect(Linzer.verify(pubkey, message, valid_signature)).to eq(true)
     end
 
+    it "allows validating the `created` parameter" do
+      signed_headers   = headers.merge(signature.to_h)
+      valid_signature  = Linzer::Signature.build(signed_headers)
+      p valid_signature.parameters
+
+      expect(Linzer.verify(pubkey, message, valid_signature, no_older_than: 300)).to eq(true)
+    end
+
     it "cannot verify an invalid signature" do
       random_signature = build_random_signature("sig1")
       signed_headers   = signature.to_h.merge({"signature" => random_signature})
