@@ -5,11 +5,15 @@ module Linzer
     class << self
       include Common
 
-      def verify(key, message, signature)
+      def verify(key, message, signature, no_older_than: nil)
         validate message, key, signature
 
         parameters = signature.parameters
         components = signature.components
+
+        if no_older_than && (Time.now.to_i - parameters["created"]) > no_older_than.to_i
+          raise Error.new "Signature created more than #{no_older_than} seconds ago"
+        end
 
         signature_base = signature_base(message, components, parameters)
 

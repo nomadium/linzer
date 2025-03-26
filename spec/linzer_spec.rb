@@ -11,7 +11,7 @@ RSpec.describe Linzer do
     signature = :some_signature
 
     expect(Linzer::Verifier).to receive(:verify)
-      .with(pubkey, message, signature)
+      .with(pubkey, message, signature, no_older_than: nil)
 
     Linzer.verify(pubkey, message, signature)
   end

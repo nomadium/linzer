@@ -142,4 +142,38 @@ RSpec.describe Linzer::Verifier do
 
     expect(described_class.verify(pubkey, message, signature)).to eq(true)
   end
+
+  context "when passing the `no_older_than` parameter" do
+    let(:test_request_data) do
+      valid_signature = {
+        "signature-input" => "sig1=(\"@method\" \"@authority\" \"@path\" \"content-digest\" \"content-length\" \"content-type\");created=1618884473;keyid=\"test-key-rsa-pss\"",
+        "signature" => "sig1=:HIbjHC5rS0BYaa9v4QfD4193TORw7u9edguPh0AW3dMq9WImrlFrCGUDih47vAxi4L2YRZ3XMJc1uOKk/J0ZmZ+wcta4nKIgBkKq0rM9hs3CQyxXGxHLMCy8uqK488o+9jrptQ+xFPHK7a9sRL1IXNaagCNN3ZxJsYapFj+JXbmaI5rtAdSfSvzPuBCh+ARHBmWuNo1UzVVdHXrl8ePL4cccqlazIJdC4QEjrF+Sn4IxBQzTZsL9y9TP5FsZYzHvDqbInkTNigBcE9cKOYNFCn4D/WM7F6TNuZO9EgtzepLWcjTymlHzK7aXq6Am6sfOrpIC49yXjj3ae6HRalVc/g==:"
+      }
+      test_request_data = request_data.dup
+      test_request_data[:headers].merge!(valid_signature)
+      test_request_data
+    end
+
+    let(:message) do
+      path = test_request_data[:http]["path"]
+      request = Linzer.new_request(:post, path, {}, test_request_data[:headers])
+      Linzer::Message.new(request)
+    end
+    let(:pubkey) do
+      Linzer.new_rsa_pss_sha512_public_key(OpenSSL::PKey::RSA.new(test_key_rsa_pss_pub), "test-key-rsa-pss")
+    end
+    let(:signature) do
+      Linzer::Signature.build(test_request_data[:headers])
+    end
+
+    it "verifies `created` and passes when it is not too old" do
+      age = Time.now.to_i - 1618884472
+      expect(described_class.verify(pubkey, message, signature, no_older_than: age)).to eq true
+    end
+
+    it "verifies `created` and fails when it is too old" do
+      expect { described_class.verify(pubkey, message, signature, no_older_than: 300) }
+        .to raise_error(Linzer::Error, /Signature created more than 300 seconds ago/)
+    end
+  end
 end
