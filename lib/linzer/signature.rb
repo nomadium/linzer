@@ -31,11 +31,11 @@ module Linzer
         headers.transform_keys!(&:downcase)
         validate headers
 
-        input = parse_field(headers, "signature-input")
+        input = parse_structured_field(headers, "signature-input")
         reject_multiple_signatures if input.size > 1 && options[:label].nil?
         label = options[:label] || input.keys.first
 
-        signature = parse_field(headers, "signature")
+        signature = parse_structured_field(headers, "signature")
         fail_with_signature_not_found label unless signature.key?(label)
 
         raw_signature =
@@ -44,8 +44,7 @@ module Linzer
 
         fail_due_invalid_components unless input[label].value.respond_to?(:each)
 
-        ascii = Encoding::US_ASCII
-        components = input[label].value.map { |c| c.value.encode(ascii) }
+        components = input[label].value.map(&:value)
         parameters = input[label].parameters
 
         new(components, raw_signature, label, parameters)
@@ -75,8 +74,11 @@ module Linzer
         raise Error.new "Unexpected value for covered components."
       end
 
-      def parse_field(hsh, field_name)
-        Message.parse_structured_dictionary(hsh[field_name], field_name)
+      def parse_structured_field(hsh, field_name)
+        # Serialized Structured Field values for HTTP are ASCII strings.
+        # See: RFC 8941 (https://datatracker.ietf.org/doc/html/rfc8941)
+        value = hsh[field_name].encode(Encoding::US_ASCII)
+        Message.parse_structured_dictionary(value, field_name)
       end
     end
   end
