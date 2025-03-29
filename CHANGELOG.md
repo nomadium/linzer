@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+## [0.6.3] - 2025-03-29
+
+- Parse signature structured fields values as ASCII string.
+
 ## [0.6.2] - 2024-12-10
 
 - Remove dependency on ed25519 gem. Pull request
