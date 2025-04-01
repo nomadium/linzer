@@ -14,6 +14,15 @@ module Linzer
     alias_method :components, :metadata
     alias_method :bytes, :value
 
+    def created
+      parameters["created"]
+    end
+
+    def older_than?(seconds)
+      raise Error.new "Signature is missing the `created` parameter" if created.nil?
+      (Time.now.to_i - created) > seconds
+    end
+
     def to_h
       {
         "signature" => Starry.serialize({label => value}),

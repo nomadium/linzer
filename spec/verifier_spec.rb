@@ -145,10 +145,6 @@ RSpec.describe Linzer::Verifier do
 
   context "when passing the `no_older_than` parameter" do
     let(:test_request_data) do
-      valid_signature = {
-        "signature-input" => "sig1=(\"@method\" \"@authority\" \"@path\" \"content-digest\" \"content-length\" \"content-type\");created=1618884473;keyid=\"test-key-rsa-pss\"",
-        "signature" => "sig1=:HIbjHC5rS0BYaa9v4QfD4193TORw7u9edguPh0AW3dMq9WImrlFrCGUDih47vAxi4L2YRZ3XMJc1uOKk/J0ZmZ+wcta4nKIgBkKq0rM9hs3CQyxXGxHLMCy8uqK488o+9jrptQ+xFPHK7a9sRL1IXNaagCNN3ZxJsYapFj+JXbmaI5rtAdSfSvzPuBCh+ARHBmWuNo1UzVVdHXrl8ePL4cccqlazIJdC4QEjrF+Sn4IxBQzTZsL9y9TP5FsZYzHvDqbInkTNigBcE9cKOYNFCn4D/WM7F6TNuZO9EgtzepLWcjTymlHzK7aXq6Am6sfOrpIC49yXjj3ae6HRalVc/g==:"
-      }
       test_request_data = request_data.dup
       test_request_data[:headers].merge!(valid_signature)
       test_request_data
@@ -166,14 +162,37 @@ RSpec.describe Linzer::Verifier do
       Linzer::Signature.build(test_request_data[:headers])
     end
 
-    it "verifies `created` and passes when it is not too old" do
-      age = Time.now.to_i - 1618884472
-      expect(described_class.verify(pubkey, message, signature, no_older_than: age)).to eq true
+    context "when `created` is present" do
+      let(:valid_signature) do
+        {
+          "signature-input" => "sig1=(\"@method\" \"@authority\" \"@path\" \"content-digest\" \"content-length\" \"content-type\");created=1618884473;keyid=\"test-key-rsa-pss\"",
+          "signature" => "sig1=:HIbjHC5rS0BYaa9v4QfD4193TORw7u9edguPh0AW3dMq9WImrlFrCGUDih47vAxi4L2YRZ3XMJc1uOKk/J0ZmZ+wcta4nKIgBkKq0rM9hs3CQyxXGxHLMCy8uqK488o+9jrptQ+xFPHK7a9sRL1IXNaagCNN3ZxJsYapFj+JXbmaI5rtAdSfSvzPuBCh+ARHBmWuNo1UzVVdHXrl8ePL4cccqlazIJdC4QEjrF+Sn4IxBQzTZsL9y9TP5FsZYzHvDqbInkTNigBcE9cKOYNFCn4D/WM7F6TNuZO9EgtzepLWcjTymlHzK7aXq6Am6sfOrpIC49yXjj3ae6HRalVc/g==:"
+        }
+      end
+
+      it "verifies `created` and passes when it is not too old" do
+        age = Time.now.to_i - 1618884472
+        expect(described_class.verify(pubkey, message, signature, no_older_than: age)).to eq true
+      end
+
+      it "verifies `created` and fails when it is too old" do
+        expect { described_class.verify(pubkey, message, signature, no_older_than: 300) }
+          .to raise_error(Linzer::Error, /Signature created more than 300 seconds ago/)
+      end
     end
 
-    it "verifies `created` and fails when it is too old" do
-      expect { described_class.verify(pubkey, message, signature, no_older_than: 300) }
-        .to raise_error(Linzer::Error, /Signature created more than 300 seconds ago/)
+    context "when `created` is missing" do
+      let(:valid_signature) do
+        {
+          "signature-input" => "sig1=(\"@method\" \"@authority\" \"@path\" \"content-digest\" \"content-length\" \"content-type\");keyid=\"test-key-rsa-pss\"",
+          "signature" => "sig1=:gUpR6HipAmj9/6XWb6/HRFkaZ9Su28KctBgK0z31XpqAz9WIKRPQGJ7p6u1mNo+NxfO1FG7e9hCoo+R4zZF+ExstI2mQKyhFeDi9Q3F9pyVlU0Z/AFdPJgBbFg2EmE8QQf/99pNPQFBrpl1ceTO1s8BEVPpodgV/7s9mIMXwAv+WG2kKq9lSKJzGYHe4mC8wlsfp35Vn/kdcmCr5EwFJ5z5Rh4EcluU+p5lJVwGZaKBpGxBWal5jtEEABfczEWJfnCf6g4XdR4aRl2qP/hiodQE80gAk9GBN08ra2PqckagBTr5VaJji3LmJRM8cpj6YSLJhsNqYWhdq2bKyYJ2aAA==:"
+        }
+      end
+
+      it "fails verification" do
+        expect { described_class.verify(pubkey, message, signature, no_older_than: 300) }
+          .to raise_error(Linzer::Error, /Signature is missing the `created` parameter/)
+      end
     end
   end
 end
