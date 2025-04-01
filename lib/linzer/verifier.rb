@@ -6,14 +6,10 @@ module Linzer
       include Common
 
       def verify(key, message, signature, no_older_than: nil)
-        validate message, key, signature
+        validate message, key, signature, no_older_than: no_older_than
 
         parameters = signature.parameters
         components = signature.components
-
-        if no_older_than && (Time.now.to_i - parameters["created"]) > no_older_than.to_i
-          raise Error.new "Signature created more than #{no_older_than} seconds ago"
-        end
 
         signature_base = signature_base(message, components, parameters)
 
@@ -22,7 +18,7 @@ module Linzer
 
       private
 
-      def validate(message, key, signature)
+      def validate(message, key, signature, no_older_than: nil)
         raise Error.new "Message to verify cannot be null"       if message.nil?
         raise Error.new "Key to verify signature cannot be null" if key.nil?
         raise Error.new "Signature to verify cannot be null"     if signature.nil?
@@ -35,6 +31,9 @@ module Linzer
         raise Error.new "Components cannot be null"             if signature.components.nil?
 
         validate_components message, signature.components
+
+        return unless no_older_than
+        raise Error.new "Signature created more than #{no_older_than} seconds ago" if signature.older_than?(no_older_than.to_i)
       end
 
       def verify_or_fail(key, signature, data)
