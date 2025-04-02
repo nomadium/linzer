@@ -21,6 +21,24 @@ Or just `gem install linzer`.
 
 ## Usage
 
+### TL;DR: I just want to protect my application!!
+
+Add the following middleware to you run Rack application, e.g.:
+
+```ruby
+# config.ru
+use Rack::Auth::Signature, except: "/login",
+  default_key: {key: IO.read("app/config/pubkey.pem"), alg: "ed25519"}
+```
+
+And that's it, all routes in the example app (except `/login`) above will
+require a valid signature created with the respective private key held by a
+client. For more details on what configuration options are available, take a
+look at
+[lib/rack/auth/signature.rb](https://github.com/nomadium/linzer/tree/introduce-rack-middleware/lib/rack/auth/signature.rb) file.
+
+To learn about more specific scenarios or use cases, keep reading on below.
+
 ### To sign a HTTP message:
 
 ```ruby

@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+- Introduce Rack::Auth::Signature middleware.
+
 ## [0.6.5] - 2025-04-09
 
 - Add support for RSA (RSASSA-PKCS1-V1_5) and improve RSASSA-PSS handling.
