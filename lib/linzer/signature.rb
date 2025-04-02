@@ -15,7 +15,10 @@ module Linzer
     alias_method :bytes, :value
 
     def created
-      parameters["created"]
+      Integer(parameters["created"])
+    rescue
+      return nil if parameters["created"].nil?
+      raise Error.new "Signature has a non-integer `created` parameter"
     end
 
     def older_than?(seconds)

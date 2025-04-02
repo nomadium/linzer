@@ -181,6 +181,20 @@ RSpec.describe Linzer::Verifier do
       end
     end
 
+    context "when `created` is present but invalid" do
+      let(:valid_signature) do
+        {
+          "signature-input" => "sig1=(\"@method\" \"@authority\" \"@path\" \"content-digest\" \"content-length\" \"content-type\");created=\"something\";keyid=\"test-key-rsa-pss\"",
+          "signature" => "sig1=:HIbjHC5rS0BYaa9v4QfD4193TORw7u9edguPh0AW3dMq9WImrlFrCGUDih47vAxi4L2YRZ3XMJc1uOKk/J0ZmZ+wcta4nKIgBkKq0rM9hs3CQyxXGxHLMCy8uqK488o+9jrptQ+xFPHK7a9sRL1IXNaagCNN3ZxJsYapFj+JXbmaI5rtAdSfSvzPuBCh+ARHBmWuNo1UzVVdHXrl8ePL4cccqlazIJdC4QEjrF+Sn4IxBQzTZsL9y9TP5FsZYzHvDqbInkTNigBcE9cKOYNFCn4D/WM7F6TNuZO9EgtzepLWcjTymlHzK7aXq6Am6sfOrpIC49yXjj3ae6HRalVc/g==:"
+        }
+      end
+
+      it "fails verification" do
+        expect { described_class.verify(pubkey, message, signature, no_older_than: 300) }
+          .to raise_error(Linzer::Error, /non-integer/)
+      end
+    end
+
     context "when `created` is missing" do
       let(:valid_signature) do
         {
