@@ -8,3 +8,4 @@ ignore:
     - Layout/HashAlignment
     - Layout/ArgumentAlignment
     - Style/EmptyCaseCondition
+    - Style/RescueModifier
