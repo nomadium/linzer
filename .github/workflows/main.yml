@@ -23,6 +23,7 @@ jobs:
           - '3.3'
           - '3.4'
           - head
+          - jruby-head
 
     steps:
     - uses: actions/checkout@v4
