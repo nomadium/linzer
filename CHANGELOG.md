@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+## [0.6.4] - 2025-04-04
+
+- Allow validating the `created` parameter to mitigate the
+  risk of replay attacks.
+  Pull request [#8](https://github.com/nomadium/linzer/pull/8)
+  by [oneiros](https://github.com/oneiros).
+
 ## [0.6.3] - 2025-03-29
 
 - Parse signature structured fields values as ASCII string.
