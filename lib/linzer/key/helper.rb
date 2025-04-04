@@ -4,18 +4,18 @@ module Linzer
   class Key
     module Helper
       def generate_rsa_pss_sha512_key(size, key_id = nil)
-        material = OpenSSL::PKey::RSA.generate(size)
-        Linzer::RSA::Key.new(material, id: key_id, digest: "SHA512")
+        material = OpenSSL::PKey.generate_key("RSASSA-PSS")
+        Linzer::RSAPSS::Key.new(material, id: key_id, digest: "SHA512")
       end
 
       def new_rsa_pss_sha512_key(material, key_id = nil)
         key = OpenSSL::PKey.read(material)
-        Linzer::RSA::Key.new(key, id: key_id, digest: "SHA512")
+        Linzer::RSAPSS::Key.new(key, id: key_id, digest: "SHA512")
       end
 
       def new_rsa_pss_sha512_public_key(material, key_id = nil)
         key = OpenSSL::PKey::RSA.new(material)
-        Linzer::RSA::Key.new(key, id: key_id, digest: "SHA512")
+        Linzer::RSAPSS::Key.new(key, id: key_id, digest: "SHA512")
       end
 
       # XXX: to-do
