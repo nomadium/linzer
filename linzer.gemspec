@@ -34,4 +34,5 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency "rack", ">= 2.2", "< 4.0"
   spec.add_runtime_dependency "uri", "~> 1.0", ">= 1.0.2"
   spec.add_runtime_dependency "stringio", "~> 3.1", ">= 3.1.2"
+  spec.add_runtime_dependency "logger", "~> 1.7", ">= 1.7.0"
 end
