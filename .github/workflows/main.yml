@@ -37,12 +37,14 @@ jobs:
   # To run linzer tests on Ruby 3.0 on Github Actions environment:
   # linzer RSA signing/verifying functionality depends on openssl gem >= 3.0.
   # However, Ruby 3.0 by default is linked with OpenSSL 1.1 and there is no
-  # convenient way to override.
+  # convenient way to override it.
   #
   # As result, Ruby 3.0 is built in this way to avoid the precompiled version
   # available in Github Actions that's linked with OpenSSL 1.1 library and
   # will not pickup OpenSSL 3.0 system library, even when openssl gem >= 3.0
   # is bundled with your library.
+  #
+  # Example: https://gist.github.com/yob/08d53a003181aa0fcce9812b1b533870
   #
   # A better approach and/or a PR to fix this kludge is more than welcome.
   build-v3_0:
