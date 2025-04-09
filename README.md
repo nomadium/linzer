@@ -160,7 +160,7 @@ pp signature.to_h
 
 For now, to consult additional details just take a look at source code and/or the unit tests.
 
-Please note that is still early days and extensive testing is still ongoing. For now only the following algorithms are supported: RSASSA-PSS using SHA-512, HMAC-SHA256, Ed25519 and ECDSA (P-256 and P-384 curves).
+Please note that is still early days and extensive testing is still ongoing. For now the following algorithms are supported: RSASSA-PSS using SHA-512, RSASSA-PKCS1-v1_5 using SHA-256, HMAC-SHA256, Ed25519 and ECDSA (P-256 and P-384 curves). JSON Web Signature (JWS) algorithms mentioned in the RFC are not supported yet.
 
 I'll be expanding the library to cover more functionality specified in the RFC
 in subsequent releases.

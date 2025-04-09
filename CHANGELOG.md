@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+## [0.6.5] - 2025-04-09
+
+- Add support for RSA (RSASSA-PKCS1-V1_5) and improve RSASSA-PSS handling.
+  Pull request [#10](https://github.com/nomadium/linzer/pull/10)
+  by [oneiros](https://github.com/oneiros).
+
 ## [0.6.4] - 2025-04-04
 
 - Allow validating the `created` parameter to mitigate the
