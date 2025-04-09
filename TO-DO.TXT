@@ -1,0 +1,12 @@
+# XXX: check the names of the config keys
+# XXX: think on what to do with a configuration file
+
+probably add something like:
+keyid_required (already done)
+nonce_required
+alg_required
+tag_required
+expires_required
+created_required
+
+# XXX: Test it with a sinatra app and a rails one
