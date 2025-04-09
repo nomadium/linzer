@@ -13,6 +13,8 @@ module Linzer
         Linzer::RSAPSS::Key.new(key, id: key_id, digest: "SHA512")
       end
 
+      # XXX: investigate: was this method made redundant after:
+      # https://github.com/nomadium/linzer/pull/10
       def new_rsa_pss_sha512_public_key(material, key_id = nil)
         key = OpenSSL::PKey::RSA.new(material)
         Linzer::RSAPSS::Key.new(key, id: key_id, digest: "SHA512")
@@ -28,6 +30,8 @@ module Linzer
         Linzer::RSA::Key.new(key, id: key_id, digest: "SHA256")
       end
 
+      # XXX: investigate: was this method made redundant after:
+      # https://github.com/nomadium/linzer/pull/10
       def new_rsa_v1_5_sha256_public_key(material, key_id = nil)
         key = OpenSSL::PKey.read(material)
         Linzer::RSA::Key.new(key, id: key_id, digest: "SHA256")

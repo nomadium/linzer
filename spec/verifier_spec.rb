@@ -90,7 +90,7 @@ RSpec.describe Linzer::Verifier do
     path = request_data[:http]["path"]
     request = Linzer.new_request(:post, path, {}, test_request_data[:headers])
 
-    pubkey = Linzer.new_rsa_pss_sha512_public_key(test_key_rsa_pss_pub, "test-key-rsa-pss")
+    pubkey = Linzer.new_rsa_pss_sha512_key(test_key_rsa_pss_pub, "test-key-rsa-pss")
 
     signature = Linzer::Signature.build(test_request_data[:headers])
     message   = Linzer::Message.new(request)
@@ -110,7 +110,7 @@ RSpec.describe Linzer::Verifier do
     path = request_data[:http]["path"]
     request = Linzer.new_request(:post, path, {}, test_request_data[:headers])
 
-    pubkey = Linzer.new_rsa_pss_sha512_public_key(OpenSSL::PKey::RSA.new(test_key_rsa_pss_pub), "test-key-rsa-pss")
+    pubkey = Linzer.new_rsa_pss_sha512_key(test_key_rsa_pss_pub, "test-key-rsa-pss")
     signature = Linzer::Signature.build(test_request_data[:headers])
     message = Linzer::Message.new(request)
 
@@ -136,7 +136,7 @@ RSpec.describe Linzer::Verifier do
     path = request_data[:http]["path"]
     request = Linzer.new_request(:post, path, {}, test_request_data[:headers])
 
-    pubkey = Linzer.new_rsa_pss_sha512_public_key(OpenSSL::PKey::RSA.new(test_key_rsa_pss_pub), "test-key-rsa-pss")
+    pubkey = Linzer.new_rsa_pss_sha512_key(test_key_rsa_pss_pub, "test-key-rsa-pss")
     signature = Linzer::Signature.build(test_request_data[:headers])
     message = Linzer::Message.new(request)
 
@@ -156,7 +156,7 @@ RSpec.describe Linzer::Verifier do
       Linzer::Message.new(request)
     end
     let(:pubkey) do
-      Linzer.new_rsa_pss_sha512_public_key(OpenSSL::PKey::RSA.new(test_key_rsa_pss_pub), "test-key-rsa-pss")
+      Linzer.new_rsa_pss_sha512_key(test_key_rsa_pss_pub, "test-key-rsa-pss")
     end
     let(:signature) do
       Linzer::Signature.build(test_request_data[:headers])

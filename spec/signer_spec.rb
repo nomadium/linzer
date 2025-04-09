@@ -94,10 +94,7 @@ RSpec.describe Linzer::Signer do
     # to test if the signature is valid, we use the public key and build
     # a verifier to test if the result can be successfully verified
 
-    # XXX: ideally this should work, but it doesn't with RSA-PSS keys... :(
-    # to-do: track this issue: https://github.com/ruby/openssl/issues/715
-    # pubkey = Linzer::new_rsa_pss_sha512_public_key(key.public_to_pem, parameters[:keyid])
-    pubkey = Linzer.new_rsa_pss_sha512_public_key(test_key_rsa_pss_pub, key_id)
+    pubkey = Linzer.new_rsa_pss_sha512_key(test_key_rsa_pss_pub, key_id)
 
     expect(verifier.verify(pubkey, message, signature)).to eq(true)
   end
@@ -137,10 +134,7 @@ RSpec.describe Linzer::Signer do
     # to test if the signature is valid, we use the public key and build
     # a verifier to test if the result can be successfully verified
 
-    # XXX: ideally this should work, but it doesn't with RSA-PSS keys... :(
-    # to-do: track this issue: https://github.com/ruby/openssl/issues/715
-    # pubkey = Linzer::new_rsa_pss_sha512_public_key(key.public_to_pem, parameters[:keyid])
-    pubkey = Linzer.new_rsa_pss_sha512_public_key(test_key_rsa_pss_pub, key_id)
+    pubkey = Linzer.new_rsa_pss_sha512_key(test_key_rsa_pss_pub, key_id)
 
     expect(verifier.verify(pubkey, message, signature)).to eq(true)
   end
