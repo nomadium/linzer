@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+## [0.7.0.beta1] - 2025-04-12
+
 - Introduce Rack::Auth::Signature middleware.
 
 ## [0.6.5] - 2025-04-09
