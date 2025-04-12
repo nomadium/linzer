@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+## [0.7.0.beta2] - 2025-04-13
+
+- Refactor and improve Rack::Auth::Signature code organization.
+- Do not expose secret material on HMAC SHA-256 key when #inspect method is used.
+- Update Rack::Auth::Signature configuration file options.
+- Validate and test Rack::Auth::Signature with example Rails and Sinatra apps.
+
 ## [0.7.0.beta1] - 2025-04-12
 
 - Introduce Rack::Auth::Signature middleware.

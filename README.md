@@ -23,12 +23,14 @@ Or just `gem install linzer`.
 
 ### TL;DR: I just want to protect my application!!
 
-Add the following middleware to you run Rack application, e.g.:
+Add the following middleware to you run Rack application and configure it
+as needed, e.g.:
 
 ```ruby
 # config.ru
 use Rack::Auth::Signature, except: "/login",
-  default_key: {"key" => IO.read("app/config/pubkey.pem"), "alg" => "ed25519"}
+  default_key: {material: Base64.strict_decode64(ENV["MYAPP_KEY"]), alg: "hmac-sha256"}
+  # or: default_key: {material: IO.read("app/config/pubkey.pem"), "ed25519"}
 ```
 
 or on more complex scenarios:
@@ -37,6 +39,14 @@ or on more complex scenarios:
 # config.ru
 use Rack::Auth::Signature, except: "/login",
   config_path: "app/configuration/http-signatures.yml"
+```
+
+or with a typical Rails application:
+
+```ruby
+# config/application.rb
+config.middleware.use Rack::Auth::Signature, except: "/login",
+  config_path: "http-signatures.yml"
 ```
 
 And that's it, all routes in the example app (except `/login`) above will

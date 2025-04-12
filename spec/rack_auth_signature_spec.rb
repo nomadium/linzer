@@ -79,7 +79,7 @@ RSpec.describe Rack::Auth::Signature do
     end
 
     it "rejects requests with signature headers with incomplete parameters" do
-      settings = {except: "/bar", keyid_required: true}
+      settings = {except: "/bar", signatures: {keyid_required: true}}
       request = Rack::MockRequest.env_for("/protected")
       created = Time.now.utc.to_i - 15
       request["HTTP_SIGNATURE"]       = "sig2=\"foobar\""
@@ -132,7 +132,7 @@ RSpec.describe Rack::Auth::Signature do
 
     it "rejects requests with signature with unknown/unsupported algorithm" do
       keyid = "mykey"
-      settings[:known_keys] = {keyid => {"key" => "..."}}
+      settings[:keys] = {keyid.to_sym => {material: "..."}}
       request = Rack::MockRequest.env_for("/protected")
       components = '"date" "@authority" "@request-target" "@method" "x-foo"'
       created = Time.now.utc.to_i - 67
@@ -141,6 +141,35 @@ RSpec.describe Rack::Auth::Signature do
       request["HTTP_SIGNATURE_INPUT"] = "sig2=(#{components});#{params}"
       response = signature(app, **settings).call(request)
       expect(response[code]).to eq(401)
+    end
+
+    context "requests with multiple signatures" do
+      let(:signature_input) { 'sig1=("@method" "@authority" "@path" "content-digest" "content-type" "content-length");created=1618884475;keyid="test-key-ecc-p256", proxy_sig=("@method" "@authority" "@path" "content-digest" "content-type" "content-length" "forwarded");created=1618884480;keyid="test-key-rsa";alg="rsa-v1_5-sha256";expires=1618884540' }
+      let(:signatures) { "sig1=:X5spyd6CFnAG5QnDyHfqoSNICd+BUP4LYMz2Q0JXlb//4Ijpzp+kve2w4NIyqeAuM7jTDX+sNalzA8ESSaHD3A==:, proxy_sig=:S6ZzPXSdAMOPjN/6KXfXWNO/f7V6cHm7BXYUh3YD/fRad4BCaRZxP+JH+8XY1I6+8Cy+CM5g92iHgxtRPz+MjniOaYmdkDcnL9cCpXJleXsOckpURl49GwiyUpZ10KHgOEe11sx3G2gxI8S0jnxQB+Pu68U9vVcasqOWAEObtNKKZd8tSFu7LB5YAv0RAGhB8tmpv7sFnIm9y+7X5kXQfi8NMaZaA8i2ZHwpBdg7a6CMfwnnrtflzvZdXAsD3LH2TwevU+/PBPv0B6NMNk93wUs/vfJvye+YuI87HU38lZHowtznbLVdp770I6VHR6WfgS9ddzirrswsE1w5o0LV/g==:" }
+
+      it "rejects requests with multiple signatures if none is selected" do
+        keyid = "test-key-ecc-p256"
+        settings[:keys] = {keyid.to_sym => {material: "..."}}
+        request = Rack::MockRequest.env_for("/protected")
+        request["HTTP_SIGNATURE_INPUT"] = signature_input
+        request["HTTP_SIGNATURE"] = signatures
+        response = signature(app, **settings).call(request)
+        expect(response[code]).to eq(401)
+      end
+
+      context "when a label is selected" do
+        it "processes the signature with the selected label" do
+          keyid = "test-key-ecc-p256"
+          settings[:keys] = {keyid.to_sym => {material: "..."}}
+          settings[:signatures] = {default_label: "sig1"}
+          request = Rack::MockRequest.env_for("/protected")
+          request["HTTP_SIGNATURE_INPUT"] = signature_input
+          request["HTTP_SIGNATURE"] = signatures
+          response = signature(app, **settings).call(request)
+          # as no valid key was passed, request is rejected
+          expect(response[code]).to eq(401)
+        end
+      end
     end
   end
 
@@ -152,7 +181,7 @@ RSpec.describe Rack::Auth::Signature do
         "host"    => "example.org:80"
       }
     }
-    let(:settings) { {except: "/login", known_keys: {}} }
+    let(:settings) { {except: "/login", keys: {}} }
     let(:keyid)    { "mykey" }
     let(:fields)   { %w[@method @request-target @authority date x-field]  }
     let(:request)  { Linzer.new_request(:post, "/protected", {}, headers) }
@@ -161,7 +190,7 @@ RSpec.describe Rack::Auth::Signature do
     it "allows the request to proceed [ed25519]" do
       key = Linzer.generate_ed25519_key(keyid)
       pubkey = key.material.public_to_pem
-      settings[:known_keys][keyid] = {"alg" => "ed25519", "key" => pubkey}
+      settings[:keys][keyid.to_sym] = {alg: "ed25519", material: pubkey}
 
       signature = Linzer.sign(key, message, fields)
       env = Rack::MockRequest.env_for.merge(request.env)
@@ -176,7 +205,7 @@ RSpec.describe Rack::Auth::Signature do
 
     it "allows the request to proceed [hmac-sha256]" do
       key = Linzer.generate_hmac_sha256_key(keyid)
-      settings[:known_keys][keyid] = {"alg" => "hmac-sha256", "key" => key.material}
+      settings[:keys][keyid.to_sym] = {alg: "hmac-sha256", material: key.material}
 
       signature = Linzer.sign(key, message, fields)
       env = Rack::MockRequest.env_for.merge(request.env)
@@ -192,7 +221,7 @@ RSpec.describe Rack::Auth::Signature do
     it "allows the request to proceed [rsa-pss-sha512]" do
       key = Linzer.generate_rsa_pss_sha512_key(2048, keyid)
       pubkey = key.material.public_to_pem
-      settings[:known_keys][keyid] = {"alg" => "rsa-pss-sha512", "key" => pubkey}
+      settings[:keys][keyid.to_sym] = {alg: "rsa-pss-sha512", material: pubkey}
 
       signature = Linzer.sign(key, message, fields)
       env = Rack::MockRequest.env_for.merge(request.env)
@@ -208,7 +237,7 @@ RSpec.describe Rack::Auth::Signature do
     it "allows the request to proceed [ecdsa-p256-sha256]" do
       key = Linzer.generate_ecdsa_p256_sha256_key(keyid)
       pubkey = key.material.public_to_pem
-      settings[:known_keys][keyid] = {"alg" => "ecdsa-p256-sha256", "key" => pubkey}
+      settings[:keys][keyid.to_sym] = {alg: "ecdsa-p256-sha256", material: pubkey}
 
       signature = Linzer.sign(key, message, fields)
       env = Rack::MockRequest.env_for.merge(request.env)
@@ -224,7 +253,7 @@ RSpec.describe Rack::Auth::Signature do
     it "allows the request to proceed [ecdsa-p384-sha384]" do
       key = Linzer.generate_ecdsa_p384_sha384_key(keyid)
       pubkey = key.material.public_to_pem
-      settings[:known_keys][keyid] = {"alg" => "ecdsa-p384-sha384", "key" => pubkey}
+      settings[:keys][keyid.to_sym] = {alg: "ecdsa-p384-sha384", material: pubkey}
 
       signature = Linzer.sign(key, message, fields)
       env = Rack::MockRequest.env_for.merge(request.env)
@@ -241,7 +270,7 @@ RSpec.describe Rack::Auth::Signature do
       it "allows the request to proceed if checks succeed" do
         key = Linzer.generate_ecdsa_p384_sha384_key(keyid)
         pubkey = key.material.public_to_pem
-        settings[:known_keys][keyid] = {"alg" => "ecdsa-p384-sha384", "key" => pubkey}
+        settings[:keys][keyid.to_sym] = {alg: "ecdsa-p384-sha384", material: pubkey}
 
         signature = Linzer.sign(key, message, fields, tag: "myapp")
         env = Rack::MockRequest.env_for.merge(request.env)
@@ -265,7 +294,7 @@ RSpec.describe Rack::Auth::Signature do
 
       it "rejects the request if checks do not pass" do
         key = Linzer.generate_hmac_sha256_key(keyid)
-        settings[:known_keys][keyid] = {"alg" => "hmac-sha256", "key" => key.material}
+        settings[:keys][keyid.to_sym] = {alg: "hmac-sha256", material: key.material}
 
         signature = Linzer.sign(key, message, fields, tag: "myapp2")
         env = Rack::MockRequest.env_for.merge(request.env)

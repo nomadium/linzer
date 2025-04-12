@@ -1,26 +1,33 @@
 ---
-no_older_than: 6000
-created_required: true
-keyid_required: true
-# nonce_required: false
-# alg_required: false
-# tag_required: false
-# expires_required: false
-covered_components:
-- "@method"
-- "@request-target"
-- date
-known_keys:
+signatures:
+  reject_older_than:  6000 # seconds
+  created_required:   true
+  keyid_required:     true
+  # nonce_required:   false
+  # alg_required:     false
+  # tag_required:     false
+  # expires_required: false
+  covered_components:
+  - "@method"
+  - "@request-target"
+  - date
+  # In most cases is not needed to configure a label but it
+  # could useful in the event of receiving a signature
+  # header with more than 1 signature. Currently, linzer signatures
+  # middleware will only validate 1 signature per request and multiple
+  # signatures validation at the same time are not supported.
+  # If you need this, feel free to open an issue and explain your use case.
+  # default_label:      "mylabel"
+keys:
   foo:
     alg: ed25519
-    key: |
+    material: |
       -----BEGIN PUBLIC KEY-----
       MCowBQYDK2VwAyEAMEH9bSanwgAWE5qxUEaXjK6qei8z2hiHT0nlr7ljG0Y=
       -----END PUBLIC KEY-----
   bar:
-    alg: hmac-sha256
-    key: !binary |-
-      KuOR/Q8U1Crgp0WsFqW+5ZuC+KbN41dIlXWp71UhPEeJcRfuxZEy6XAUE9nf0yl4jt55yRASBnD0kQKucO6SfA==
-  baz:
     alg: rsa-pss-sha512
-    path: rsa.pem
+    path: pubkey_rsa.pem
+  baz:
+    alg: hmac-sha256
+    path: app.secret
