@@ -9,6 +9,10 @@ RSpec.describe Linzer do
       expect(key.material.to_str.bytesize).to     eq(64)
       expect(key.sign("data").to_str.bytesize).to eq(32)
     end
+    it "does not leak HMAC SHA256 key underlying secret" do
+      key = Linzer.generate_hmac_sha256_key
+      expect(key.inspect).to_not match(/material/)
+    end
   end
 end
 
