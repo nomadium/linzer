@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "linzer"
 require "logger"
 require_relative "signature/helpers"
