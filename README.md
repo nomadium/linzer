@@ -1,4 +1,5 @@
 # Linzer [![Latest Version][gem-badge]][gem-link] [![License: MIT][license-image]][license-link] [![CI Status][ci-image]][ci-link]
+# Fix broken merge here
 
 [gem-badge]: https://badge.fury.io/rb/linzer.svg
 [gem-link]: https://rubygems.org/gems/linzer
@@ -58,7 +59,37 @@ look at
 
 To learn about more specific scenarios or use cases, keep reading on below.
 
+<<<<<<< HEAD
 ### To sign a HTTP request:
+=======
+### To sign a HTTP request (if you are using http gem):
+
+```ruby
+#
+# first require http signatures feature class ready to be used with http gem:
+#
+require "linzer/http/signature_feature"
+#
+# generate a key pair
+#
+key = Linzer.generate_ed25519_key
+# => #<Linzer::Ed25519::Key:0x00000fe13e9bd208
+# or load an existing key with:
+# key = Linzer.new_ed25519_key(IO.read("key"), "mykeyid")
+#
+# then send the request:
+#
+url = "https://example.org/api"
+response = HTTP.headers(date: Time.now.to_s, foo: "bar")
+               .use(http_signature: {key: key}
+               .get(url)
+=> #<HTTP::Response/1.1 200 OK {"Content-Type" => ...
+response.body.to_s
+=> "protected content..."
+````
+
+### To sign a HTTP message:
+>>>>>>> 84abf67 (Add custom feature for HTTP signatures and http.rb gem)
 
 ```ruby
 key = Linzer.generate_ed25519_key
