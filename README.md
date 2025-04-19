@@ -68,8 +68,7 @@ To learn about more specific scenarios or use cases, keep reading on below.
 # first require http signatures feature class ready to be used with http gem:
 require "linzer/http/signature_feature"
 #
-# generate a key pair
-key = Linzer.generate_ed25519_key
+key = Linzer.generate_ed25519_key # generate a new key pair
 # => #<Linzer::Ed25519::Key:0x00000fe13e9bd208
 # or load an existing key with:
 # key = Linzer.new_ed25519_key(IO.read("key"), "mykeyid")
