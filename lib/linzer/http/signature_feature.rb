@@ -5,6 +5,10 @@ require "linzer"
 begin
   require "http"
 rescue LoadError # http gem is not a linzer core dependency
+  # :nocov:
+  puts "http gem is required to be installed to use this feature."
+  false
+  # :nocov:
 else
   module Linzer
     module HTTP
