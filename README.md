@@ -71,9 +71,9 @@ key = Linzer.generate_ed25519_key # generate a new key pair
 #
 # then send the request:
 url = "https://example.org/api"
-resp = HTTP.headers(date: Time.now.to_s, foo: "bar")
-           .use(http_signature: {key: key} # <--- covered components and signature
-           .get(url)                       #   params can be customized
+response = HTTP.headers(date: Time.now.to_s, foo: "bar")
+               .use(http_signature: {key: key} # <--- covered components and signature params
+               .get(url)                       #      can be customized on the client
 => #<HTTP::Response/1.1 200 OK {"Content-Type" => ...
 response.body.to_s
 => "protected content..."
