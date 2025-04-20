@@ -22,6 +22,7 @@ require_relative "linzer/ecdsa"
 require_relative "linzer/key/helper"
 require_relative "linzer/signer"
 require_relative "linzer/verifier"
+require_relative "linzer/http/helper"
 require_relative "rack/auth/signature"
 
 module Linzer
@@ -29,6 +30,7 @@ module Linzer
 
   class << self
     include Key::Helper
+    include HTTP::Helper
 
     def verify(pubkey, message, signature, no_older_than: nil)
       Linzer::Verifier.verify(pubkey, message, signature, no_older_than: no_older_than)
