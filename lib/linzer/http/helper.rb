@@ -42,36 +42,12 @@ module Linzer
           .map    { |klass| klass::METHOD }
       end
 
-      def head(uri, options = {})
-        request :head, uri, options
-      end
-
-      def get(uri, options = {})
-        request :get, uri, options
-      end
-
-      def post(uri, options = {})
-        request :post, uri, options
-      end
-
-      def put(uri, options = {})
-        request :put, uri, options
-      end
-
-      def options(uri, options = {})
-        request :options, uri, options
-      end
-
-      def patch(uri, options = {})
-        request :patch, uri, options
-      end
-
-      def trace(uri, options = {})
-        request :trace, uri, options
-      end
-
-      def delete(uri, options = {})
-        request :delete, uri, options
+      known_http_methods.each do |http_method|
+        method = http_method.downcase.to_sym
+        define_method(method) do |uri, options|
+          options ||= {}
+          request method, uri, options
+        end
       end
 
       def default_covered_components
