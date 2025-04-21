@@ -5,6 +5,24 @@ require "net/http"
 module Linzer
   module HTTP
     module Helper
+      def self.known_http_methods
+        Net::HTTP
+          .constants
+          .map    { |const| Net::HTTP.const_get(const) }
+          .select { |klass| klass.is_a?(Class) && klass.const_defined?(:METHOD) }
+          .map    { |klass| klass::METHOD }
+      end
+
+      known_http_methods.each do |http_method|
+        method = http_method.downcase.to_sym
+        define_method(method) do |uri, options|
+          options ||= {}
+          request method, uri, options
+        end
+      end
+
+      private
+
       def request(verb, uri, options = {})
         key = options[:key]
         validate_key(key)
@@ -34,28 +52,10 @@ module Linzer
         end
       end
 
-      def self.known_http_methods
-        Net::HTTP
-          .constants
-          .map    { |const| Net::HTTP.const_get(const) }
-          .select { |klass| klass.is_a?(Class) && klass.const_defined?(:METHOD) }
-          .map    { |klass| klass::METHOD }
-      end
-
-      known_http_methods.each do |http_method|
-        method = http_method.downcase.to_sym
-        define_method(method) do |uri, options|
-          options ||= {}
-          request method, uri, options
-        end
-      end
-
-      def default_covered_components
+      def default_components
         # Linzer::Options.DEFAULT_OPTIONS[:covered_components]
         %w[@method @request-target @authority date]
       end
-
-      alias_method :default_components, :default_covered_components
 
       def validate_key(key)
         raise Linzer::Error, "Key can not be nil!"    if !key
@@ -75,5 +75,7 @@ module Linzer
         request
       end
     end
+    include Helper
+    extend self
   end
 end
