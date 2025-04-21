@@ -48,7 +48,7 @@ module Linzer
           # method = %i[post put].include?(verb) ? "request_#{verb}".to_sym : verb
           http.public_send(verb, uri, data, headers.merge(signature.to_h))
         else
-          raise Linzer::Error, "Unknown/unsupported HTTP method: #{verb.to_s}"
+          raise Linzer::Error, "Unknown/unsupported HTTP method: '#{verb.upcase}'"
         end
       end
 
