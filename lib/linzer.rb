@@ -30,7 +30,6 @@ module Linzer
   class << self
     include Key::Helper
     include Response
-    include HTTP::Helper
 
     def new_request(verb, uri = "/", params = {}, headers = {})
       Linzer::Request.build(verb, uri, params, headers)
