@@ -22,7 +22,7 @@ require_relative "linzer/ecdsa"
 require_relative "linzer/key/helper"
 require_relative "linzer/signer"
 require_relative "linzer/verifier"
-require_relative "linzer/http/helper"
+require_relative "linzer/http"
 require_relative "rack/auth/signature"
 
 module Linzer
