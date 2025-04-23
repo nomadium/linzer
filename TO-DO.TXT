@@ -1,0 +1,32 @@
+# [done] [beta2] there is a bug when the signature has a keyid foo, and the app
+# [done] [beta2] setup with default_key, it fails to find foo and rejects the request
+# [done] [beta2] if foo not found and default key is set, use default key and verify with that
+# [done] [beta2] XXX: Test it with a rails app
+# [done] [beta2] XXX: Add example Rails config to readme
+# [done] [beta2] XXX: re-test the sinatra example
+#
+# [done] [beta2] ensure keys configuration is consistents "string keys" and "symbols"
+# [done] [but verify it by hand with sinatra app]  
+# [done] [beta2] usabiility improves described in TO-DO2.TXT
+#
+# [done] [beta2] use default_label and add a test case
+
+
+
+
+# [beta2/3] @authority issue with readme and default middleware config
+# [beta2/3] get test coverage back at 100%
+
+# [beta3] standardize how to retrieve a public key
+# [beta3] how to check if a key is suitable for signing or verifying
+# [beta3] test what happens if you sign with a public and verify with a private 
+# [beta3] support in except: for regexp
+# [beta3] randomize the middleware tests, there is a lot of copy & paste
+# [beta3] expose a method to easily retrieve signature base
+
+# [beta4/final] reorganize unit tests: rsa, validator, signer, etc
+# [beta4/final] create a repo names nomadium/cache, set up github pages and
+# store the ruby 3.0 that I have been building.
+
+keep an eye on linzer usage at mastodon:
+https://github.com/mastodon/mastodon/commit/97b9994743576f1b6ca93f60b51d447c48c92989

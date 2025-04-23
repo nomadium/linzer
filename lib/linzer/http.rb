@@ -40,13 +40,17 @@ module Linzer
       params = options[:params] || {}
       signature = Linzer.sign(key, message, covered_components, **params)
 
+      begin
+        data = options.fetch(:data) if %i[post put patch].include?(verb)
+      rescue
+        missing_body = "Missing request body on HTTP request: '#{verb.upcase}'"
+        raise Linzer::Error, missing_body
+      end
+
       case verb
       when :get, :head, :options, :trace, :delete
-        # method = %i[get head].include?(verb) ? "request_#{verb}".to_sym : verb
         http.public_send(verb, uri, headers.merge(signature.to_h))
       when :post, :put, :patch
-        data = options[:data] || "" if %i[post put patch].include?(verb)
-        # method = %i[post put].include?(verb) ? "request_#{verb}".to_sym : verb
         http.public_send(verb, uri, data, headers.merge(signature.to_h))
       else
         raise Linzer::Error, "Unknown/unsupported HTTP method: '#{verb.upcase}'"
