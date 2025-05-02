@@ -130,6 +130,45 @@ RSpec.describe Rack::Auth::Signature do
       expect(response[code]).to eq(401)
     end
 
+    it "rejects requests with expired signature" do
+      settings[:signatures] = {expires_required: true}
+      request = Rack::MockRequest.env_for("/protected")
+      components = '"@authority" "@request-target" "@method"'
+      created = Time.now.utc.to_i - 240
+      expired = Time.now.utc.to_i - 120
+      params = "created=#{created};expires=#{expired}"
+      request["HTTP_SIGNATURE"]       = "sig2=\"foobar\""
+      request["HTTP_SIGNATURE_INPUT"] = "sig2=(#{components});#{params}"
+      response = signature(app, **settings).call(request)
+      expect(response[code]).to eq(401)
+    end
+
+    it "rejects requests with missing expiration field in signature" do
+      settings[:signatures] = {expires_required: true}
+      request = Rack::MockRequest.env_for("/protected")
+      components = '"@authority" "@request-target" "@method"'
+      created = Time.now.utc.to_i - 48
+      params = "created=#{created}"
+      request["HTTP_SIGNATURE"]       = "sig2=\"foobar\""
+      request["HTTP_SIGNATURE_INPUT"] = "sig2=(#{components});#{params}"
+      response = signature(app, **settings).call(request)
+      expect(response[code]).to eq(401)
+    end
+
+    it "rejects requests referencing a key that cannot be found" do
+      keyid = "key_notfound"
+      settings[:signatures] = {covered_components: %w[@method @request-target @authority]}
+      settings[:keys] = {keyid.to_sym => {path: "/does/not/exist", alg: "ecdsa-p256-sha256"}}
+      request = Rack::MockRequest.env_for("/protected")
+      components = '"@authority" "@request-target" "@method"'
+      created = Time.now.utc.to_i - 28
+      params = "created=#{created};keyid=\"#{keyid}\""
+      request["HTTP_SIGNATURE"]       = "sig2=\"foobar\""
+      request["HTTP_SIGNATURE_INPUT"] = "sig2=(#{components});#{params}"
+      response = signature(app, **settings).call(request)
+      expect(response[code]).to eq(401)
+    end
+
     it "rejects requests with signature with unknown/unsupported algorithm" do
       keyid = "mykey"
       settings[:keys] = {keyid.to_sym => {material: "..."}}
