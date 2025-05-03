@@ -1,6 +1,46 @@
 # frozen_string_literal: true
 
+module Linzer
+  MyFunnyRequest = Struct.new("MyFunnyRequest", :headers, :body, :other)
+  MyRegisteredResponse = Struct.new("MyRegisteredResponse", :headers, :body, :bar)
+  MyRegisteredResponseAdapter = Struct.new("MyRegisteredResponse", :operation, :options) do
+    def response?
+      true
+    end
+  end
+end
+
 RSpec.describe Linzer::Message do
+  describe "#initialize" do
+    context "when a HTTP message supported class is provided" do
+      it "creates a valid HTTP message object without errors" do
+        response = Net::HTTPOK.new("1.1", "200", "OK")
+        message = described_class.new(response)
+        expect(message.response?).to eq(true)
+      end
+    end
+
+    context "when an unsupported or unknown HTTP message class is provided" do
+      it "fails to create a HTTP message object" do
+        funny_request = Linzer::MyFunnyRequest.new({}, "data", "more data")
+        expect { described_class.new(funny_request) }
+          .to raise_error(Linzer::Error, /Unknown/)
+      end
+    end
+
+    context "when an custom but registered HTTP message class is provided" do
+      it "creates a valid HTTP message object without errors" do
+        custom_response         = Linzer::MyRegisteredResponse.new({}, "data", "more data")
+        custom_response_class   = Linzer::MyRegisteredResponse
+        custom_response_adapter = Linzer::MyRegisteredResponseAdapter
+        Linzer::Message.register_adapter(custom_response_class, custom_response_adapter)
+
+        message = described_class.new(custom_response)
+        expect(message.response?).to eq(true)
+      end
+    end
+  end
+
   describe "#request?" do
     it "returns true on a HTTP request message" do
       message = described_class.new(Rack::Request.new({}))
@@ -221,6 +261,7 @@ RSpec.describe Linzer::Message do
         response = Linzer.new_response(body, 503, resp_headers)
 
         message = described_class.new(response, attached_request: request)
+        expect(message.attached_request?).to     eq(true)
         expect(message["@authority;req"]).to     eq("example.com")
         expect(message["@method;req"]).to        eq("POST")
         expect(message["@path;req"]).to          eq("/foo")
@@ -266,6 +307,22 @@ RSpec.describe Linzer::Message do
       message = described_class.new(response)
       expect(message.response?).to eq(true)
       expect(message.headers).to   eq(headers)
+    end
+  end
+
+  describe "#attach!" do
+    let(:headers) { {"content-type" => "application/json", "foo" => "bar"} }
+
+    let(:signature) do
+      Linzer::Signature.build({"signature" => "baz=:Cv1TU==:", "signature-input" => "baz=()"})
+    end
+
+    it "attaches a signature to a HTTP message" do
+      response = Linzer.new_response("body", 202, headers)
+      message = described_class.new(response)
+      message.attach!(signature)
+      response["signature"] = signature.to_h["signature"]
+      response["signature-input"] = signature.to_h["signature-input"]
     end
   end
 

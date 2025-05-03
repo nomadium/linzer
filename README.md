@@ -23,7 +23,7 @@ Or just `gem install linzer`.
 
 ### TL;DR: I just want to protect my application!!
 
-Add the following middleware to you run Rack application and configure it
+Add the following middleware to your Rack application and configure it
 as needed, e.g.:
 
 ```ruby
@@ -58,46 +58,40 @@ look at
 
 To learn about more specific scenarios or use cases, keep reading on below.
 
-### To sign a HTTP message:
+### To sign a HTTP request:
 
 ```ruby
 key = Linzer.generate_ed25519_key
 # => #<Linzer::Ed25519::Key:0x00000fe13e9bd208
 
-headers = {
-  "date" => "Fri, 23 Feb 2024 17:57:23 GMT",
-  "x-custom-header" => "foo"
-}
+uri = URI("https://example.org/api/task")
+request = Net::HTTP::Get.new(uri)
+request["date"] = Time.now.to_s
 
-request = Linzer.new_request(:post, "/some_uri", {}, headers)
-# => #<Rack::Request:0x0000000104c1c8c0
-#       @env={"HTTP_DATE"=>"Fri, 23 Feb 2024 17:57:23 GMT", "HTTP_X_CUSTOM..."
-#       @params=nil>
+Linzer.sign!(
+  request,
+  key: key,
+  components: %w[@method @request-target date],
+  label: "sig1",
+  params: {
+    created: Time.now.to_i
+  }
+)
 
-message = Linzer::Message.new(request)
-# => #<Linzer::Message:0x0000000104afa960
-#       @operation=#<Rack::Request:0x00000001049754a0
-#       @env={"HTTP_DATE"=>"Fri, 23 Feb 2024 17:57:23 GMT", "HTTP_X_CUSTOM..."
-#       @params=nil>>
-
-fields = %w[date x-custom-header @method @path]
-
-signature = Linzer.sign(key, message, fields)
-# => #<Linzer::Signature:0x0000000111f77ad0 ...
-
-pp signature.to_h
-# => {"signature"=>"sig1=:Cv1TUCxUpX+5SVa7pH0Xh...",
-#  "signature-input"=>"sig1=(\"date\" \"x-custom-header\" ..."}
+request["signature"]
+# => "sig1=:Cv1TUCxUpX+5SVa7pH0Xh..."
+request["signature-input"]
+# => "sig1=(\"@method\" \"@request-target\" \"date\" ..."}
 ```
 
-### Use the message signature with any HTTP client:
+### Use the signed request with an HTTP client:
 
 ```ruby
 require "net/http"
 
-http = Net::HTTP.new("localhost", 9292)
+http = Net::HTTP.new(uri.host, uri.port)
 http.set_debug_output($stderr)
-response = http.post("/some_uri", "data", headers.merge(signature.to_h))
+response = http.request(request)
 # opening connection to localhost:9292...
 # opened
 # <- "POST /some_uri HTTP/1.1\r\n
@@ -131,7 +125,123 @@ response = http.post("/some_uri", "data", headers.merge(signature.to_h))
 # => #<Net::HTTPOK 200 OK readbody=true>
 ```
 
-### To verify a valid signature:
+### To verify an incoming request on the server side:
+
+The middleware `Rack::Auth::Signature` can be used for this scenario
+[as shown above](#tldr-i-just-want-to-protect-my-application).
+
+Or directly in the application controller (or routes), the incoming request can
+be verified with the following approach:
+
+```ruby
+post "/foo" do
+  request
+  # =>
+  # #<Sinatra::Request:0x000000011e5a5d60
+  #  @env=
+  #   {"GATEWAY_INTERFACE" => "CGI/1.1",
+  #   "PATH_INFO" => "/api",
+  # ...
+
+  result = Linzer.verify!(request, key: some_client_key)
+  # => true
+  ...
+end
+```
+
+If the signature is missing or invalid, the verification method will raise an
+exception with a message clarifying why the request signature failed verification.
+
+Also, for additional flexibility on the server side, the method above can take
+a block with the `keyid` parameter extracted from the signature (if any) as argument.
+This can be useful to retrieve key data from databases/caches on the server side, e.g.:
+
+```ruby
+get "/bar" do
+  ...
+  result = Linzer.verify!(request) do |keyid|
+    retrieve_pubkey_from_db(db_client, keyid)
+  end
+  # => true
+  ...
+end
+```
+
+### To verify a received response on the client side:
+
+It's similar to verifying requests, the same method is used, see example below:
+
+```ruby
+response
+# => #<Net::HTTPOK 200 OK readbody=true>
+response.body
+# => "protected"
+pubkey = Linzer.new_ed25519_key(IO.read("pubkey.pem"))
+result = Linzer.verify!(response, key: pubkey, no_older_than: 600)
+# => true
+```
+
+### To sign an outgoing response on the server side:
+
+Again, the same principle used to sign outgoing requests, the same method is used,
+see example below:
+
+```ruby
+put "/baz" do
+  ...
+  response
+  # => #<Sinatra::Response:0x0000000109ac40b8 ...
+  response.headers["x-custom-app-header"] = "..."
+  Linzer.sign!(response,
+    key: my_key,
+    components: %w[@status content-type content-digest x-custom-app-header],
+    label: "sig1",
+    params: {
+      created: Time.now.to_i
+    }
+  )
+  response["signature"]
+  # => "sig1=:2TPCzD4l48bg6LMcVXdV9u..."
+  response["signature-input"]
+  # => "sig1=(\"@status\" \"content-type\" \"content-digest\"..."
+  ...
+end
+```
+
+### What do you do if you want to sign/verify requests and responses with your preferred HTTP ruby library/framework (not using Rack or `Net::HTTP`, for example)?
+
+You can provide an adapter class and then register it with this library.
+For guidance on how to implement such adapters, you can consult an
+[example adapter for http gem response](https://github.com/nomadium/linzer/blob/master/lib/linzer/message/adapter/http_gem/response.rb)
+included with this gem or the ones
+[provided out of the box](https://github.com/nomadium/linzer/blob/master/lib/linzer/message/adapter).
+
+For how to register a custom adapter and how to verify signatures in a response,
+see this example:
+
+```ruby
+Linzer::Message.register_adapter(HTTP::Response, MyOwnResponseAdapter)
+response = HTTP.get("http://www.example.com/api/service/task")
+# => #<HTTP::Response/1.1 200 OK ...
+response["signature"]
+=> "sig1=:oqzDlQmfejfT..."
+response["signature-input"]
+=> "sig1=(\"@status\" \"foo\");created=1746480237"
+result = Linzer.verify!(response, key: my_key)
+# => true
+```
+---
+
+Furthermore, on some low-level scenarios where a user wants or needs additional
+control on how the signing and verification routines are performed, Linzer allows
+to manipulate instances of internal HTTP messages (requests & responses, see
+`Linzer::Message` class and available adapters), signature objects
+(`Linzer::Signature`) and how to register additional message adapters for any
+HTTP ruby library not supported out of the box by this gem.
+
+See below for a few examples of these scenarios.
+
+#### To verify a valid signature:
 
 ```ruby
 test_ed25519_key_pub = key.material.public_to_pem
@@ -163,14 +273,14 @@ Linzer.verify(pubkey, message, signature, no_older_than: 500)
 `no_older_than` expects a number of seconds, but you can pass anything that to responds to `#to_i`, including an `ActiveSupport::Duration`.
 `::verify` will raise if the `created` parameter of the signature is older than the given number of seconds.
 
-### What if an invalid signature if verified?
+#### What if an invalid signature if verified?
 
 ```ruby
 result = Linzer.verify(pubkey, message, signature)
 lib/linzer/verifier.rb:38:in `verify_or_fail': Failed to verify message: Invalid signature. (Linzer::Error)
 ```
 
-### HTTP responses are also supported
+#### HTTP responses are also supported
 
 HTTP responses can also be signed and verified in the same way as requests.
 
