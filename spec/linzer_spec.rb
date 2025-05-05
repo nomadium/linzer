@@ -41,7 +41,7 @@ RSpec.describe Linzer do
       end
 
       it "yields the keyid of the HTTP message signature if a block is passed" do
-        response = Linzer.new_response("body", 201, {"header1" => "value1"})
+        response = Linzer::Test::Response.new_response("body", 201, {"header1" => "value1"})
         key = Linzer.generate_ed25519_key
         keyid = "unit-test"
         components = %w[@status header1]
@@ -126,6 +126,6 @@ RSpec.describe Linzer do
     expect(Rack::Response).to receive(:new)
       .with(:body, :status, {})
 
-    Linzer.new_response(:body, :status, {})
+    Linzer::Test::Response.new_response(:body, :status, {})
   end
 end

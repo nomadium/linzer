@@ -78,7 +78,7 @@ RSpec.describe Linzer::Message do
     end
 
     it "returns the status code of the response" do
-      response = Linzer.new_response("body", 202, {})
+      response = Linzer::Test::Response.new_response("body", 202, {})
       message = described_class.new(response)
       expect(message["@status"]).to eq(202)
     end
@@ -225,7 +225,7 @@ RSpec.describe Linzer::Message do
         def body.trailers
           {"expires" => "Wed, 9 Nov 2022 07:28:00 GMT"}
         end
-        response = Linzer.new_response(body, 200, headers)
+        response = Linzer::Test::Response.new_response(body, 200, headers)
         message = described_class.new(response)
         expect(message["@status"]).to    eq(200)
         expect(message["trailer"]).to    eq("Expires")
@@ -258,7 +258,7 @@ RSpec.describe Linzer::Message do
           "Content-Digest" => "sha-512=:0Y6iCBzGg5rZtoXS95Ijz03mslf6KAMCloESHObfwnHJDbkkWWQz6PhhU9kxsTbARtY2PTBOzq24uJFpHsMuAg==:"
         }
         body = '{"busy": true, "message": "Your call is very important to us"}'
-        response = Linzer.new_response(body, 503, resp_headers)
+        response = Linzer::Test::Response.new_response(body, 503, resp_headers)
 
         message = described_class.new(response, attached_request: request)
         expect(message.attached_request?).to     eq(true)
@@ -278,7 +278,7 @@ RSpec.describe Linzer::Message do
 
   describe "#field?" do
     it "returns true if the requested field is defined on the message" do
-      response = Linzer.new_response(nil, 301, {})
+      response = Linzer::Test::Response.new_response(nil, 301, {})
       message = described_class.new(response)
       expect(message.field?("@status")).to eq(true)
       expect(message["@status"]).to        be_truthy
@@ -303,7 +303,7 @@ RSpec.describe Linzer::Message do
     end
 
     it "returns HTTP headers from message response" do
-      response = Linzer.new_response("body", 302, headers)
+      response = Linzer::Test::Response.new_response("body", 302, headers)
       message = described_class.new(response)
       expect(message.response?).to eq(true)
       expect(message.headers).to   eq(headers)
@@ -318,7 +318,7 @@ RSpec.describe Linzer::Message do
     end
 
     it "attaches a signature to a HTTP message" do
-      response = Linzer.new_response("body", 202, headers)
+      response = Linzer::Test::Response.new_response("body", 202, headers)
       message = described_class.new(response)
       message.attach!(signature)
       response["signature"] = signature.to_h["signature"]
