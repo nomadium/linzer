@@ -86,11 +86,17 @@ module Linzer
         raise Error.new "Unexpected value for covered components."
       end
 
+      def parse_structured_dictionary(str, field_name = nil)
+        Starry.parse_dictionary(str)
+      rescue Starry::ParseError => _
+        raise Error.new "Cannot parse \"#{field_name}\" field. Bailing out!"
+      end
+
       def parse_structured_field(hsh, field_name)
         # Serialized Structured Field values for HTTP are ASCII strings.
         # See: RFC 8941 (https://datatracker.ietf.org/doc/html/rfc8941)
         value = hsh[field_name].encode(Encoding::US_ASCII)
-        Message.parse_structured_dictionary(value, field_name)
+        parse_structured_dictionary(value, field_name)
       end
     end
   end

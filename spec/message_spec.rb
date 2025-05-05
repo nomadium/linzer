@@ -325,19 +325,4 @@ RSpec.describe Linzer::Message do
       response["signature-input"] = signature.to_h["signature-input"]
     end
   end
-
-  describe "::parse_structured_dictionary" do
-    it "parses HTTP structured dictionaries" do
-      dict = 'sig-b26=("@status" "content-type" "content-digest" "content-length");created=1618884473;keyid="test-key-ecc-p256"'
-      parsed_dict = described_class.parse_structured_dictionary(dict)
-
-      expect(parsed_dict["sig-b26"].to_a.map(&:value))
-        .to eq(%w[@status content-type content-digest content-length])
-    end
-
-    it "raises an error on unparsable strings" do
-      expect { described_class.parse_structured_dictionary('puts "hello world"') }
-        .to raise_error(Linzer::Error, /Cannot parse/)
-    end
-  end
 end
