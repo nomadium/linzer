@@ -20,7 +20,7 @@ RSpec.describe "README usage" do
       }
     end
 
-    let(:request) { Linzer.new_request(:post, "/some_uri", {}, headers) }
+    let(:request) { Linzer::Test::Request.new_request(:post, "/some_uri", {}, headers) }
 
     let(:message) { Linzer::Message.new(request) }
 

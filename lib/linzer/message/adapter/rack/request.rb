@@ -14,12 +14,12 @@ module Linzer
           end
 
           def headers
-            Linzer::Request.headers(@operation)
+            rack_request_headers(@operation)
           end
 
           def attach!(signature)
             signature.to_h.each do |h, v|
-              @operation.set_header(Linzer::Request.rack_header_name(h), v)
+              @operation.set_header(rack_header_name(h), v)
             end
             @operation
           end

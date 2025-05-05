@@ -5,7 +5,7 @@ RSpec.describe Linzer::Signer do
     let(:request) do
       request_data = Linzer::RFC9421::Examples.test_request_data
       path = request_data[:http]["path"]
-      Linzer.new_request(:post, path, {}, request_data[:headers])
+      Linzer::Test::Request.new_request(:post, path, {}, request_data[:headers])
     end
 
     let(:test_key_ed25519) do
@@ -44,7 +44,7 @@ RSpec.describe Linzer::Verifier do
     let(:request) do
       request_data = Linzer::RFC9421::Examples.test_request_data
       path = request_data[:http]["path"]
-      Linzer.new_request(:post, path, {}, request_data[:headers])
+      Linzer::Test::Request.new_request(:post, path, {}, request_data[:headers])
     end
 
     let(:test_key_ed25519_pub) { Linzer::RFC9421::Examples.test_key_ed25519_pub }

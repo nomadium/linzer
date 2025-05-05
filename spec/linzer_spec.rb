@@ -8,7 +8,7 @@ RSpec.describe Linzer do
   context "verifying messages" do
     it "has a ::verify method aliased to Linzer::Verifier::verify" do
       pubkey    = :some_key
-      message   = Linzer::Message.new(Linzer.new_request(:get))
+      message   = Linzer::Message.new(Linzer::Test::Request.new_request(:get))
       signature = :some_signature
 
       expect(Linzer::Verifier).to receive(:verify)
@@ -24,7 +24,7 @@ RSpec.describe Linzer do
 
         components = %w[@method @path date x-header]
         headers = {"x-header" => "foo", "date" => Time.now.to_s}
-        request = Linzer.new_request(:get, "/baz", {}, headers)
+        request = Linzer::Test::Request.new_request(:get, "/baz", {}, headers)
 
         # let's sign the simulated incoming request first, so we can test verification below
         Linzer.sign!(request, key: test_private_key, components: components)
@@ -34,7 +34,7 @@ RSpec.describe Linzer do
 
       it "raises an error if underlying HTTP message cannot be verified" do
         test_key = Linzer.generate_ed25519_key
-        request = Linzer.new_request(:get, "/foo", {}, {})
+        request = Linzer::Test::Request.new_request(:get, "/foo", {}, {})
 
         expect { Linzer.verify!(request, key: test_key) }
           .to raise_error(Linzer::Error, /Cannot build signature/)
@@ -109,23 +109,5 @@ RSpec.describe Linzer do
         expect(signature.parameters["expires"]).to eq(expires)
       end
     end
-  end
-
-  it "has a ::new_request method aliased to Linzer::Request::build" do
-    uri     = "/some_uri"
-    params  = {}
-    headers = {"foo" => "bar"}
-
-    expect(Linzer::Request).to receive(:build)
-      .with(:get, uri, params, headers)
-
-    Linzer.new_request(:get, uri, params, headers)
-  end
-
-  it "has a ::new_response method aliased to Rack::Response::initialize" do
-    expect(Rack::Response).to receive(:new)
-      .with(:body, :status, {})
-
-    Linzer::Test::Response.new_response(:body, :status, {})
   end
 end

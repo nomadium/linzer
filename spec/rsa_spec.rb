@@ -18,7 +18,7 @@ RSpec.describe Linzer::Signer do
         "host" => "origin.host.internal.example",
         "forwarded" => "for=192.0.2.123;host=example.com;proto=https"
       })
-      request = Linzer.new_request(:post, path, {}, headers)
+      request = Linzer::Test::Request.new_request(:post, path, {}, headers)
       # Workaround the fact that `rack` reports a different `@authority`
       # than this example from RFC9421 expects
       allow(request).to receive(:authority).and_return("origin.host.internal.example")
@@ -57,7 +57,7 @@ RSpec.describe Linzer::Verifier do
       headers = request_data[:headers].merge({
         "Forwarded" => "for=192.0.2.123;host=example.com;proto=https"
       })
-      request = Linzer.new_request(:post, path, {}, headers)
+      request = Linzer::Test::Request.new_request(:post, path, {}, headers)
       # Workaround the fact that `rack` reports a different `@authority`
       # than this example from RFC9421 expects
       allow(request).to receive(:authority).and_return("origin.host.internal.example")
