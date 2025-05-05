@@ -67,7 +67,7 @@ RSpec.describe "README usage" do
       }
     end
 
-    let(:response) { Linzer.new_response("request body", 200, headers) }
+    let(:response) { Linzer::Test::Response.new_response("request body", 200, headers) }
 
     let(:message) { Linzer::Message.new(response) }
 

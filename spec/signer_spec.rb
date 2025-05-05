@@ -54,7 +54,7 @@ RSpec.describe Linzer::Signer do
     request_data = {headers: request_headers}
     path         = "/foo"
     request      = Linzer.new_request(:post, path, {}, request_data[:headers])
-    response     = Linzer.new_response(nil, 200, {"Header3" => "three"})
+    response     = Linzer::Test::Response.new_response(nil, 200, {"Header3" => "three"})
     message      = Linzer::Message.new(response, attached_request: request)
 
     expect { described_class.sign(:key, message, %w[header3 header2;bs;req header2;req;bs]) }

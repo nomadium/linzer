@@ -10,7 +10,6 @@ require "net/http"
 require_relative "linzer/version"
 require_relative "linzer/common"
 require_relative "linzer/request"
-require_relative "linzer/response"
 require_relative "linzer/message"
 require_relative "linzer/message/adapter"
 require_relative "linzer/message/wrapper"
@@ -31,7 +30,6 @@ module Linzer
 
   class << self
     include Key::Helper
-    include Response
 
     def new_request(verb, uri = "/", params = {}, headers = {})
       Linzer::Request.build(verb, uri, params, headers)
