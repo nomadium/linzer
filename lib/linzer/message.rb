@@ -20,14 +20,7 @@ module Linzer
     # to attach a signature to the underlying HTTP message
     def_delegators :@adapter, :attach!
 
-    # maybe move this to a better place
     class << self
-      def parse_structured_dictionary(str, field_name = nil)
-        Starry.parse_dictionary(str)
-      rescue Starry::ParseError => _
-        raise Error.new "Cannot parse \"#{field_name}\" field. Bailing out!"
-      end
-
       def register_adapter(operation_class, adapter_class)
         Wrapper.register_adapter(operation_class, adapter_class)
       end
