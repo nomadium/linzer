@@ -35,7 +35,7 @@ RSpec.describe Linzer::Verifier do
     test_request_data = request_data.dup
     test_request_data[:headers].merge!(signature_with_missing_component)
     path = request_data[:http]["path"]
-    request = Linzer.new_request(:post, path, {}, test_request_data[:headers])
+    request = Linzer::Test::Request.new_request(:post, path, {}, test_request_data[:headers])
 
     signature = Linzer::Signature.build(test_request_data[:headers])
     message = Linzer::Message.new(request)
@@ -52,7 +52,7 @@ RSpec.describe Linzer::Verifier do
     test_request_data = request_data.dup
     test_request_data[:headers].merge!(signature_with_duplicated_component)
     path = request_data[:http]["path"]
-    request = Linzer.new_request(:post, path, {}, test_request_data[:headers])
+    request = Linzer::Test::Request.new_request(:post, path, {}, test_request_data[:headers])
 
     pubkey = Linzer.generate_rsa_pss_sha512_key(2048, "foo-key-rsa-pss")
     signature = Linzer::Signature.build(test_request_data[:headers])
@@ -70,7 +70,7 @@ RSpec.describe Linzer::Verifier do
     test_request_data = request_data.dup
     test_request_data[:headers].merge!(signature_with_invalid_component)
     path = request_data[:http]["path"]
-    request = Linzer.new_request(:post, path, {}, test_request_data[:headers])
+    request = Linzer::Test::Request.new_request(:post, path, {}, test_request_data[:headers])
 
     pubkey = Linzer.generate_rsa_pss_sha512_key(2048, "foo-key-rsa-pss")
     signature = Linzer::Signature.build(test_request_data[:headers])
@@ -88,7 +88,7 @@ RSpec.describe Linzer::Verifier do
     test_request_data = request_data.dup
     test_request_data[:headers].merge!(invalid_signature)
     path = request_data[:http]["path"]
-    request = Linzer.new_request(:post, path, {}, test_request_data[:headers])
+    request = Linzer::Test::Request.new_request(:post, path, {}, test_request_data[:headers])
 
     pubkey = Linzer.new_rsa_pss_sha512_key(test_key_rsa_pss_pub, "test-key-rsa-pss")
 
@@ -108,7 +108,7 @@ RSpec.describe Linzer::Verifier do
     test_request_data = request_data.dup
     test_request_data[:headers].merge!(valid_signature)
     path = request_data[:http]["path"]
-    request = Linzer.new_request(:post, path, {}, test_request_data[:headers])
+    request = Linzer::Test::Request.new_request(:post, path, {}, test_request_data[:headers])
 
     pubkey = Linzer.new_rsa_pss_sha512_key(test_key_rsa_pss_pub, "test-key-rsa-pss")
     signature = Linzer::Signature.build(test_request_data[:headers])
@@ -134,7 +134,7 @@ RSpec.describe Linzer::Verifier do
       .merge!(valid_signature)       #     "Content-Type"=>"application/json",
 
     path = request_data[:http]["path"]
-    request = Linzer.new_request(:post, path, {}, test_request_data[:headers])
+    request = Linzer::Test::Request.new_request(:post, path, {}, test_request_data[:headers])
 
     pubkey = Linzer.new_rsa_pss_sha512_key(test_key_rsa_pss_pub, "test-key-rsa-pss")
     signature = Linzer::Signature.build(test_request_data[:headers])
@@ -152,7 +152,7 @@ RSpec.describe Linzer::Verifier do
 
     let(:message) do
       path = test_request_data[:http]["path"]
-      request = Linzer.new_request(:post, path, {}, test_request_data[:headers])
+      request = Linzer::Test::Request.new_request(:post, path, {}, test_request_data[:headers])
       Linzer::Message.new(request)
     end
     let(:pubkey) do

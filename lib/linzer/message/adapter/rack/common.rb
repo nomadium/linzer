@@ -24,6 +24,39 @@ module Linzer
             raise Error.new msg if response? == request?
           end
 
+          def validate_header_name(name)
+            raise ArgumentError.new, "Blank header name." if name.empty?
+            name.to_str
+          rescue => ex
+            err_msg = "Invalid header name: '#{name}'"
+            raise Linzer::Error.new, err_msg, cause: ex
+          end
+
+          def rack_header_name(field_name)
+            validate_header_name field_name
+
+            rack_name = field_name.upcase.tr("-", "_")
+            case field_name.downcase
+            when "content-type", "content-length"
+              rack_name
+            else
+              "HTTP_#{rack_name}"
+            end
+          end
+
+          def rack_request_headers(rack_request)
+            rack_request
+              .each_header
+              .to_h
+              .select do |k, _|
+                k.start_with?("HTTP_") || %w[CONTENT_TYPE CONTENT_LENGTH].include?(k)
+              end
+              .transform_keys { |k| k.downcase.tr("_", "-") }
+              .transform_keys do |k|
+                %w[content-type content-length].include?(k) ? k : k.gsub(/^http-/, "")
+              end
+          end
+
           def derived(name)
             method = DERIVED_COMPONENT[name.value]
 
@@ -42,7 +75,7 @@ module Linzer
               value = tr(name)
             else
               if request?
-                rack_header_name = Linzer::Request.rack_header_name(name.value.to_s)
+                rack_header_name = rack_header_name(name.value.to_s)
                 value = @operation.env[rack_header_name]
               end
               value = @operation.headers[name.value.to_s] if response?

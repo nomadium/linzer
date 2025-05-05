@@ -250,12 +250,6 @@ test_ed25519_key_pub = key.material.public_to_pem
 pubkey = Linzer.new_ed25519_public_key(test_ed25519_key_pub, "some-key-ed25519")
 # => #<Linzer::Ed25519::Key:0x00000fe19b9384b0
 
-# if you have to, there is a helper method to build a request object on the server side
-# although any standard Ruby web server or framework (Sinatra, Rails, etc) should expose
-# a request object and this should not be required for most cases.
-#
-# request = Linzer.new_request(:post, "/some_uri", {}, headers)
-
 message = Linzer::Message.new(request)
 
 signature = Linzer::Signature.build(message.headers)
