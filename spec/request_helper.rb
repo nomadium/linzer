@@ -5,14 +5,14 @@ module Linzer
     module Request
       extend self
 
-      def new_request(verb, uri = "/", params = {}, headers = {})
-        validate verb, uri, params, headers
+      def new_request(verb, path = "/", params = {}, headers = {})
+        validate verb, path, params, headers
 
         # XXX: to-do: handle rack request params?
         request_method = Rack.const_get(verb.upcase)
         args = {
           "REQUEST_METHOD" => request_method,
-          "PATH_INFO"      => uri.to_str,
+          "PATH_INFO"      => path.to_str,
           "rack.input"     => StringIO.new
         }
 
@@ -21,9 +21,9 @@ module Linzer
 
       private
 
-      def validate(verb, uri, params, headers)
+      def validate(verb, path, params, headers)
         validate_verb      verb
-        validate_uri       uri
+        validate_path      path
         validate_arg_hash  headers: headers
         validate_arg_hash  params:  params
       end
@@ -35,11 +35,11 @@ module Linzer
         raise Error.new, unknown_method, cause: ex
       end
 
-      def validate_uri(uri)
-        uri.to_str
+      def validate_path(path)
+        path.to_str
       rescue => ex
-        invalid_uri = "Invalid URI"
-        raise Error.new, invalid_uri, cause: ex
+        invalid_path = "Invalid path"
+        raise Error.new, invalid_path, cause: ex
       end
 
       def validate_arg_hash(hsh)
