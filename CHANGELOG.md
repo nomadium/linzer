@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+## [0.7.0.beta3] - 2025-05-06 (aka the ["MiniDebConf Hamburg 2025"](https://wiki.debian.org/DebianEvents/de/2025/MiniDebConfHamburg) release)
+
+- Refactor to improve Linzer APIs and streamline its usage along with different
+  HTTP libraries.
+
 ## [0.7.0.beta2] - 2025-04-13
 
 - Refactor and improve Rack::Auth::Signature code organization.
