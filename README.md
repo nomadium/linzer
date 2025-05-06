@@ -59,32 +59,30 @@ look at
 
 To learn about more specific scenarios or use cases, keep reading on below.
 
-<<<<<<< HEAD
-### To sign a HTTP request:
-=======
 ### To sign a HTTP request (if you are using http gem):
+
+(This is probably the most convenient option available)
 
 ```ruby
 # first require http signatures feature class ready to be used with http gem:
-require "linzer/http/signature_feature"
-#
+require "linzer/http/signature_feature" # XXX: <--- maybe review this
+
 key = Linzer.generate_ed25519_key # generate a new key pair
 # => #<Linzer::Ed25519::Key:0x00000fe13e9bd208
 # or load an existing key with:
 # key = Linzer.new_ed25519_key(IO.read("key"), "mykeyid")
-#
+
 # then send the request:
 url = "https://example.org/api"
 response = HTTP.headers(date: Time.now.to_s, foo: "bar")
-               .use(http_signature: {key: key} # <--- covered components and signature params
-               .get(url)                       #      can be customized on the client
+               .use(http_signature: {key: key} # <--- covered components
+               .get(url) # and signature params can also be customized on the client
 => #<HTTP::Response/1.1 200 OK {"Content-Type" => ...
 response.body.to_s
 => "protected content..."
 ```
 
 ### To sign a HTTP message:
->>>>>>> 84abf67 (Add custom feature for HTTP signatures and http.rb gem)
 
 ```ruby
 key = Linzer.generate_ed25519_key
@@ -246,7 +244,8 @@ For how to register a custom adapter and how to verify signatures in a response,
 see this example:
 
 ```ruby
-Linzer::Message.register_adapter(HTTP::Response, MyOwnResponseAdapter)
+Linzer::Message.register_adapter(HTTP::Response, Linzer::Message::Adapter::HTTPGem::Response)
+# Linzer::Message.register_adapter(HTTP::Response, MyOwnResponseAdapter) # or use your own
 response = HTTP.get("http://www.example.com/api/service/task")
 # => #<HTTP::Response/1.1 200 OK ...
 response["signature"]
