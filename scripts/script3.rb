@@ -1,3 +1,4 @@
+# rubocop:disable all
 require_relative "lib/linzer/http/signature_feature"
 
 

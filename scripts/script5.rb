@@ -1,3 +1,4 @@
+# rubocop:disable all
 require "linzer"
 
 key = Linzer.new_ed25519_key(IO.read("key"))

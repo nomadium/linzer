@@ -13,7 +13,15 @@ rescue LoadError # http gem is not a linzer core dependency
 else
   module Linzer
     module HTTP
-      Linzer::Message.register_adapter(::HTTP::Request, Linzer::Message::Adapter::HTTPGem::Request)
+      class << self
+        def register_adapter
+          request_class = ::HTTP::Request
+          adapter_class = Linzer::Message::Adapter::HTTPGem::Request
+          Linzer::Message.register_adapter(request_class, adapter_class)
+        end
+      end
+
+      register_adapter
 
       class SignatureFeature < ::HTTP::Feature
         def initialize(key:, params: {}, covered_components: default_components)

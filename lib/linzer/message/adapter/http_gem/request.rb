@@ -13,7 +13,7 @@ module Linzer
 
           def derived(name)
             return @operation.verb.to_s.upcase if name.value == :method
-            super(name)
+            super
           end
         end
       end

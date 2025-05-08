@@ -1,3 +1,4 @@
+# rubocop:disable all
 require "linzer"
 require "http"
 
