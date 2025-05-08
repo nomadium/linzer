@@ -4,6 +4,7 @@ require "linzer"
 
 begin
   require "http"
+  require_relative "../message/adapter/http_gem/request"
 rescue LoadError # http gem is not a linzer core dependency
   # :nocov:
   puts "http gem is required to be installed to use this feature."
@@ -12,6 +13,8 @@ rescue LoadError # http gem is not a linzer core dependency
 else
   module Linzer
     module HTTP
+      Linzer::Message.register_adapter(::HTTP::Request, Linzer::Message::Adapter::HTTPGem::Request)
+
       class SignatureFeature < ::HTTP::Feature
         def initialize(key:, params: {}, covered_components: default_components)
           @fields = Array(covered_components)
@@ -22,7 +25,7 @@ else
         attr_reader :fields, :params
 
         def wrap_request(request)
-          message   = Linzer::Message.new(adapt_request(request))
+          message   = Linzer::Message.new(request)
           signature = Linzer.sign(key, message, fields, **params)
           request.headers.merge!(signature.to_h)
           request
@@ -43,17 +46,6 @@ else
           raise ::HTTP::Error, "Key can not be nil!"    if !key
           raise ::HTTP::Error, "Key object is invalid!" if !key.respond_to?(:sign)
           key
-        end
-
-        def adapt_request(request)
-          env = Rack::MockRequest.env_for(request.uri)
-          rack_request = Rack::Request.new(env)
-
-          request.headers.each do |h, v|
-            rack_request.set_header Linzer::Request.rack_header_name(h), v
-          end
-
-          rack_request
         end
 
         ::HTTP::Options.register_feature(:http_signature, self)

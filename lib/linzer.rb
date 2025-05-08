@@ -30,7 +30,7 @@ module Linzer
 
   class << self
     include Key::Helper
-    include HTTP::Helper
+    include HTTP
 
     def verify(pubkey, message, signature, no_older_than: nil)
       Linzer::Verifier.verify(pubkey, message, signature, no_older_than: no_older_than)
