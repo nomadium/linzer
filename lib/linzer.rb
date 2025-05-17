@@ -9,6 +9,7 @@ require "net/http"
 
 require_relative "linzer/version"
 require_relative "linzer/common"
+require_relative "linzer/options"
 require_relative "linzer/message"
 require_relative "linzer/message/adapter"
 require_relative "linzer/message/wrapper"
