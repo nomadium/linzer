@@ -1,5 +1,28 @@
 ## [Unreleased]
 
+## [0.7.0] - 2025-05-17
+
+(No changes since the last beta release, this new stable release just
+bundles all the features/changes introduced during 0.7.0 beta releases) 
+
+- Introduce Rack::Auth::Signature middleware.
+
+- Refactor and improve Rack::Auth::Signature code organization.
+
+- Do not expose secret material on HMAC SHA-256 key when #inspect method is used.
+
+- Update Rack::Auth::Signature configuration file options.
+
+- Validate and test Rack::Auth::Signature with example Rails and Sinatra apps.
+
+- Refactor to improve Linzer APIs and streamline its usage along with different
+  HTTP libraries. (Issues [#6](https://github.com/nomadium/linzer/issues/6) and
+  [#11](https://github.com/nomadium/linzer/issues/11))
+
+- Provide integration with http.rb gem to allow signing outgoing HTTP requests.
+
+- Add simple HTTP client module.
+
 ## [0.7.0.beta4] - 2025-05-17
 
 - Provide integration with http.rb gem to allow signing outgoing HTTP requests.
