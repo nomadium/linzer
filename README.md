@@ -60,6 +60,31 @@ To learn about more specific scenarios or use cases, keep reading on below.
 
 ### To sign a HTTP request:
 
+There are several options:
+
+#### If you are using http gem:
+
+```ruby
+# first require http signatures feature class ready to be used with http gem:
+require "linzer/http/signature_feature"
+
+key = Linzer.generate_ed25519_key # generate a new key pair
+# => #<Linzer::Ed25519::Key:0x00000fe13e9bd208
+# or load an existing key with:
+# key = Linzer.new_ed25519_key(IO.read("key"), "mykeyid")
+
+# then send the request:
+url = "https://example.org/api"
+response = HTTP.headers(date: Time.now.to_s, foo: "bar")
+               .use(http_signature: {key: key} # <--- covered components
+               .get(url) # and signature params can also be customized on the client
+=> #<HTTP::Response/1.1 200 OK {"Content-Type" => ...
+response.body.to_s
+=> "protected content..."
+```
+
+#### If you are using plain old Net::HTTP:
+
 ```ruby
 key = Linzer.generate_ed25519_key
 # => #<Linzer::Ed25519::Key:0x00000fe13e9bd208
@@ -84,7 +109,7 @@ request["signature-input"]
 # => "sig1=(\"@method\" \"@request-target\" \"date\" ..."}
 ```
 
-### Use the signed request with an HTTP client:
+Then you can submit the signed request with Net::HTTP client:
 
 ```ruby
 require "net/http"
@@ -123,6 +148,26 @@ response = http.request(request)
 # read 0 bytes
 # Conn close
 # => #<Net::HTTPOK 200 OK readbody=true>
+```
+
+#### Or you can also use the simple HTTP client bundled with this library:
+
+(This client is probably not suitable for production use but could be useful
+enough to get started. It's build on top of Net::HTTP.)
+
+```ruby
+key = Linzer.generate_rsa_pss_sha512_key(4096)
+uri = URI("https://example.org/api/task")
+headers = {"date" => Time.now.to_s}
+response =
+  Linzer::HTTP
+    .post("http://httpbin.org/headers",
+          data: "foo",
+          debug: true,
+          key: key,
+          headers: headers)
+...
+=> #<Net::HTTPOK 200 OK readbody=true>
 ```
 
 ### To verify an incoming request on the server side:
@@ -220,7 +265,8 @@ For how to register a custom adapter and how to verify signatures in a response,
 see this example:
 
 ```ruby
-Linzer::Message.register_adapter(HTTP::Response, MyOwnResponseAdapter)
+Linzer::Message.register_adapter(HTTP::Response, Linzer::Message::Adapter::HTTPGem::Response)
+# Linzer::Message.register_adapter(HTTP::Response, MyOwnResponseAdapter) # or use your own adapter
 response = HTTP.get("http://www.example.com/api/service/task")
 # => #<HTTP::Response/1.1 200 OK ...
 response["signature"]
