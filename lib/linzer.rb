@@ -31,6 +31,8 @@ module Linzer
 
   class VerifyError < Error; end
 
+  class SigningError < Error; end
+
   class << self
     include Key::Helper
 

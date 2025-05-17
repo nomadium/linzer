@@ -15,17 +15,17 @@ RSpec.describe Linzer::Signer do
 
   it "cannot sign a null message" do
     expect { described_class.sign(:key, nil, []) }
-      .to raise_error(Linzer::Error, /null value/)
+      .to raise_error(Linzer::SigningError, /null value/)
   end
 
   it "cannot sign a message with a null key" do
     expect { described_class.sign(nil, :message, []) }
-      .to raise_error(Linzer::Error, /null key.*/)
+      .to raise_error(Linzer::SigningError, /null key.*/)
   end
 
   it "cannot sign a message with null components" do
     expect { described_class.sign(:key, :message, nil) }
-      .to raise_error(Linzer::Error, /null component/)
+      .to raise_error(Linzer::SigningError, /null component/)
   end
 
   it "cannot sign a message with a missing component" do
@@ -35,7 +35,7 @@ RSpec.describe Linzer::Signer do
     message      = Linzer::Message.new(request)
 
     expect { described_class.sign(:key, message, %w[header1 header2 missing]) }
-      .to raise_error(Linzer::Error, /[Mm]issing component in message/)
+      .to raise_error(Linzer::SigningError, /[Mm]issing component in message/)
   end
 
   it "cannot sign a message with a duplicated component, example 1" do
@@ -45,7 +45,7 @@ RSpec.describe Linzer::Signer do
     message      = Linzer::Message.new(request)
 
     expect { described_class.sign(:key, message, %w[header1 header2 header2]) }
-      .to raise_error(Linzer::Error, /[dD]uplicated component/)
+      .to raise_error(Linzer::SigningError, /[dD]uplicated component/)
   end
 
   it "cannot sign a message with a duplicated component, example 2" do
@@ -58,7 +58,7 @@ RSpec.describe Linzer::Signer do
     message      = Linzer::Message.new(response, attached_request: request)
 
     expect { described_class.sign(:key, message, %w[header3 header2;bs;req header2;req;bs]) }
-      .to raise_error(Linzer::Error, /[dD]uplicated component/)
+      .to raise_error(Linzer::SigningError, /[dD]uplicated component/)
   end
 
   it "cannot sign a message with a @signature-params component" do
@@ -69,7 +69,7 @@ RSpec.describe Linzer::Signer do
     message      = Linzer::Message.new(request)
 
     expect { described_class.sign(:key, message, components) }
-      .to raise_error(Linzer::Error, /[iI]nvalid component/)
+      .to raise_error(Linzer::SigningError, /[iI]nvalid component/)
   end
 
   it "signs a message" do
