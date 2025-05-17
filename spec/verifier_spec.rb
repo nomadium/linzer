@@ -7,22 +7,22 @@ RSpec.describe Linzer::Verifier do
 
   it "cannot verify a null message" do
     expect { described_class.verify(:key, nil, :signature) }
-      .to raise_error(Linzer::Error, /cannot be null/)
+      .to raise_error(Linzer::VerifyError, /cannot be null/)
   end
 
   it "cannot verify with a null key" do
     expect { described_class.verify(nil, :message, :signature) }
-      .to raise_error(Linzer::Error, /Key.+cannot be null/)
+      .to raise_error(Linzer::VerifyError, /Key.+cannot be null/)
   end
 
   it "cannot verify with a null signature" do
     expect { described_class.verify(:key, :message, nil) }
-      .to raise_error(Linzer::Error, /Signature.+cannot be null/)
+      .to raise_error(Linzer::VerifyError, /Signature.+cannot be null/)
   end
 
   it "cannot verify with an unexpected or invalid signature object" do
     expect { described_class.verify(:key, :message, :signature) }
-      .to raise_error(Linzer::Error, /Signature is invalid/)
+      .to raise_error(Linzer::VerifyError, /Signature is invalid/)
   end
 
   it "cannot verify a message with a missing component" do
@@ -41,7 +41,7 @@ RSpec.describe Linzer::Verifier do
     message = Linzer::Message.new(request)
 
     expect { described_class.verify(:key, message, signature) }
-      .to raise_error(Linzer::Error, /Missing component.+#{missing_component}.*/)
+      .to raise_error(Linzer::VerifyError, /Missing component.+#{missing_component}.*/)
   end
 
   it "cannot verify a message with duplicated component" do
@@ -59,7 +59,7 @@ RSpec.describe Linzer::Verifier do
     message = Linzer::Message.new(request)
 
     expect { described_class.verify(pubkey, message, signature) }
-      .to raise_error(Linzer::Error, /[dD]uplicated component/)
+      .to raise_error(Linzer::VerifyError, /[dD]uplicated component/)
   end
 
   it "cannot verify a message with @signature-params component" do
@@ -77,7 +77,7 @@ RSpec.describe Linzer::Verifier do
     message = Linzer::Message.new(request)
 
     expect { described_class.verify(pubkey, message, signature) }
-      .to raise_error(Linzer::Error, /[iI]nvalid component/)
+      .to raise_error(Linzer::VerifyError, /[iI]nvalid component/)
   end
 
   it "fails to verify an invalid signature" do
@@ -96,7 +96,7 @@ RSpec.describe Linzer::Verifier do
     message   = Linzer::Message.new(request)
 
     expect { described_class.verify(pubkey, message, signature) }
-      .to raise_error(Linzer::Error, /Invalid signature/)
+      .to raise_error(Linzer::VerifyError, /Invalid signature/)
   end
 
   # Example from section 3.2 Verifying a Signature
@@ -177,7 +177,7 @@ RSpec.describe Linzer::Verifier do
 
       it "verifies `created` and fails when it is too old" do
         expect { described_class.verify(pubkey, message, signature, no_older_than: 300) }
-          .to raise_error(Linzer::Error, /Signature created more than 300 seconds ago/)
+          .to raise_error(Linzer::VerifyError, /Signature created more than 300 seconds ago/)
       end
     end
 
@@ -191,7 +191,7 @@ RSpec.describe Linzer::Verifier do
 
       it "fails verification" do
         expect { described_class.verify(pubkey, message, signature, no_older_than: 300) }
-          .to raise_error(Linzer::Error, /non-integer/)
+          .to raise_error(Linzer::VerifyError, /non-integer/)
       end
     end
 
@@ -205,7 +205,7 @@ RSpec.describe Linzer::Verifier do
 
       it "fails verification" do
         expect { described_class.verify(pubkey, message, signature, no_older_than: 300) }
-          .to raise_error(Linzer::Error, /Signature is missing the `created` parameter/)
+          .to raise_error(Linzer::VerifyError, /Signature is missing the `created` parameter/)
       end
     end
   end

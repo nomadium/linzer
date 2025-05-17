@@ -29,6 +29,8 @@ require_relative "rack/auth/signature"
 module Linzer
   class Error < StandardError; end
 
+  class VerifyError < Error; end
+
   class << self
     include Key::Helper
 

@@ -19,27 +19,35 @@ module Linzer
       private
 
       def validate(message, key, signature, no_older_than: nil)
-        raise Error, "Message to verify cannot be null"       if message.nil?
-        raise Error, "Key to verify signature cannot be null" if key.nil?
-        raise Error, "Signature to verify cannot be null"     if signature.nil?
+        raise VerifyError, "Message to verify cannot be null"       if message.nil?
+        raise VerifyError, "Key to verify signature cannot be null" if key.nil?
+        raise VerifyError, "Signature to verify cannot be null"     if signature.nil?
 
         if !signature.respond_to?(:value) || !signature.respond_to?(:components)
-          raise Error, "Signature is invalid"
+          raise VerifyError, "Signature is invalid"
         end
 
-        raise Error, "Signature raw value to cannot be null" if signature.value.nil?
-        raise Error, "Components cannot be null"             if signature.components.nil?
+        raise VerifyError, "Signature raw value to cannot be null" if signature.value.nil?
+        raise VerifyError, "Components cannot be null"             if signature.components.nil?
 
-        validate_components message, signature.components
+        begin
+          validate_components message, signature.components
+        rescue Error => ex
+          raise VerifyError, ex.message, cause: ex
+        end
 
         return unless no_older_than
         old_sig_msg = "Signature created more than #{no_older_than} seconds ago"
-        raise Error, old_sig_msg if signature.older_than?(no_older_than.to_i)
+        begin
+          raise VerifyError, old_sig_msg if signature.older_than?(no_older_than.to_i)
+        rescue Error => ex
+          raise VerifyError, ex.message, cause: ex
+        end
       end
 
       def verify_or_fail(key, signature, data)
         return true if key.verify(signature, data)
-        raise Error, "Failed to verify message: Invalid signature."
+        raise VerifyError, "Failed to verify message: Invalid signature."
       end
     end
   end
