@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+## [0.7.0.beta4] - 2025-05-17
+
+- Provide integration with http.rb gem to allow signing outgoing HTTP requests.
+- Add simple HTTP client module.
+
 ## [0.7.0.beta3] - 2025-05-06 (aka the ["MiniDebConf Hamburg 2025"](https://wiki.debian.org/DebianEvents/de/2025/MiniDebConfHamburg) release)
 
 - Refactor to improve Linzer APIs and streamline its usage along with different
