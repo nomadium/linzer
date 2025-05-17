@@ -27,9 +27,9 @@ module Linzer
 
       def validate(key, message, components)
         msg = "Message cannot be signed with null %s"
-        raise Error.new msg % "value"     if message.nil?
-        raise Error.new msg % "key"       if key.nil?
-        raise Error.new msg % "component" if components.nil?
+        raise Error, msg % "value"     if message.nil?
+        raise Error, msg % "key"       if key.nil?
+        raise Error, msg % "component" if components.nil?
 
         validate_components message, components
       end
