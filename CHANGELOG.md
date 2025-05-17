@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+- Introduce specific exception classes for message signing errors
+  and signature verification exceptions (i.e. Linzer::SigningError
+  and Linzer::VerifyError)
+
 ## [0.7.0] - 2025-05-17
 
 (No changes since the last beta release, this new stable release just
