@@ -4,6 +4,8 @@
   and signature verification exceptions (i.e. Linzer::SigningError
   and Linzer::VerifyError)
 
+- Fix bug in Linzer::HTTP client that prevented from working with https URLs.
+
 ## [0.7.0] - 2025-05-17
 
 (No changes since the last beta release, this new stable release just

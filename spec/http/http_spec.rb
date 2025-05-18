@@ -32,6 +32,7 @@ RSpec.describe Linzer::HTTP do
 
       uri = "https://www.example.com/api/service"
 
+      expect(net_http).to receive(:use_ssl=).with(true)
       expect(net_http).to receive(:get).with(
         uri,
         satisfy do |hsh|
@@ -50,6 +51,7 @@ RSpec.describe Linzer::HTTP do
 
       data = "body"
 
+      expect(net_http).to receive(:use_ssl=).with(true)
       expect(net_http).to receive(:post).with(
         uri,
         data,
@@ -78,6 +80,7 @@ RSpec.describe Linzer::HTTP do
       net_http = instance_double("Net::HTTP")
       allow(Net::HTTP).to receive(:new).and_return(net_http)
 
+      expect(net_http).to receive(:use_ssl=).with(true)
       expect(net_http).to receive(:lock).with(
         uri,
         "some data",

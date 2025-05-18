@@ -33,6 +33,8 @@ module Linzer
 
       req_uri = URI(uri)
       http = Net::HTTP.new(req_uri.host, req_uri.port)
+
+      http.use_ssl = req_uri.scheme == "https"
       http.set_debug_output($stderr) if options[:debug]
 
       headers    = build_headers(options[:headers] || {})
