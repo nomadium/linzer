@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+- Add a few integration tests against CloudFlare test server.
+
 ## [0.7.1] - 2025-05-18
 
 - Introduce specific exception classes for message signing errors
