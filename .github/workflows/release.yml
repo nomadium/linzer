@@ -31,5 +31,8 @@ jobs:
           bundler-cache: true
           ruby-version: ruby
 
+      - name: Run all tests
+        run: bundle exec rake all
+
       # Release
       - uses: rubygems/release-gem@9e85cb11501bebc2ae661c1500176316d3987059 # v1
