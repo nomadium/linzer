@@ -299,16 +299,16 @@ RSpec.describe Linzer::Message do
       request = Linzer::Test::RackHelper.new_request(:options, "/foo", {}, headers)
       message = described_class.new(request)
       expect(message.request?).to eq(true)
-      expect(message.header("content-type")).to  eq("application/json")
-      expect(message.header("foo")).to  eq("bar")
+      expect(message.header("content-type")).to eq("application/json")
+      expect(message.header("foo")).to eq("bar")
     end
 
     it "returns HTTP header from message response" do
       response = Linzer::Test::RackHelper.new_response("body", 302, headers)
       message = described_class.new(response)
       expect(message.response?).to eq(true)
-      expect(message.header("content-type")).to  eq("application/json")
-      expect(message.header("foo")).to  eq("bar")
+      expect(message.header("content-type")).to eq("application/json")
+      expect(message.header("foo")).to eq("bar")
     end
   end
 

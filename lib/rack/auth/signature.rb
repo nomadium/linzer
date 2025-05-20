@@ -68,7 +68,7 @@ module Rack
 
         @message = Linzer::Message.new(request)
         signature_headers = {}
-        %w(signature-input signature).each do |name|
+        %w[signature-input signature].each do |name|
           value = @message.header(name)
           signature_headers[name] = value if value
         end
