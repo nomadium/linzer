@@ -7,6 +7,8 @@
 # https://github.com/thibmeu/http-message-signatures-directory
 #
 RSpec.describe "Tests against cloudflare example server", :integration do
+  let(:debug) { false }
+
   let(:expected_msg) do
     /You successfully authenticated as owning the test public key/
   end
@@ -36,7 +38,7 @@ RSpec.describe "Tests against cloudflare example server", :integration do
       now = Time.now.utc.to_i
       Linzer::HTTP.get(uri,
         key:    key,
-        # debug:  true,
+        debug:  debug,
         params: {
           created: now,
           expires: now + 500,
@@ -89,6 +91,8 @@ RSpec.describe "Tests against cloudflare example server", :integration do
       response = http_client.call(uri).request(request)
 
       expect(response.code).to eq("200")
+
+      puts response.body if debug
 
       expect(response.body)
         .to include("signature: #{request["signature"]}")
