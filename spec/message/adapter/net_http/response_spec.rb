@@ -4,12 +4,11 @@ RSpec.describe Linzer::Message::Adapter::NetHTTP::Response do
   describe "#headers" do
     it "returns all headers in HTTP response message" do
       response = Net::HTTPOK.new("1.1", "200", "OK")
-      response["header1"] = "value1"
+      response["Test-Header1"] = "value1"
       response["header2"] = "value2"
       adapter = described_class.new(response)
-      headers = adapter.headers
-      expect(headers["header1"]).to eq("value1")
-      expect(headers["header2"]).to eq("value2")
+      expect(adapter.header("test-header1")).to eq("value1")
+      expect(adapter.header("header2")).to eq("value2")
     end
   end
 

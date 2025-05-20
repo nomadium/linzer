@@ -13,8 +13,8 @@ module Linzer
             freeze
           end
 
-          def headers
-            @operation.each_header.to_h
+          def header(name)
+            @operation[name]
           end
 
           # XXX: this implementation is incomplete, e.g.: ;tr parameter is not supported yet

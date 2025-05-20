@@ -14,7 +14,7 @@ RSpec.describe Linzer::Signer do
     let(:request) do
       request_data = Linzer::RFC9421::Examples.test_request_data
       path = request_data[:http]["path"]
-      request = Linzer::Test::Request.new_request(:post, path, {}, request_data[:headers])
+      request = Linzer::Test::RackHelper.new_request(:post, path, {}, request_data[:headers])
       request.env["QUERY_STRING"] = "param=Value&Pet=dog"
       request
     end
@@ -48,7 +48,7 @@ RSpec.describe Linzer::Verifier do
     let(:request) do
       request_data = Linzer::RFC9421::Examples.test_request_data
       path = request_data[:http]["path"]
-      request = Linzer::Test::Request.new_request(:post, path, {}, request_data[:headers])
+      request = Linzer::Test::RackHelper.new_request(:post, path, {}, request_data[:headers])
       request.env["QUERY_STRING"] = "param=Value&Pet=dog"
       request
     end

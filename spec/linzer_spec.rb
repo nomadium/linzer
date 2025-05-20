@@ -8,7 +8,7 @@ RSpec.describe Linzer do
   context "verifying messages" do
     it "has a ::verify method aliased to Linzer::Verifier::verify" do
       pubkey    = :some_key
-      message   = Linzer::Message.new(Linzer::Test::Request.new_request(:get))
+      message   = Linzer::Message.new(Linzer::Test::RackHelper.new_request(:get))
       signature = :some_signature
 
       expect(Linzer::Verifier).to receive(:verify)
@@ -24,7 +24,7 @@ RSpec.describe Linzer do
 
         components = %w[@method @path date x-header]
         headers = {"x-header" => "foo", "date" => Time.now.to_s}
-        request = Linzer::Test::Request.new_request(:get, "/baz", {}, headers)
+        request = Linzer::Test::RackHelper.new_request(:get, "/baz", {}, headers)
 
         # let's sign the simulated incoming request first, so we can test verification below
         Linzer.sign!(request, key: test_private_key, components: components)
@@ -34,14 +34,14 @@ RSpec.describe Linzer do
 
       it "raises an error if underlying HTTP message cannot be verified" do
         test_key = Linzer.generate_ed25519_key
-        request = Linzer::Test::Request.new_request(:get, "/foo", {}, {})
+        request = Linzer::Test::RackHelper.new_request(:get, "/foo", {}, {})
 
         expect { Linzer.verify!(request, key: test_key) }
           .to raise_error(Linzer::Error, /Cannot build signature/)
       end
 
       it "yields the keyid of the HTTP message signature if a block is passed" do
-        response = Linzer::Test::Response.new_response("body", 201, {"header1" => "value1"})
+        response = Linzer::Test::RackHelper.new_response("body", 201, {"header1" => "value1"})
         key = Linzer.generate_ed25519_key
         keyid = "unit-test"
         components = %w[@status header1]

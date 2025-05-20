@@ -11,12 +11,11 @@ RSpec.describe Linzer::Message::Adapter::HTTPGem::Request do
   describe "#headers" do
     it "returns all headers in HTTP request message" do
       request = HTTP::Client.new.build_request(:get, URI("http://example.org/something"))
-      request["header1"] = "value1"
+      request["Test-Header1"] = "value1"
       request["header2"] = "value2"
       adapter = described_class.new(request)
-      headers = adapter.headers
-      expect(headers["header1"]).to eq("value1")
-      expect(headers["header2"]).to eq("value2")
+      expect(adapter.header("test-header1")).to eq("value1")
+      expect(adapter.header("header2")).to eq("value2")
     end
   end
 

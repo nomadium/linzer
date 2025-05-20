@@ -74,11 +74,9 @@ module Linzer
             if has_tr
               value = tr(name)
             else
-              if request?
-                rack_header_name = rack_header_name(name.value.to_s)
-                value = @operation.env[rack_header_name]
-              end
-              value = @operation.headers[name.value.to_s] if response?
+              rack_header_name = rack_header_name(name.value.to_s)
+              value = @operation.env[rack_header_name] if request?
+              value = @operation.get_header(rack_header_name) if response?
             end
             value.dup&.strip
           end

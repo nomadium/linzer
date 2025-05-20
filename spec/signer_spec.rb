@@ -7,7 +7,7 @@ RSpec.describe Linzer::Signer do
 
   let(:request) do
     path = request_data[:http]["path"]
-    Linzer::Test::Request.new_request(:post, path, {}, request_data[:headers])
+    Linzer::Test::RackHelper.new_request(:post, path, {}, request_data[:headers])
   end
 
   let(:test_key_rsa_pss)     { Linzer::RFC9421::Examples.test_key_rsa_pss      }
@@ -31,7 +31,7 @@ RSpec.describe Linzer::Signer do
   it "cannot sign a message with a missing component" do
     request_data = {headers: {"header1" => "foo", "header2" => 10}}
     path         = "/foo"
-    request      = Linzer::Test::Request.new_request(:post, path, {}, request_data[:headers])
+    request      = Linzer::Test::RackHelper.new_request(:post, path, {}, request_data[:headers])
     message      = Linzer::Message.new(request)
 
     expect { described_class.sign(:key, message, %w[header1 header2 missing]) }
@@ -41,7 +41,7 @@ RSpec.describe Linzer::Signer do
   it "cannot sign a message with a duplicated component, example 1" do
     request_data = {headers: {"header1" => "foo", "header2" => 10}}
     path         = "/foo"
-    request      = Linzer::Test::Request.new_request(:post, path, {}, request_data[:headers])
+    request      = Linzer::Test::RackHelper.new_request(:post, path, {}, request_data[:headers])
     message      = Linzer::Message.new(request)
 
     expect { described_class.sign(:key, message, %w[header1 header2 header2]) }
@@ -53,8 +53,8 @@ RSpec.describe Linzer::Signer do
     request_headers = {"Header1" => "foo", "Header2" => example_dictionary}
     request_data = {headers: request_headers}
     path         = "/foo"
-    request      = Linzer::Test::Request.new_request(:post, path, {}, request_data[:headers])
-    response     = Linzer::Test::Response.new_response(nil, 200, {"Header3" => "three"})
+    request      = Linzer::Test::RackHelper.new_request(:post, path, {}, request_data[:headers])
+    response     = Linzer::Test::RackHelper.new_response(nil, 200, {"Header3" => "three"})
     message      = Linzer::Message.new(response, attached_request: request)
 
     expect { described_class.sign(:key, message, %w[header3 header2;bs;req header2;req;bs]) }
@@ -64,7 +64,7 @@ RSpec.describe Linzer::Signer do
   it "cannot sign a message with a @signature-params component" do
     request_data = {headers: {"header1" => "foo", "header2" => 10}}
     path         = "/foo"
-    request      = Linzer::Test::Request.new_request(:post, path, {}, request_data[:headers])
+    request      = Linzer::Test::RackHelper.new_request(:post, path, {}, request_data[:headers])
     components   = %w[header1 header2 @signature-params]
     message      = Linzer::Message.new(request)
 
@@ -114,7 +114,7 @@ RSpec.describe Linzer::Signer do
     updated_request_data[:http]    = request_data[:http]
     updated_request_data[:headers] = headers
     path = updated_request_data[:http]["path"]
-    request = Linzer::Test::Request.new_request(:post, path, {}, updated_request_data[:headers])
+    request = Linzer::Test::RackHelper.new_request(:post, path, {}, updated_request_data[:headers])
 
     message        = Linzer::Message.new(request)
     components     = %w[@method @authority @path content-digest content-length content-type].freeze

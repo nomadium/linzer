@@ -5,8 +5,8 @@ module Linzer
     module Adapter
       module HTTPGem
         class Request < Linzer::Message::Adapter::NetHTTP::Request
-          def headers
-            @operation.headers.to_h
+          def header(name)
+            @operation[name]
           end
 
           private

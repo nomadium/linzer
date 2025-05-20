@@ -67,7 +67,12 @@ module Rack
         signature_opts[:label] = label if label
 
         @message = Linzer::Message.new(request)
-        signature = Linzer::Signature.build(@message.headers, **signature_opts)
+        signature_headers = {}
+        %w(signature-input signature).each do |name|
+          value = @message.header(name)
+          signature_headers[name] = value if value
+        end
+        signature = Linzer::Signature.build(signature_headers, **signature_opts)
         request.env["rack.signature"] = signature
         signature
       end

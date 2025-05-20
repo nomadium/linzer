@@ -2,7 +2,7 @@
 
 module Linzer
   module Test
-    module Request
+    module RackHelper
       extend self
 
       def new_request(verb, path = "/", params = {}, headers = {})
@@ -17,6 +17,10 @@ module Linzer
         }
 
         Rack::Request.new(build_rack_env(headers).merge(args))
+      end
+
+      def new_response(body = nil, status = 200, headers = {})
+        Rack::Response.new(body, status, build_rack_env(headers))
       end
 
       private

@@ -16,7 +16,7 @@ RSpec.describe Linzer::Signer do
       body          = response_data[:body]
       status        = response_data[:http]["status"]
       headers       = response_data[:headers]
-      Linzer::Test::Response.new_response(body, status, headers)
+      Linzer::Test::RackHelper.new_response(body, status, headers)
     end
 
     let(:test_key_ecc_p256)     { Linzer::RFC9421::Examples.test_key_ecc_p256 }
@@ -56,7 +56,7 @@ RSpec.describe Linzer::Verifier do
       body          = response_data[:body]
       status        = response_data[:http]["status"]
       headers       = response_data[:headers]
-      Linzer::Test::Response.new_response(body, status, headers)
+      Linzer::Test::RackHelper.new_response(body, status, headers)
     end
 
     let(:test_key_ecc_p256_pub) { Linzer::RFC9421::Examples.test_key_ecc_p256_pub }

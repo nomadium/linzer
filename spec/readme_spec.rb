@@ -20,7 +20,7 @@ RSpec.describe "README usage" do
       }
     end
 
-    let(:request) { Linzer::Test::Request.new_request(:post, "/some_uri", {}, headers) }
+    let(:request) { Linzer::Test::RackHelper.new_request(:post, "/some_uri", {}, headers) }
 
     let(:message) { Linzer::Message.new(request) }
 
@@ -67,7 +67,7 @@ RSpec.describe "README usage" do
       }
     end
 
-    let(:response) { Linzer::Test::Response.new_response("request body", 200, headers) }
+    let(:response) { Linzer::Test::RackHelper.new_response("request body", 200, headers) }
 
     let(:message) { Linzer::Message.new(response) }
 
