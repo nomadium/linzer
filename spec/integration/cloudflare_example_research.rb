@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "linzer/http/signature_feature"
+
 #
 # https://blog.cloudflare.com/web-bot-auth/
 # https://http-message-signatures-example.research.cloudflare.com
@@ -18,12 +20,14 @@ RSpec.describe "Tests against cloudflare example server", :integration do
   end
 
   # test private key defined in Appendix B.1.4 of RFC 9421.
-  let(:key) do
+  let(:test_key_ed25519) do
     material = Linzer::RFC9421::Examples.test_key_ed25519
     Linzer.new_ed25519_key(material, "test-key-ed25519")
   end
 
-  let(:http_client) do
+  let(:other_key) { Linzer.generate_ed25519_key("other_key") }
+
+  let(:net_http_client) do
     ->(uri) do
       http = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = uri.scheme == "https"
@@ -33,7 +37,7 @@ RSpec.describe "Tests against cloudflare example server", :integration do
 
   let(:bot_tag) { "web-bot-auth" }
 
-  let(:http_get) do
+  let(:linzer_http_get) do
     ->(uri, key) do
       now = Time.now.utc.to_i
       Linzer::HTTP.get(uri,
@@ -50,68 +54,123 @@ RSpec.describe "Tests against cloudflare example server", :integration do
     end
   end
 
+  let(:http_gem_client) do
+    ->(key) do
+      now = Time.now.utc.to_i
+
+      http_signature_opts = {
+        key: key,
+        covered_components: %w[@authority signature-agent],
+        params: {
+          created: now,
+          expires: now + 500,
+          keyid:   key.key_id,
+          tag:     bot_tag
+        }
+      }
+
+      HTTP.use(http_signature: http_signature_opts)
+    end
+  end
+
+  let(:sign!) do
+    ->(key, request_or_response) do
+      now = Time.now.utc.to_i
+      Linzer.sign!(
+        request_or_response,
+        key: key,
+        components: %w[@authority signature-agent],
+        params: {
+          created: now,
+          expires: now + 500,
+          keyid:   key.key_id,
+          tag:     bot_tag
+        }
+      )
+    end
+  end
+
   context "main website" do
     let(:uri) { URI(url) }
 
     context "using Linzer::HTTP client" do
       it "authenticates successfully when using key defined in Appendix B.1.4" do
-        response = http_get.call(uri, key)
+        response = linzer_http_get.call(uri, test_key_ed25519)
 
         expect(response.code).to eq("200")
         expect(response.body).to match expected_msg
       end
 
       it "does not authenticate request when an unknown key is used" do
-        other_key = Linzer.generate_ed25519_key("other_key")
-        response  = http_get.call(uri, other_key)
+        response = linzer_http_get.call(uri, other_key)
 
         expect(response.body).to_not match expected_msg
       end
     end
 
-    # XXX: TO-DO:
-    # context "with http gem client" do
-    # end
+    context "with http gem client" do
+      it "authenticates successfully when using key defined in Appendix B.1.4" do
+        response =
+          http_gem_client
+            .call(test_key_ed25519)
+            .headers("signature-agent" => uri.authority)
+            .get(url)
+
+        expect(response.code).to      eq(200)
+        expect(response.body.to_s).to match expected_msg
+      end
+
+      it "does not authenticate request when an unknown key is used" do
+        response =
+          http_gem_client
+            .call(other_key)
+            .headers("signature-agent" => uri.authority)
+            .get(url)
+
+        expect(response.body.to_s).to_not match expected_msg
+      end
+    end
   end
 
   context "debug server" do
+    let(:uri) { URI(url + "/debug") }
+
     context "using Net::HTTP client" do
       it "dumps incoming request headers" do
-        uri     = URI(url + "/debug")
         request = Net::HTTP::Get.new(uri)
-
-        now = Time.now.utc.to_i
         request["signature-agent"] = uri.authority
 
-        Linzer.sign!(
-          request,
-          key: key,
-          components: %w[@authority signature-agent],
-          params: {
-            created: now,
-            expires: now + 500,
-            keyid:   key.key_id,
-            tag:     bot_tag
-          }
-        )
-
-        response = http_client.call(uri).request(request)
+        sign!.call(test_key_ed25519, request)
+        response = net_http_client.call(uri).request(request)
+        body     = response.body.to_s
 
         expect(response.code).to eq("200")
 
-        puts response.body if debug
+        puts body if debug
 
-        expect(response.body)
-          .to include("signature: #{request["signature"]}")
-        expect(response.body)
-          .to include("signature-input: #{request["signature-input"]}")
-        expect(response.body)
-          .to include("host: #{uri.authority}")
+        expect(body).to include("signature: #{request["signature"]}")
+        expect(body).to include("signature-input: #{request["signature-input"]}")
+        expect(body).to include("host: #{uri.authority}")
       end
     end
 
-    # XXX: TO-DO:
-    # context "using http gem client client" do
-    # end
+    context "using http gem client client" do
+      it "dumps incoming request headers" do
+        headers = {"signature-agent" => uri.authority}
+        request = HTTP::Request.new(verb: :get, uri: uri, headers: headers)
+
+        sign!.call(test_key_ed25519, request)
+        response = HTTP::Client.new.perform(request, HTTP::Options.new({}))
+        body     = response.body.to_s
+
+        expect(response.code).to eq(200)
+
+        puts body if debug
+
+        expect(body).to include("signature: #{request["signature"]}")
+        expect(body).to include("signature-input: #{request["signature-input"]}")
+        expect(body).to include("host: #{uri.authority}")
+      end
+    end
   end
 end
