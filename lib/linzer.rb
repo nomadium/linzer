@@ -60,7 +60,7 @@ module Linzer
     def verify!(request_or_response, key: nil, no_older_than: 900)
       message = Message.new(request_or_response)
       signature_headers = {}
-      %w(signature-input signature).each do |name|
+      %w[signature-input signature].each do |name|
         value = message.header(name)
         signature_headers[name] = value if value
       end
