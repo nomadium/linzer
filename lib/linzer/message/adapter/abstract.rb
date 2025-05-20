@@ -37,7 +37,7 @@ module Linzer
           end
         end
 
-        def headers
+        def header(name)
           raise Linzer::Error, "Sub-classes are required to implement this method!"
         end
 

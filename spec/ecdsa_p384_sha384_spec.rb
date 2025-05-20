@@ -5,7 +5,7 @@ RSpec.describe Linzer::Signer do
     let(:request) do
       request_data = Linzer::RFC9421::Examples.test_request_data
       path = request_data[:http]["path"]
-      Linzer::Test::Request.new_request(:post, path, {}, request_data[:headers])
+      Linzer::Test::RackHelper.new_request(:post, path, {}, request_data[:headers])
     end
 
     let(:key_id)       { "test-key-ecc-p384" }
@@ -49,7 +49,7 @@ RSpec.describe Linzer::Verifier do
     let(:request) do
       request_data = Linzer::RFC9421::Examples.test_request_data
       path = request_data[:http]["path"]
-      Linzer::Test::Request.new_request(:post, path, {}, request_data[:headers])
+      Linzer::Test::RackHelper.new_request(:post, path, {}, request_data[:headers])
     end
 
     let(:key_id)       { "test-key-ecc-p384" }

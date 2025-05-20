@@ -15,7 +15,7 @@ module Linzer
     def_delegators :@adapter, :request?, :response?, :attached_request?
 
     # fields look up
-    def_delegators :@adapter, :headers, :field?, :[]
+    def_delegators :@adapter, :header, :field?, :[]
 
     # to attach a signature to the underlying HTTP message
     def_delegators :@adapter, :attach!

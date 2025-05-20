@@ -16,12 +16,12 @@ RSpec.describe Linzer::Message::Adapter::Abstract do
         .to raise_error(Linzer::Error, /Cannot instantiate/)
     end
   end
-  describe "#headers" do
+  describe "#header" do
     context "when subclasses don't provide a complete implementation" do
       it "raises an error" do
         request = Net::HTTP::Get.new(URI("http://example.org/something"))
         adaptor = Linzer::IncompleteAdapter.new(request)
-        expect { adaptor.headers }
+        expect { adaptor.header("signature") }
           .to raise_error(Linzer::Error, /required to implement this method/)
       end
     end

@@ -16,12 +16,14 @@ module Linzer
             freeze
           end
 
-          def headers
-            @operation.headers
+          def header(name)
+            @operation.get_header(rack_header_name(name))
           end
 
           def attach!(signature)
-            signature.to_h.each { |h, v| @operation[h] = v }
+            signature.to_h.each do |h, v|
+              @operation.set_header(rack_header_name(h), v)
+            end
             @operation
           end
         end

@@ -13,8 +13,8 @@ module Linzer
             freeze
           end
 
-          def headers
-            rack_request_headers(@operation)
+          def header(name)
+            @operation.get_header(rack_header_name(name))
           end
 
           def attach!(signature)

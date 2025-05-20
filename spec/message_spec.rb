@@ -60,25 +60,25 @@ RSpec.describe Linzer::Message do
   describe "#[]" do
     it "returns the authority pseudo-header of an incoming request" do
       server = "www.example.org"
-      request = Linzer::Test::Request.new_request(:get, "/foo", {}, {"Host" => server})
+      request = Linzer::Test::RackHelper.new_request(:get, "/foo", {}, {"Host" => server})
       message = described_class.new(request)
       expect(message["@authority"]).to eq(server)
     end
 
     it "returns the HTTP method of an incoming request" do
-      request = Linzer::Test::Request.new_request(:put)
+      request = Linzer::Test::RackHelper.new_request(:put)
       message = described_class.new(request)
       expect(message["@method"]).to eq("PUT")
     end
 
     it "returns the full path of the request URI" do
-      request = Linzer::Test::Request.new_request(:post, "/something")
+      request = Linzer::Test::RackHelper.new_request(:post, "/something")
       message = described_class.new(request)
       expect(message["@path"]).to eq("/something")
     end
 
     it "returns the status code of the response" do
-      response = Linzer::Test::Response.new_response("body", 202, {})
+      response = Linzer::Test::RackHelper.new_response("body", 202, {})
       message = described_class.new(response)
       expect(message["@status"]).to eq(202)
     end
@@ -88,7 +88,7 @@ RSpec.describe Linzer::Message do
       scheme = "http"
       path = "/target/example"
       headers = {"Host" => server}
-      request = Linzer::Test::Request.new_request(:get, path, {}, headers)
+      request = Linzer::Test::RackHelper.new_request(:get, path, {}, headers)
       request.env["rack.url_scheme"] = scheme
       expected_target_uri = "#{scheme}://#{server}#{path}"
       message = described_class.new(request)
@@ -98,7 +98,7 @@ RSpec.describe Linzer::Message do
     it "returns the scheme of the target URI for a request" do
       scheme = "https"
       path = "/target/example2"
-      request = Linzer::Test::Request.new_request(:get, path, {}, {})
+      request = Linzer::Test::RackHelper.new_request(:get, path, {}, {})
       request.env["rack.url_scheme"] = scheme
       message = described_class.new(request)
       expect(message["@scheme"]).to eq(scheme)
@@ -106,7 +106,7 @@ RSpec.describe Linzer::Message do
 
     it "returns the request target" do
       path = "/path"
-      request = Linzer::Test::Request.new_request(:post, path, {}, {})
+      request = Linzer::Test::RackHelper.new_request(:post, path, {}, {})
       query_string = "param=value"
       request.env["QUERY_STRING"] = query_string
       message = described_class.new(request)
@@ -116,7 +116,7 @@ RSpec.describe Linzer::Message do
 
     it "returns the query portion of the target URI for a request, example 1" do
       path = "/path"
-      request = Linzer::Test::Request.new_request(:get, path, {}, {})
+      request = Linzer::Test::RackHelper.new_request(:get, path, {}, {})
       query_string = "param=value&foo=bar&baz=bat%2Dman"
       request.env["QUERY_STRING"] = query_string
       message = described_class.new(request)
@@ -126,7 +126,7 @@ RSpec.describe Linzer::Message do
 
     it "returns the query portion of the target URI for a request, example 2" do
       path = "/path"
-      request = Linzer::Test::Request.new_request(:get, path, {}, {})
+      request = Linzer::Test::RackHelper.new_request(:get, path, {}, {})
       query_string = "queryString"
       request.env["QUERY_STRING"] = query_string
       message = described_class.new(request)
@@ -136,7 +136,7 @@ RSpec.describe Linzer::Message do
 
     it "returns the query portion of the target URI for a request, example 3" do
       path = "/path"
-      request = Linzer::Test::Request.new_request(:get, path, {}, {})
+      request = Linzer::Test::RackHelper.new_request(:get, path, {}, {})
       message = described_class.new(request)
       expected_query = "?"
       expect(message["@query"]).to eq(expected_query)
@@ -145,7 +145,7 @@ RSpec.describe Linzer::Message do
     it "returns query parameter of the request target URI" do
       path = "/path"
       query_string = "param=value&foo=bar&baz=batman&qux="
-      request = Linzer::Test::Request.new_request(:get, path, {}, {})
+      request = Linzer::Test::RackHelper.new_request(:get, path, {}, {})
       request.env["QUERY_STRING"] = query_string
       message = described_class.new(request)
       expect(message["@query-param;name=\"baz\""]).to    eq("batman")
@@ -156,7 +156,7 @@ RSpec.describe Linzer::Message do
     it "returns parsed and encoded query parameter of the request target URI" do
       path = "/parameters"
       query_string = "var=this%20is%20a%20big%0Amultiline%20value&bar=with+plus+whitespace&fa%C3%A7ade%22%3A%20=something"
-      request = Linzer::Test::Request.new_request(:get, path, {}, {})
+      request = Linzer::Test::RackHelper.new_request(:get, path, {}, {})
       request.env["QUERY_STRING"] = query_string
       message = described_class.new(request)
       expected_var_value    = "this%20is%20a%20big%0Amultiline%20value"
@@ -168,19 +168,19 @@ RSpec.describe Linzer::Message do
     end
 
     it "returns null on invalid field on request" do
-      request = Linzer::Test::Request.new_request(:put, "/bar", {}, {"x-foo" => "baz"})
+      request = Linzer::Test::RackHelper.new_request(:put, "/bar", {}, {"x-foo" => "baz"})
       message = described_class.new(request)
       expect(message["@query-param;name=%20"]).to eq(nil)
     end
 
     it "returns null on not found query-param field on request" do
-      request = Linzer::Test::Request.new_request(:get, "/", {}, {"x-not-found" => "missing"})
+      request = Linzer::Test::RackHelper.new_request(:get, "/", {}, {"x-not-found" => "missing"})
       message = described_class.new(request)
       expect(message['@query-param;name="not_found"']).to eq(nil)
     end
 
     it "returns null on undefined field on request" do
-      request = Linzer::Test::Request.new_request(:put, "/bar", {}, {"x-foo" => "baz"})
+      request = Linzer::Test::RackHelper.new_request(:put, "/bar", {}, {"x-foo" => "baz"})
       message = described_class.new(request)
       expect(message["x-not-in-message"]).to eq(nil)
     end
@@ -190,7 +190,7 @@ RSpec.describe Linzer::Message do
         example_dictionary = " a=1,    b=2;x=1;y=2,   c=(a   b   c)"
         serialized_dictionary = "a=1, b=2;x=1;y=2, c=(a b c)"
         headers = {"Example-Dict" => example_dictionary, "X-Baz" => "bar"}
-        request = Linzer::Test::Request.new_request(:put, "/bar", {}, headers)
+        request = Linzer::Test::RackHelper.new_request(:put, "/bar", {}, headers)
         message = described_class.new(request)
         expect(message["x-baz"]).to           eq("bar")
         expect(message["example-dict"]).to    eq(example_dictionary.strip)
@@ -200,7 +200,7 @@ RSpec.describe Linzer::Message do
       it "returns a single member value from a dictionary structured field" do
         example_dictionary = " a=1, b=2;x=1;y=2, c=(a   b    c), d"
         headers = {"Example-Dict" => example_dictionary, "X-Foo" => "ok"}
-        request = Linzer::Test::Request.new_request(:post, "/foo", {}, headers)
+        request = Linzer::Test::RackHelper.new_request(:post, "/foo", {}, headers)
         message = described_class.new(request)
         expect(message["x-foo"]).to eq("ok")
         expect(message['example-dict;key="a"']).to eq("1")
@@ -213,7 +213,7 @@ RSpec.describe Linzer::Message do
         value_with_commas = "value, with, lots, of, commas"
         encoded_value = ":dmFsdWUsIHdpdGgsIGxvdHMsIG9mLCBjb21tYXM=:"
         headers = {"Example-Header" => value_with_commas}
-        request = Linzer::Test::Request.new_request(:get, "/something", {}, headers)
+        request = Linzer::Test::RackHelper.new_request(:get, "/something", {}, headers)
         message = described_class.new(request)
         expect(message["example-header;bs"]).to eq(encoded_value)
       end
@@ -225,7 +225,7 @@ RSpec.describe Linzer::Message do
         def body.trailers
           {"expires" => "Wed, 9 Nov 2022 07:28:00 GMT"}
         end
-        response = Linzer::Test::Response.new_response(body, 200, headers)
+        response = Linzer::Test::RackHelper.new_response(body, 200, headers)
         message = described_class.new(response)
         expect(message["@status"]).to    eq(200)
         expect(message["trailer"]).to    eq("Expires")
@@ -233,7 +233,7 @@ RSpec.describe Linzer::Message do
       end
 
       it "returns null on invalid field name" do
-        request = Linzer::Test::Request.new_request(:get, "/", {}, {})
+        request = Linzer::Test::RackHelper.new_request(:get, "/", {}, {})
         message = described_class.new(request)
         expect(message["%20"]).to eq(nil)
       end
@@ -247,7 +247,7 @@ RSpec.describe Linzer::Message do
           "Content-Type" => "application/json",
           "Content-Length" => 18
         }
-        request = Linzer::Test::Request.new_request(:post, "/foo", {}, req_headers)
+        request = Linzer::Test::RackHelper.new_request(:post, "/foo", {}, req_headers)
         query_string = "param=Value&Pet=dog"
         request.env["QUERY_STRING"] = query_string
 
@@ -258,7 +258,7 @@ RSpec.describe Linzer::Message do
           "Content-Digest" => "sha-512=:0Y6iCBzGg5rZtoXS95Ijz03mslf6KAMCloESHObfwnHJDbkkWWQz6PhhU9kxsTbARtY2PTBOzq24uJFpHsMuAg==:"
         }
         body = '{"busy": true, "message": "Your call is very important to us"}'
-        response = Linzer::Test::Response.new_response(body, 503, resp_headers)
+        response = Linzer::Test::RackHelper.new_response(body, 503, resp_headers)
 
         message = described_class.new(response, attached_request: request)
         expect(message.attached_request?).to     eq(true)
@@ -269,7 +269,7 @@ RSpec.describe Linzer::Message do
       end
 
       it "returns null on component name with unsupported parameter" do
-        request = Linzer::Test::Request.new_request(:get)
+        request = Linzer::Test::RackHelper.new_request(:get)
         message = described_class.new(request)
         expect(message["@method;wrong"]).to eq(nil)
       end
@@ -278,35 +278,37 @@ RSpec.describe Linzer::Message do
 
   describe "#field?" do
     it "returns true if the requested field is defined on the message" do
-      response = Linzer::Test::Response.new_response(nil, 301, {})
+      response = Linzer::Test::RackHelper.new_response(nil, 301, {})
       message = described_class.new(response)
       expect(message.field?("@status")).to eq(true)
       expect(message["@status"]).to        be_truthy
     end
 
     it "returns false if the requested field is not defined on the message" do
-      request = Linzer::Test::Request.new_request(:get, "/baz", {}, {"content-type" => "application/json"})
+      request = Linzer::Test::RackHelper.new_request(:get, "/baz", {}, {"content-type" => "application/json"})
       message = described_class.new(request)
       expect(message.field?("x-missing")).to eq(false)
       expect(message["x-missing"]).to        be_falsey
     end
   end
 
-  describe "#headers" do
+  describe "#header" do
     let(:headers) { {"content-type" => "application/json", "foo" => "bar"} }
 
-    it "returns HTTP headers from message request" do
-      request = Linzer::Test::Request.new_request(:options, "/foo", {}, headers)
+    it "returns HTTP header from message request" do
+      request = Linzer::Test::RackHelper.new_request(:options, "/foo", {}, headers)
       message = described_class.new(request)
       expect(message.request?).to eq(true)
-      expect(message.headers).to  eq(headers)
+      expect(message.header("content-type")).to  eq("application/json")
+      expect(message.header("foo")).to  eq("bar")
     end
 
-    it "returns HTTP headers from message response" do
-      response = Linzer::Test::Response.new_response("body", 302, headers)
+    it "returns HTTP header from message response" do
+      response = Linzer::Test::RackHelper.new_response("body", 302, headers)
       message = described_class.new(response)
       expect(message.response?).to eq(true)
-      expect(message.headers).to   eq(headers)
+      expect(message.header("content-type")).to  eq("application/json")
+      expect(message.header("foo")).to  eq("bar")
     end
   end
 
@@ -318,7 +320,7 @@ RSpec.describe Linzer::Message do
     end
 
     it "attaches a signature to a HTTP message" do
-      response = Linzer::Test::Response.new_response("body", 202, headers)
+      response = Linzer::Test::RackHelper.new_response("body", 202, headers)
       message = described_class.new(response)
       message.attach!(signature)
       response["signature"] = signature.to_h["signature"]

@@ -59,7 +59,12 @@ module Linzer
 
     def verify!(request_or_response, key: nil, no_older_than: 900)
       message = Message.new(request_or_response)
-      signature = Signature.build(message.headers.slice("signature", "signature-input"))
+      signature_headers = {}
+      %w(signature-input signature).each do |name|
+        value = message.header(name)
+        signature_headers[name] = value if value
+      end
+      signature = Signature.build(signature_headers)
       keyid = signature.parameters["keyid"]
       raise Linzer::Error, "key not found" if !key && !keyid
       verify_key = block_given? ? (yield keyid) : key

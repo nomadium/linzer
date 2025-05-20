@@ -223,7 +223,7 @@ RSpec.describe Rack::Auth::Signature do
     let(:settings) { {except: "/login", keys: {}} }
     let(:keyid)    { "mykey" }
     let(:fields)   { %w[@method @request-target @authority date x-field]  }
-    let(:request)  { Linzer::Test::Request.new_request(:post, "/protected", {}, headers) }
+    let(:request)  { Linzer::Test::RackHelper.new_request(:post, "/protected", {}, headers) }
     let(:message)  { Linzer::Message.new(request) }
 
     it "allows the request to proceed [ed25519]" do
