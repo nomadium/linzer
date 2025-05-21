@@ -10,16 +10,6 @@ require_relative "rfc9421_examples"
 require_relative "response_helper"
 require_relative "request_helper"
 
-module Linzer
-  module Test
-    class << self
-      def unit_tests_only?
-        ENV["CI"] != "true" && ENV["LINZER_INTEG_TESTS"] != "true"
-      end
-    end
-  end
-end
-
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
   config.example_status_persistence_file_path = ".rspec_status"
