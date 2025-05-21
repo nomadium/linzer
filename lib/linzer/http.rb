@@ -65,6 +65,7 @@ module Linzer
     end
 
     def build_headers(headers)
+      return headers if headers.transform_keys(&:downcase).key?("user-agent")
       headers.merge({"user-agent" => "Linzer/#{Linzer::VERSION}"})
     end
 

@@ -19,6 +19,14 @@ RSpec.describe "Tests against cloudflare example server", :integration do
     "https://http-message-signatures-example.research.cloudflare.com"
   end
 
+  let(:headers) do
+    repo_url = "https://github.com/nomadium/linzer"
+    {
+      "signature-agent" => uri.authority,
+      "user-agent"      => "Linzer/#{Linzer::VERSION} (+#{repo_url})"
+    }
+  end
+
   # test private key defined in Appendix B.1.4 of RFC 9421.
   let(:test_key_ed25519) do
     material = Linzer::RFC9421::Examples.test_key_ed25519
@@ -50,7 +58,7 @@ RSpec.describe "Tests against cloudflare example server", :integration do
           tag:     bot_tag
         },
         covered_components: %w[@authority signature-agent],
-        headers:            {"signature-agent" => uri.authority})
+        headers:            headers)
     end
   end
 
@@ -113,7 +121,7 @@ RSpec.describe "Tests against cloudflare example server", :integration do
         response =
           http_gem_client
             .call(test_key_ed25519)
-            .headers("signature-agent" => uri.authority)
+            .headers(headers)
             .get(url)
 
         expect(response.code).to      eq(200)
@@ -124,7 +132,7 @@ RSpec.describe "Tests against cloudflare example server", :integration do
         response =
           http_gem_client
             .call(other_key)
-            .headers("signature-agent" => uri.authority)
+            .headers(headers)
             .get(url)
 
         expect(response.body.to_s).to_not match expected_msg
@@ -137,8 +145,7 @@ RSpec.describe "Tests against cloudflare example server", :integration do
 
     context "using Net::HTTP client" do
       it "dumps incoming request headers" do
-        request = Net::HTTP::Get.new(uri)
-        request["signature-agent"] = uri.authority
+        request = Net::HTTP::Get.new(uri, headers)
 
         sign!.call(test_key_ed25519, request)
         response = net_http_client.call(uri).request(request)
@@ -156,7 +163,6 @@ RSpec.describe "Tests against cloudflare example server", :integration do
 
     context "using http gem client client" do
       it "dumps incoming request headers" do
-        headers = {"signature-agent" => uri.authority}
         request = HTTP::Request.new(verb: :get, uri: uri, headers: headers)
 
         sign!.call(test_key_ed25519, request)
