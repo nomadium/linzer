@@ -1,6 +1,12 @@
 ## [Unreleased]
 
+## [0.7.2] - 2025-05-21
+
 - Add a few integration tests against CloudFlare test server.
+
+- Fix bug when accessing headers in http adapter classes.
+  Pull request [#14](https://github.com/nomadium/linzer/pull/14)
+  by [oneiros](https://github.com/oneiros).
 
 ## [0.7.1] - 2025-05-18
 
