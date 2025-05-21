@@ -7,8 +7,6 @@
 # https://github.com/thibmeu/http-message-signatures-directory
 #
 RSpec.describe "Tests against cloudflare example server", :integration do
-  return if ENV["CI"] != "true" && ENV["LINZER_INTEG_TESTS"] != "true"
-
   let(:expected_msg) do
     /You successfully authenticated as owning the test public key/
   end
