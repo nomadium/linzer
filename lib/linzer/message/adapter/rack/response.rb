@@ -17,7 +17,7 @@ module Linzer
           end
 
           def header(name)
-            @operation.get_header(rack_header_name(name))
+            @operation.get_header(name)
           end
 
           def attach!(signature)

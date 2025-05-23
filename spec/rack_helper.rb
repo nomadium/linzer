@@ -20,7 +20,7 @@ module Linzer
       end
 
       def new_response(body = nil, status = 200, headers = {})
-        Rack::Response.new(body, status, build_rack_env(headers))
+        Rack::Response.new(body, status, headers.transform_values(&:to_s))
       end
 
       private
