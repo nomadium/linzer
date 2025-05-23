@@ -22,7 +22,7 @@ module Linzer
 
           def attach!(signature)
             signature.to_h.each do |h, v|
-              @operation.set_header(rack_header_name(h), v)
+              @operation.set_header(h, v)
             end
             @operation
           end
