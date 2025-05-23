@@ -13,18 +13,15 @@ module Linzer
         # message = Linzer::Message.new(response)
         # binding.irb
 
-        # if response.class == String # false
-        if true
-          Linzer.sign!(
-            response,
-            key: key,
-            components: %w[@status bar baz],
-            label: "sig1",
-            params: {
-              created: Time.now.to_i
-            }
-          )
-        end
+        Linzer.sign!(
+          response,
+          key: key,
+          components: %w[@status bar baz],
+          label: "sig1",
+          params: {
+            created: Time.now.to_i
+          }
+        )
 
         # "Hello world sinatra!"
         response.finish
