@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+- Fix a few bugs when signing rack responses.
+
 ## [0.7.2] - 2025-05-21
 
 - Add a few integration tests against CloudFlare test server.

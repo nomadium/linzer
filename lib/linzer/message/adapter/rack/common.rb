@@ -63,7 +63,7 @@ module Linzer
             else
               rack_header_name = rack_header_name(name.value.to_s)
               value = @operation.env[rack_header_name] if request?
-              value = @operation.get_header(rack_header_name) if response?
+              value = @operation.get_header(name.value.to_s) if response?
             end
             value.dup&.strip
           end

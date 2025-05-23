@@ -17,12 +17,12 @@ module Linzer
           end
 
           def header(name)
-            @operation.get_header(rack_header_name(name))
+            @operation.get_header(name)
           end
 
           def attach!(signature)
             signature.to_h.each do |h, v|
-              @operation.set_header(rack_header_name(h), v)
+              @operation.set_header(h, v)
             end
             @operation
           end
