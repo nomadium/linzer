@@ -21,4 +21,6 @@ group :test do
   gem "sinatra",   require: false
   gem "webrick",   require: false
   gem "rackup",    require: false
+  gem "jose",      require: false
+  gem "rbnacl",    require: false
 end
