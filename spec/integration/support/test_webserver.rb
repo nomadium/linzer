@@ -54,7 +54,7 @@ module Linzer
       end
 
       def port_available?(some_port)
-        socket = TCPServer.new('::1', some_port)
+        socket = TCPServer.new("::1", some_port)
         socket.close
         socket.closed?
       rescue Errno::EADDRINUSE, Errno::EACCES

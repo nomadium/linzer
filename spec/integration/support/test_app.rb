@@ -37,7 +37,7 @@ module Linzer
               "kty" => "OKP",
               "crv" => "Ed25519",
               "x"   => Base64.urlsafe_encode64(app_raw_pubkey, padding: false),
-              "nbf" => (now -  500) * 1000,
+              "nbf" => (now - 500) * 1000,
               "exp" => (now + 3600) * 1000
             }
           ],
@@ -65,7 +65,7 @@ module Linzer
         end
 
         def sign!
-          key = Linzer.generate_ed25519_key
+          Linzer.generate_ed25519_key
           Linzer.sign!(
             response,
             key:        settings.app_key,

@@ -48,8 +48,8 @@ RSpec.describe "Test signed responses from a local web server", :integration do
         expect(keys_headers["content-digest"])
           .to eq(content_digest(keys_response.body))
 
-        keys_data = JSON.load(keys_response.body)
-        pubkey = keys_data["keys"].first
+        keys_data = JSON.parse(keys_response.body)
+        keys_data["keys"].first
 
         pubkey_uri = URI("#{url}/pubkey")
         pubkey_response = Net::HTTP.get_response(pubkey_uri)
@@ -60,14 +60,13 @@ RSpec.describe "Test signed responses from a local web server", :integration do
         expect(Linzer.verify!(keys_response, key: @pubkey)).to eq(true)
         expect(Linzer.verify!(response, key: @pubkey)).to eq(true)
 
-
-#         # expect(response.body).to eq("Hello world sinatra!")
-#         expect(response.each_header.to_h.key?("signature")).to eq(true)
-#         expect(response.each_header.to_h.key?("content-digest")).to eq(true)
-#         uri2 = URI("#{url}.well-known/http-message-signatures-directory")
-#         response2 = Net::HTTP.get_response(uri2)
-#         puts response2.each_header.to_h
-#         puts response2.body
+        #         # expect(response.body).to eq("Hello world sinatra!")
+        #         expect(response.each_header.to_h.key?("signature")).to eq(true)
+        #         expect(response.each_header.to_h.key?("content-digest")).to eq(true)
+        #         uri2 = URI("#{url}.well-known/http-message-signatures-directory")
+        #         response2 = Net::HTTP.get_response(uri2)
+        #         puts response2.each_header.to_h
+        #         puts response2.body
       end
     end
   end
