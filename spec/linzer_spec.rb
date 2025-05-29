@@ -110,4 +110,40 @@ RSpec.describe Linzer do
       end
     end
   end
+
+  describe "::signature_base" do
+    # Example from Section 2.5
+    let(:expected_signature_base) do
+      signature_base = <<~EOF
+        "@method": POST
+        "@authority": example.com
+        "@path": /foo
+        "content-digest": sha-512=:WZDPaVn/7XgHaAy8pmojAkGWoRx2UFChF41A2svX+TaPm+AbwAgBWnrIiYllu7BNNyealdVLvRwEmTHWXvJwew==:
+        "content-length": 18
+        "content-type": application/json
+        "@signature-params": ("@method" "@authority" "@path" "content-digest" "content-length" "content-type");created=1618884473;keyid="test-key-rsa-pss"
+      EOF
+      signature_base.chomp # otherwise it will include a newline at the end
+    end
+
+    let(:request) do
+      uri = URI("http://example.com/foo?param=Value&Pet=dog")
+      headers = {
+        "Date"           => "Tue, 20 Apr 2021 02:07:55 GMT",
+        "Content-Type"   => "application/json",
+        "Content-Digest" => "sha-512=:WZDPaVn/7XgHaAy8pmojAkGWoRx2UFChF41A2svX+TaPm+AbwAgBWnrIiYllu7BNNyealdVLvRwEmTHWXvJwew==:",
+        "Content-Length" => "18"
+      }
+      Net::HTTP::Post.new(uri, headers)
+    end
+
+    it "returns the signature base of a message to be signed or verified" do
+      message            = Linzer::Message.new(request)
+      parameters         = {created: 1618884473, keyid: "test-key-rsa-pss"}
+      covered_components = %w[@method @authority @path content-digest content-length content-type]
+
+      expect(Linzer.signature_base(message, covered_components, parameters))
+        .to eq(expected_signature_base)
+    end
+  end
 end

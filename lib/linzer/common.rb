@@ -13,6 +13,9 @@ module Linzer
       signature_base << "\"@signature-params\": #{signature_params}"
       signature_base
     end
+    module_function :signature_base
+
+    private
 
     def validate_components(message, components)
       if components.include?("@signature-params")

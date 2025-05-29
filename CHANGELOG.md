@@ -1,6 +1,7 @@
 ## [Unreleased]
 
 - Fix a few bugs when signing rack responses.
+- Add Linzer.signature_base method.
 
 ## [0.7.2] - 2025-05-21
 
