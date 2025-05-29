@@ -70,5 +70,11 @@ module Linzer
       verify_key = block_given? ? (yield keyid) : key
       Linzer.verify(verify_key, message, signature, no_older_than: no_older_than)
     end
+
+    def signature_base(message, signature)
+      parameters = signature.parameters
+      components = signature.components
+      Linzer::Common.signature_base(message, components, parameters)
+    end
   end
 end
