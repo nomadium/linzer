@@ -20,10 +20,6 @@ module Linzer
         "Hello, world!\n"
       end
 
-      get "/pubkey" do
-        settings.app_key.material.public_to_pem
-      end
-
       get "/.well-known/http-message-signatures-directory" do
         now = Time.now.utc.to_i
 
@@ -65,7 +61,6 @@ module Linzer
         end
 
         def sign!
-          Linzer.generate_ed25519_key
           Linzer.sign!(
             response,
             key:        settings.app_key,

@@ -18,7 +18,6 @@ module Linzer
           }
           Rackup::Handler::WEBrick.run(rack_app, **server_opts)
         end
-        puts @port
       end
 
       attr_reader :port
