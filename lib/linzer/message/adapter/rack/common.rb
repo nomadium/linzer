@@ -44,19 +44,6 @@ module Linzer
             end
           end
 
-          def rack_request_headers(rack_request)
-            rack_request
-              .each_header
-              .to_h
-              .select do |k, _|
-                k.start_with?("HTTP_") || %w[CONTENT_TYPE CONTENT_LENGTH].include?(k)
-              end
-              .transform_keys { |k| k.downcase.tr("_", "-") }
-              .transform_keys do |k|
-                %w[content-type content-length].include?(k) ? k : k.gsub(/^http-/, "")
-              end
-          end
-
           def derived(name)
             method = DERIVED_COMPONENT[name.value]
 
