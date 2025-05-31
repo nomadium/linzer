@@ -3,7 +3,7 @@
 require_relative "support/test_app"
 require_relative "support/test_webserver"
 
-require "linzer/jwa"
+require "linzer/jws"
 
 RSpec.describe "Signatures verification on responses", :integration do
   let(:debug) { false }

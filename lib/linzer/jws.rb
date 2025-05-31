@@ -4,10 +4,10 @@ require "jwt"
 require "jwt/eddsa"
 
 module Linzer
-  module JWA
+  module JWS
     def jwk_import(key, params = {})
       material = JWT::JWK.import(key)
-      Linzer::JWA::Key.new(material, params)
+      Linzer::JWS::Key.new(material, params)
     end
     module_function :jwk_import
 
