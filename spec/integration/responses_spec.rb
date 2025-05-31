@@ -29,8 +29,9 @@ RSpec.describe "Signatures verification on responses", :integration do
   let(:verify_key) do
     keys_uri = URI("#{url}.well-known/http-message-signatures-directory")
     response = Net::HTTP.get_response(keys_uri)
-    jwk = JWT::JWK.import(JSON.parse(response.body)["keys"][0])
-    Linzer::JWA.jwk_import(jwk)
+    keys_dir = JSON.parse(response.body)
+    jwk_data = JWT::JWK.import(keys_dir["keys"][0])
+    Linzer::JWS.jwk_import(jwk_data)
   end
 
   context "when request is successful" do
