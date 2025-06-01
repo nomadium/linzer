@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+## [0.7.3] - 2025-06-01
+
 - Fix broken retrieval of header names from Rack responses.
   Previously, this caused signatures attached to Rack response instances
   to use incorrect header names, making them unverifiable.
