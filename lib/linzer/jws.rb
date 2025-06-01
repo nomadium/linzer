@@ -13,7 +13,9 @@ module Linzer
 
     class Key < Linzer::Key
       def sign(data)
-        raise Linzer::SigningError, "Unimplemented algorithm"
+        raise Linzer::SigningError, "Unimplemented algorithm" if !material.private?
+        algo = resolve_algorithm
+        algo.sign(data: data, signing_key: material.signing_key)
       end
 
       def verify(signature, data)
