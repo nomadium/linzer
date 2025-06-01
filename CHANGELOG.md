@@ -1,6 +1,8 @@
 ## [Unreleased]
 
-- Fix a few bugs when signing rack responses.
+- Fix broken retrieval of header names from Rack responses.
+  Previously, this caused signatures attached to Rack response instances
+  to use incorrect header names, making them unverifiable.
 
 - Add Linzer.signature_base method.
 
