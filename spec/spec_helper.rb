@@ -1,7 +1,10 @@
 # frozen_string_literal: true
 
 require "simplecov"
-SimpleCov.start
+SimpleCov.start do
+  add_filter "/spec/integration"
+  add_filter "/spec/rack_helper.rb"
+end
 
 require "securerandom"
 
