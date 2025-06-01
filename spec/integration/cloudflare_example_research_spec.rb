@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "linzer/http/signature_feature"
-
 #
 # https://blog.cloudflare.com/web-bot-auth/
 # https://http-message-signatures-example.research.cloudflare.com
@@ -9,6 +7,10 @@ require "linzer/http/signature_feature"
 # https://github.com/thibmeu/http-message-signatures-directory
 #
 RSpec.describe "Tests against cloudflare example server", :integration do
+  before(:all) do
+    require "linzer/http/signature_feature"
+  end
+
   let(:debug) { false }
 
   let(:expected_msg) do
