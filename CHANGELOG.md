@@ -1,9 +1,13 @@
 ## [Unreleased]
 
 - Fix a few bugs when signing rack responses.
+
 - Add Linzer.signature_base method.
+
 - Add initial support for JWS algorithms. See Linzer::JWS module for more details.
   In this initial preview, only EdDSA algorithm (Ed25519) is supported).
+
+- Add a simple integration test to verify signatures on HTTP responses.
 
 ## [0.7.2] - 2025-05-21
 

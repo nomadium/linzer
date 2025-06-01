@@ -18,5 +18,8 @@ gem "standard", "~> 1.3"
 group :test do
   gem "simplecov", require: false
   gem "http",      require: false
+  gem "sinatra",   require: false
+  gem "webrick",   require: false
+  gem "rackup",    require: false
   gem "jwt-eddsa", require: false
 end
