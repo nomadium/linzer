@@ -9,6 +9,7 @@ require "net/http"
 
 require_relative "linzer/version"
 require_relative "linzer/common"
+require_relative "linzer/helper"
 require_relative "linzer/options"
 require_relative "linzer/message"
 require_relative "linzer/message/adapter"
@@ -35,6 +36,7 @@ module Linzer
 
   class << self
     include Key::Helper
+    include Helper
 
     def verify(pubkey, message, signature, no_older_than: nil)
       Linzer::Verifier.verify(pubkey, message, signature, no_older_than: no_older_than)
@@ -42,33 +44,6 @@ module Linzer
 
     def sign(key, message, components, options = {})
       Linzer::Signer.sign(key, message, components, options)
-    end
-
-    def sign!(request_or_response, **args)
-      message = Message.new(request_or_response)
-      options = {}
-
-      label = args[:label]
-      options[:label] = label if label
-      options.merge!(args.fetch(:params, {}))
-
-      key = args.fetch(:key)
-      signature = Linzer::Signer.sign(key, message, args.fetch(:components), options)
-      message.attach!(signature)
-    end
-
-    def verify!(request_or_response, key: nil, no_older_than: 900)
-      message = Message.new(request_or_response)
-      signature_headers = {}
-      %w[signature-input signature].each do |name|
-        value = message.header(name)
-        signature_headers[name] = value if value
-      end
-      signature = Signature.build(signature_headers)
-      keyid = signature.parameters["keyid"]
-      raise Linzer::Error, "key not found" if !key && !keyid
-      verify_key = block_given? ? (yield keyid) : key
-      Linzer.verify(verify_key, message, signature, no_older_than: no_older_than)
     end
 
     def signature_base(message, components, parameters)
