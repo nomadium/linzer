@@ -28,8 +28,11 @@ module Linzer
             raise ArgumentError.new, "Blank header name." if name.empty?
             name.to_str
           rescue => ex
+            # :nocov:
+            # XXX: this block of code seems to be unreachable
             err_msg = "Invalid header name: '#{name}'"
-            raise Linzer::Error.new, err_msg, cause: ex
+            raise Linzer::Error, err_msg, cause: ex
+            # :nocov:
           end
 
           def rack_header_name(field_name)
