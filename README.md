@@ -356,6 +356,10 @@ in subsequent releases.
 
 linzer is built in [Continuous Integration](https://github.com/nomadium/linzer/actions/workflows/main.yml) on Ruby 3.0+.
 
+## Security
+
+This gem is provided “as is” without any warranties. It has not been audited for security vulnerabilities. Users are advised to review the code and assess its suitability for their use case, particularly in production environments.
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
