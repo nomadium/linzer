@@ -15,6 +15,8 @@ gem "securerandom", "~> 0.3.2" # securerandom-0.4.0 requires ruby >= 3.1.0
 
 gem "standard", "~> 1.3"
 
-gem "simplecov", require: false, group: :test
-
-gem "http",      require: false, group: :test
+group :test do
+  gem "simplecov", require: false
+  gem "http",      require: false
+  gem "jwt-eddsa", require: false
+end

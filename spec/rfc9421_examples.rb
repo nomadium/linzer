@@ -167,6 +167,17 @@ module Linzer
             -----END PRIVATE KEY-----
           EOS
         end
+
+        # B.1.4. Example Ed25519 Test Key
+        def test_key_ed25519_jwk_format
+          {
+            "kty" => "OKP",
+            "crv" => "Ed25519",
+            "kid" => "test-key-ed25519",
+            "d"   => "n4Ni-HpISpVObnQMW0wOhCKROaIKqKtW_2ZYb2p9KcU",
+            "x"   => "JrQLj5P_89iXES9-vFgrIy29clF9CC_oPPsw3c5D0bs"
+          }
+        end
       end
     end
   end

@@ -85,6 +85,14 @@ module Linzer
         key = OpenSSL::PKey::EC.new(material)
         Linzer::ECDSA::Key.new(key, id: key_id, digest: "SHA384")
       end
+
+      def generate_jws_key(algorithm:)
+        Linzer::JWS.generate_key(algorithm: algorithm)
+      end
+
+      def jwk_import(key, params = {})
+        Linzer::JWS.jwk_import(key, params)
+      end
     end
   end
 end
