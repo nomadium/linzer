@@ -6,7 +6,7 @@
 # https://datatracker.ietf.org/doc/draft-meunier-http-message-signatures-directory/
 # https://github.com/thibmeu/http-message-signatures-directory
 #
-RSpec.describe "Tests against cloudflare example server", :integration do
+RSpec.describe "Signed requests against cloudflare example server", :integration do
   before(:all) do
     require "linzer/http/signature_feature"
   end
@@ -37,67 +37,59 @@ RSpec.describe "Tests against cloudflare example server", :integration do
 
   let(:other_key) { Linzer.generate_ed25519_key("other_key") }
 
-  let(:net_http_client) do
-    ->(uri) do
-      http = Net::HTTP.new(uri.host, uri.port)
-      http.use_ssl = uri.scheme == "https"
-      http
-    end
+  def net_http_client(uri)
+    http = Net::HTTP.new(uri.host, uri.port)
+    http.use_ssl = uri.scheme == "https"
+    http
   end
 
   let(:bot_tag) { "web-bot-auth" }
 
-  let(:linzer_http_get) do
-    ->(uri, key) do
-      now = Time.now.utc.to_i
-      Linzer::HTTP.get(uri,
-        key:    key,
-        debug:  debug,
-        params: {
-          created: now,
-          expires: now + 500,
-          keyid:   key.key_id,
-          tag:     bot_tag
-        },
-        covered_components: %w[@authority signature-agent],
-        headers:            headers)
-    end
+  def linzer_http_get(uri, key)
+    now = Time.now.utc.to_i
+    Linzer::HTTP.get(uri,
+      key:    key,
+      debug:  debug,
+      params: {
+        created: now,
+        expires: now + 500,
+        keyid:   key.key_id,
+        tag:     bot_tag
+      },
+      covered_components: %w[@authority signature-agent],
+      headers:            headers)
   end
 
-  let(:http_gem_client) do
-    ->(key) do
-      now = Time.now.utc.to_i
+  def http_gem_client(key)
+    now = Time.now.utc.to_i
 
-      http_signature_opts = {
-        key: key,
-        covered_components: %w[@authority signature-agent],
-        params: {
-          created: now,
-          expires: now + 500,
-          keyid:   key.key_id,
-          tag:     bot_tag
-        }
+    http_signature_opts = {
+      key: key,
+      covered_components: %w[@authority signature-agent],
+      params: {
+        created: now,
+        expires: now + 500,
+        keyid:   key.key_id,
+        tag:     bot_tag
       }
+    }
 
-      HTTP.use(http_signature: http_signature_opts)
-    end
+    HTTP.use(http_signature: http_signature_opts)
   end
 
-  let(:sign!) do
-    ->(key, request_or_response) do
-      now = Time.now.utc.to_i
-      Linzer.sign!(
-        request_or_response,
-        key: key,
-        components: %w[@authority signature-agent],
-        params: {
-          created: now,
-          expires: now + 500,
-          keyid:   key.key_id,
-          tag:     bot_tag
-        }
-      )
-    end
+  def sign!(key, request_or_response)
+    now = Time.now.utc.to_i
+    Linzer.sign!(
+      request_or_response,
+      key: key,
+      components: %w[@authority signature-agent],
+      params: {
+        created: now,
+        expires: now + 500,
+        keyid:   key.key_id,
+        tag:     bot_tag
+      }
+    )
   end
 
   context "main website" do
@@ -105,14 +97,14 @@ RSpec.describe "Tests against cloudflare example server", :integration do
 
     context "using Linzer::HTTP client" do
       it "authenticates successfully when using key defined in Appendix B.1.4" do
-        response = linzer_http_get.call(uri, test_key_ed25519)
+        response = linzer_http_get(uri, test_key_ed25519)
 
         expect(response.code).to eq("200")
         expect(response.body).to match expected_msg
       end
 
       it "does not authenticate request when an unknown key is used" do
-        response = linzer_http_get.call(uri, other_key)
+        response = linzer_http_get(uri, other_key)
 
         expect(response.body).to_not match expected_msg
       end
@@ -121,8 +113,7 @@ RSpec.describe "Tests against cloudflare example server", :integration do
     context "with http gem client" do
       it "authenticates successfully when using key defined in Appendix B.1.4" do
         response =
-          http_gem_client
-            .call(test_key_ed25519)
+          http_gem_client(test_key_ed25519)
             .headers(headers)
             .get(url)
 
@@ -132,8 +123,7 @@ RSpec.describe "Tests against cloudflare example server", :integration do
 
       it "does not authenticate request when an unknown key is used" do
         response =
-          http_gem_client
-            .call(other_key)
+          http_gem_client(other_key)
             .headers(headers)
             .get(url)
 
@@ -149,8 +139,8 @@ RSpec.describe "Tests against cloudflare example server", :integration do
       it "dumps incoming request headers" do
         request = Net::HTTP::Get.new(uri, headers)
 
-        sign!.call(test_key_ed25519, request)
-        response = net_http_client.call(uri).request(request)
+        sign!(test_key_ed25519, request)
+        response = net_http_client(uri).request(request)
         body     = response.body.to_s
 
         expect(response.code).to eq("200")
@@ -167,7 +157,7 @@ RSpec.describe "Tests against cloudflare example server", :integration do
       it "dumps incoming request headers" do
         request = HTTP::Request.new(verb: :get, uri: uri, headers: headers)
 
-        sign!.call(test_key_ed25519, request)
+        sign!(test_key_ed25519, request)
         response = HTTP::Client.new.perform(request, HTTP::Options.new({}))
         body     = response.body.to_s
 
