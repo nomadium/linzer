@@ -18,6 +18,14 @@ module Linzer
         signature == sign(data)
       end
 
+      def private?
+        !material.nil?
+      end
+
+      def public?
+        false
+      end
+
       def inspect
         vars =
           instance_variables
