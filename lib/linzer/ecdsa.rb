@@ -9,10 +9,12 @@ module Linzer
       end
 
       def sign(data)
+        validate_signing_key
         decode_der_signature(material.sign(@params[:digest], data))
       end
 
       def verify(signature, data)
+        validate_verify_key
         material.verify(@params[:digest], der_signature(signature), data)
       end
 
