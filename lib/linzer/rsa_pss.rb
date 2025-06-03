@@ -11,12 +11,12 @@ module Linzer
       end
 
       def sign(data)
-        # XXX: should check if the key is usable for signing
+        validate_signing_key
         @material.sign(@params[:digest], data, signature_options)
       end
 
       def verify(signature, data)
-        # XXX: should check if the key is usable for verifying
+        validate_verify_key
         return true if @material.verify(
           @params[:digest],
           signature,
@@ -24,6 +24,14 @@ module Linzer
           signature_options
         )
         false
+      end
+
+      def public?
+        has_pem_public?
+      end
+
+      def private?
+        has_pem_private?
       end
 
       private
