@@ -27,14 +27,19 @@ module Linzer
 
     class Key < Linzer::Key
       def sign(data)
-        raise Linzer::SigningError, "Private key is missing!" if !material.private?
+        validate_signing_key
         algo = resolve_algorithm
         algo.sign(data: data, signing_key: signing_key)
       end
 
       def verify(signature, data)
+        validate_verify_key
         algo = resolve_algorithm
         algo.verify(data: data, signature: signature, verification_key: verify_key)
+      end
+
+      def public?
+        !!verify_key
       end
 
       private
