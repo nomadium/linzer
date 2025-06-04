@@ -40,6 +40,22 @@ RSpec.describe Linzer::Signer do
       # RSASSA-PSS is non-deterministic, so cannot make an exact comparison
       expect(signature.to_h["signature"]).to match(/^sig-b23=:.+:$/)
     end
+
+    context "when a public key is given" do
+      let(:pubkey) { Linzer::RFC9421::Examples.test_key_rsa_pss_pub }
+
+      it "fails to sign a message" do
+        headers = {"Date" => "Time.now.to_s"}
+        request = Linzer::Test::RackHelper.new_request(:post, "/test", {}, headers)
+        key = Linzer.new_rsa_pss_sha512_key(pubkey)
+        message    = Linzer::Message.new(request)
+        components = %w[@method @path "date"]
+        options    = {expires: Time.now.to_i + 600}
+
+        expect { Linzer.sign(key, message, components, options) }
+          .to raise_error(Linzer::SigningError, /Private key is needed/)
+      end
+    end
   end
 end
 

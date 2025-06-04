@@ -46,6 +46,22 @@ RSpec.describe Linzer::Signer do
       expect(signature.to_h["signature-input"]).to eq expected_input
       expect(signature.to_h["signature"]).to eq expected_signature
     end
+
+    context "when a public key is given" do
+      let(:pubkey) { Linzer::RFC9421::Examples.test_key_rsa_pub }
+
+      it "fails to sign a message" do
+        headers = {"Date" => "Time.now.to_s"}
+        request = Linzer::Test::RackHelper.new_request(:post, "/test", {}, headers)
+        key = Linzer.new_rsa_v1_5_sha256_key(pubkey)
+        message    = Linzer::Message.new(request)
+        components = %w[@method @path "date"]
+        options    = {alg: "rsa-v1_5-sha256"}
+
+        expect { Linzer.sign(key, message, components, options) }
+          .to raise_error(Linzer::SigningError, /Private key is needed/)
+      end
+    end
   end
 end
 

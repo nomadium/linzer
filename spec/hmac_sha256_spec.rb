@@ -13,6 +13,11 @@ RSpec.describe Linzer do
       key = Linzer.generate_hmac_sha256_key
       expect(key.inspect).to_not match(/material/)
     end
+    it "has a secret shared key" do
+      key = Linzer.generate_hmac_sha256_key
+      expect(key.private?).to eq(true)
+      expect(key.public?).to  eq(false)
+    end
   end
 end
 
