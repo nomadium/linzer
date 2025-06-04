@@ -17,12 +17,12 @@ module Linzer
 
     def sign(*args)
       abstract_error = "Cannot sign data, \"#{self.class}\" is an abstract class."
-      raise Error.new abstract_error
+      raise Error, abstract_error
     end
 
     def verify(*args)
       abstract_error = "Cannot verify signature, \"#{self.class}\" is an abstract class."
-      raise Error.new abstract_error
+      raise Error, abstract_error
     end
 
     private
@@ -34,7 +34,7 @@ module Linzer
     def validate_digest
       no_digest = !@params.key?(:digest) || @params[:digest].nil? || String(@params[:digest]).empty?
       no_digest_error = "Invalid key definition, no digest algorithm was selected."
-      raise Linzer::Error.new no_digest_error if no_digest
+      raise Error, no_digest_error if no_digest
     end
   end
 end
