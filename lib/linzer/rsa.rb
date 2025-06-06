@@ -9,12 +9,12 @@ module Linzer
       end
 
       def sign(data)
-        # XXX: should check if the key is usable for signing
+        validate_signing_key
         @material.sign(@params[:digest], data)
       end
 
       def verify(signature, data)
-        # XXX: should check if the key is usable for verifying
+        validate_verify_key
         return true if @material.verify(@params[:digest], signature, data)
         false
       end
