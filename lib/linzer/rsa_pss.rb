@@ -12,18 +12,17 @@ module Linzer
 
       def sign(data)
         validate_signing_key
-        @material.sign(@params[:digest], data, signature_options)
+        material.sign(@params[:digest], data, signature_options)
       end
 
       def verify(signature, data)
         validate_verify_key
-        return true if @material.verify(
+        material.verify(
           @params[:digest],
           signature,
           data,
           signature_options
         )
-        false
       end
 
       def public?
