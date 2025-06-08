@@ -12,6 +12,12 @@ module Linzer
           '"%s"%s' % [component_name, parameters]
         end
 
+        def item
+          parse_field_name
+        rescue Error => _
+          nil
+        end
+
         alias_method :to_s, :serialize
 
         private

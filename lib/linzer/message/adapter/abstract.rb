@@ -27,7 +27,7 @@ module Linzer
         end
 
         def [](field_name)
-          name = parse_field_name(field_name)
+          name = Field::Identifier.new(field_name).item
           return nil if name.nil?
 
           if field_name.start_with?("@")
@@ -46,16 +46,6 @@ module Linzer
         end
 
         private
-
-        def parse_field_name(field_name)
-          if field_name&.start_with?("@")
-            Starry.parse_item(field_name[1..])
-          else
-            Starry.parse_item(field_name)
-          end
-        rescue => _
-          nil
-        end
 
         def validate_attached_request(message)
           msg = "The attached message is not a valid HTTP request!"
