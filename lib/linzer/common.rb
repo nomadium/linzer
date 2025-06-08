@@ -4,7 +4,8 @@ module Linzer
   module Common
     def signature_base(message, components, parameters)
       signature_base = components.each_with_object(+"") do |component, base|
-        base << "\"#{component}\": #{message[component]}\n"
+        component_identifier = Message::Field::Identifier.new(component)
+        base << "#{component_identifier.serialize}: #{message[component]}\n"
       end
 
       signature_params =
