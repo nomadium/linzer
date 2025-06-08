@@ -4,6 +4,10 @@ module Linzer
   class Message
     class Field
       module IdentifierMethods
+        def derived?
+          field_name.start_with?("@")
+        end
+
         def serialize
           item = parse_field_name
           component_name = Starry.serialize_bare_item(item.value)
@@ -26,10 +30,6 @@ module Linzer
           Starry.parse_item(derived? ? field_name[1..] : field_name)
         rescue Starry::ParseError => ex
           raise Error, "Invalid component identifier: '#{field_name}'!", cause: ex
-        end
-
-        def derived?
-          field_name.start_with?("@")
         end
       end
 

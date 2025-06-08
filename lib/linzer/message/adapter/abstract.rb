@@ -27,14 +27,10 @@ module Linzer
         end
 
         def [](field_name)
-          name = Field::Identifier.new(field_name).item
-          return nil if name.nil?
-
-          if field_name.start_with?("@")
-            retrieve(name, :derived)
-          else
-            retrieve(name, :field)
-          end
+          field_id = Field::Identifier.new(field_name)
+          component_name = field_id.item
+          return nil if component_name.nil?
+          retrieve(component_name, field_id.derived? ? :derived : :field)
         end
 
         def header(name)
