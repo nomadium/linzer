@@ -47,4 +47,23 @@ RSpec.describe "Signature verification on responses", :integration do
       expect(Linzer.verify!(response, key: verify_key)).to eq(true)
     end
   end
+
+  context "example section 2.1" do
+    it "generates a correct signature base" do
+      my_uri = URI(url + "example")
+      puts my_uri
+      sleep 120
+      headers = {
+        "Date" => "Tue, 20 Apr 2021 02:07:56 GMT",
+        "X-OWS-Header" => "  Leading and trailing whitespace.",
+        # "X-Obs-Fold-Header" => "Obsolete\n    line folding.",
+        "Cache-Control" => "max-age=60",
+        "Cache-Control" => "    must-revalidate",
+        "Example-Dict" => " a=1,    b=2;x=1;y=2,   c=(a   b   c)"
+      }
+      response = Net::HTTP.get_response(my_uri, headers)
+      puts response.body
+      expect(response.code.to_i).to eq(200)
+    end
+  end
 end

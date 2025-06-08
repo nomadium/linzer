@@ -7,6 +7,7 @@ require "json"
 require "base64"
 require "ed25519"
 require "linzer/jws"
+require "pp"
 
 module Linzer
   module Test
@@ -22,6 +23,31 @@ module Linzer
 
       get "/" do
         "Hello, world!\n"
+      end
+
+      get "/example" do
+        message = Linzer::Message.new(request)
+        components = %w[host date x-ows-header x-obs-fold-header cache-control example-dict]
+        parameters = {}
+        response = Linzer.signature_base(message, components, parameters)
+        puts response
+        puts "=== individual fields ==="
+        puts request.env.class
+        pp request.env
+        # "date": Tue, 20 Apr 2021 02:07:56 GMT
+        # "x-ows-header": Leading and trailing whitespace.
+        # "x-obs-fold-header":
+        # "cache-control": must-revalidate
+        # "example-dict": a=1,    b=2;x=1;y=2,   c=(a   b   c)
+        # "@signature-params": ("host" "date" "x-ows-header" "x-obs-fold-header" "cache-control" "example-dict")
+        puts request.env["HTTP_HOST"].inspect
+        puts request.env["HTTP_DATE"].inspect
+        puts request.env["HTTP_X_OWS_HEADER"].inspect
+        puts request.env["HTTP_X_OBS_FOLD_HEADER"].inspect
+        puts request.env["HTTP_CACHE_CONTROL"].inspect
+        puts request.env["HTTP_EXAMPLE_DICT"].inspect
+
+        response
       end
 
       get "/.well-known/http-message-signatures-directory" do
