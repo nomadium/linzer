@@ -68,5 +68,25 @@ RSpec.describe "RFC9421" do
       expect(signature_base.lines[0...components.length].join.chomp)
         .to eq('"example-dict";sf: a=1, b=2;x=1;y=2, c=(a b c)')
     end
+
+    it "returns the expected component values using signature base format, example 2.1.2" do
+      uri = URI("http://www.example.com")
+      env_fields = {"HTTP_EXAMPLE_DICT" => "  a=1, b=2;x=1;y=2, c=(a   b    c), d"}
+
+      request = Rack::Request.new(Rack::MockRequest.env_for(uri, **env_fields))
+      message = Linzer::Message.new(request)
+      components = %w[a d b c].map { |k| "example-dict;key=\"#{k}\"" }
+      signature_base = Linzer.signature_base(message, components, {})
+
+      expect(signature_base.lines[0...components.length].join)
+        .to eq(
+          <<~VALUES
+            "example-dict";key="a": 1
+            "example-dict";key="d": ?1
+            "example-dict";key="b": 2;x=1;y=2
+            "example-dict";key="c": (a b c)
+          VALUES
+        )
+    end
   end
 end
