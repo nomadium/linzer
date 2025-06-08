@@ -2,11 +2,12 @@
 
 RSpec.describe "RFC9421" do
   context "Section 2.1" do
-    it "returns the expected component values using signature base format" do
-      uri = URI("http://www.example.com")
-      # Rack seems to canonicalize component values for header fields as described in
+    let(:uri) { URI("http://www.example.com") }
+
+    let(:env_fields) do
+      # Rack seems to canonicalize component values for header fields as described
       # https://datatracker.ietf.org/doc/html/rfc9421#section-2.1-5
-      env_fields = {
+      {
         "HTTP_HOST"              => uri.authority,
         "HTTP_DATE"              => "Tue, 20 Apr 2021 02:07:56 GMT",
         "HTTP_X_OWS_HEADER"      => "Leading and trailing whitespace.",
@@ -14,6 +15,9 @@ RSpec.describe "RFC9421" do
         "HTTP_CACHE_CONTROL"     => "max-age=60, must-revalidate",
         "HTTP_EXAMPLE_DICT"      => "a=1,    b=2;x=1;y=2,   c=(a   b   c)"
       }
+    end
+
+    it "returns the expected component values using signature base format" do
       request = Rack::Request.new(Rack::MockRequest.env_for(uri, **env_fields))
       message = Linzer::Message.new(request)
       components = %w[host date x-ows-header x-obs-fold-header cache-control example-dict]
@@ -41,6 +45,28 @@ RSpec.describe "RFC9421" do
       signature_base = Linzer.signature_base(message, components, {})
 
       expect(signature_base.lines[0...components.length].join.chomp).to eq('"x-empty-header": ')
+    end
+
+    it "section 2.1.1, example 1" do # XXX: rename?
+      uri = URI("http://www.example.com")
+      request = Rack::Request.new(Rack::MockRequest.env_for(uri, **env_fields))
+      message = Linzer::Message.new(request)
+      components = %w[example-dict]
+      signature_base = Linzer.signature_base(message, components, {})
+
+      expect(signature_base.lines[0...components.length].join.chomp)
+        .to eq('"example-dict": a=1,    b=2;x=1;y=2,   c=(a   b   c)')
+    end
+
+    it "section 2.1.1, example 2" do # XXX: rename?
+      uri = URI("http://www.example.com")
+      request = Rack::Request.new(Rack::MockRequest.env_for(uri, **env_fields))
+      message = Linzer::Message.new(request)
+      components = %w[example-dict;sf]
+      signature_base = Linzer.signature_base(message, components, {})
+
+      expect(signature_base.lines[0...components.length].join.chomp)
+        .to eq('"example-dict";sf: a=1, b=2;x=1;y=2, c=(a b c)')
     end
   end
 end
