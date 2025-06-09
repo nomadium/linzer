@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+SimpleCov.command_name "test:integration"
+
 #
 # https://blog.cloudflare.com/web-bot-auth/
 # https://http-message-signatures-example.research.cloudflare.com

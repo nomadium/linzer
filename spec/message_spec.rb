@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+SimpleCov.command_name "test:units"
+
 module Linzer
   MyFunnyRequest = Struct.new("MyFunnyRequest", :headers, :body, :other)
   MyRegisteredResponse = Struct.new("MyRegisteredResponse", :headers, :body, :bar)
