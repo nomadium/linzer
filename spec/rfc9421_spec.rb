@@ -88,5 +88,53 @@ RSpec.describe "RFC9421" do
           VALUES
         )
     end
+
+    # The example shown in 2.1.3 with the same header but 2 different values
+    # would be representable in rack as one single header:
+    #
+    # Example-Header: value, with, lots
+    # Example-Header: of, commas
+    #
+    # would be received by the app as:
+    #
+    # Example-Header: value, with, lots, of, commas
+
+    it "returns the expected component values using signature base format, example 2.1.3" do
+      uri = URI("http://www.example.com")
+      env_fields = {
+        "HTTP_EXAMPLE_HEADER"  => "value, with, lots, of, commas",
+        "HTTP_EXAMPLE_HEADER2" => "value, with, lots",
+        "HTTP_EXAMPLE_HEADER3" => "of, commas"
+      }
+
+      request = Rack::Request.new(Rack::MockRequest.env_for(uri, **env_fields))
+      message = Linzer::Message.new(request)
+      components = %w[example-header]
+      signature_base = Linzer.signature_base(message, components, {})
+
+      expect(signature_base.lines[0...components.length].join.chomp)
+        .to eq('"example-header": value, with, lots, of, commas')
+
+      components = %w[example-header;bs]
+      signature_base = Linzer.signature_base(message, components, {})
+
+      expect(signature_base.lines[0...components.length].join.chomp)
+        .to eq('"example-header";bs: :dmFsdWUsIHdpdGgsIGxvdHMsIG9mLCBjb21tYXM=:')
+
+      components = %w[example-header2;bs]
+      signature_base = Linzer.signature_base(message, components, {})
+
+      expect(signature_base.lines[0...components.length].join.chomp)
+        .to eq('"example-header2";bs: :dmFsdWUsIHdpdGgsIGxvdHM=:')
+
+      components = %w[example-header3;bs]
+      signature_base = Linzer.signature_base(message, components, {})
+
+      expect(signature_base.lines[0...components.length].join.chomp)
+        .to eq('"example-header3";bs: :b2YsIGNvbW1hcw==:')
+    end
+
+    xit "[trailers] example 2.1.4" do
+    end
   end
 end
