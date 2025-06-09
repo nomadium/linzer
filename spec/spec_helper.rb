@@ -2,7 +2,8 @@
 
 require "simplecov"
 SimpleCov.start do
-  add_filter "/spec/integration"
+  enable_coverage :branch
+  add_filter "/spec/integration/support"
   add_filter "/spec/rack_helper.rb"
 end
 
