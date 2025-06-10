@@ -4,39 +4,41 @@ module Linzer
   class Message
     class Field
       module IdentifierMethods
+        def parse(field_name)
+          Starry
+            .parse_item(field_name.start_with?("@") ? field_name[1..] : field_name)
+        rescue Starry::ParseError => ex
+          raise Error, "Invalid component identifier: '#{field_name}'!", cause: ex
+        end
+        module_function :parse
+
+        def initialize(field_name:)
+          @item = IdentifierMethods.parse(field_name) rescue nil
+          super
+        end
+
+        attr_reader :item
+
         def derived?
           field_name.start_with?("@")
         end
 
         def serialize
-          item = parse_field_name
-          component_name = Starry.serialize_bare_item(item.value)
-          component_name.prepend("@") if derived?
-          parameters     = Starry.serialize_parameters(item.parameters)
-          '"%s"%s' % [component_name, parameters]
-        end
-
-        def item
-          parse_field_name
-        rescue Error => _
-          nil
+          raise Error, "Invalid component identifier: '#{field_name}'!" unless @item
+          serialized_name = Starry.serialize_bare_item(@item.value)
+          serialized_name.prepend("@") if derived?
+          serialized_params = Starry.serialize_parameters(@item.parameters)
+          '"%s"%s' % [serialized_name, serialized_params]
         end
 
         alias_method :to_s, :serialize
-
-        private
-
-        def parse_field_name
-          Starry.parse_item(derived? ? field_name[1..] : field_name)
-        rescue Starry::ParseError => ex
-          raise Error, "Invalid component identifier: '#{field_name}'!", cause: ex
-        end
       end
 
-      # Excluded as obviously, both branches cannot be covered on a single run
+      # Excluded from coverage, as obviously both branches cannot be covered
+      # on a single tests run.
       # :nocov:
       if Gem::Version.new(RUBY_VERSION) < Gem::Version.new("3.2.0")
-        class Identifier < Struct.new(:field_name); end
+        class Identifier < Struct.new(:field_name, keyword_init: true); end
       else
         class Identifier < Data.define(:field_name); end
       end

@@ -27,7 +27,7 @@ module Linzer
         end
 
         def [](field_name)
-          field_id = Field::Identifier.new(field_name)
+          field_id = Field::Identifier.new(field_name: field_name)
           component_name = field_id.item
           return nil if component_name.nil?
           retrieve(component_name, field_id.derived? ? :derived : :field)
