@@ -134,7 +134,29 @@ RSpec.describe "RFC9421" do
         .to eq('"example-header3";bs: :b2YsIGNvbW1hcw==:')
     end
 
-    xit "[trailers] example 2.1.4" do
+    it "[trailers] example 2.1.4" do
+      headers = {
+        "Trailer" => "Expires",
+        "Content-Type" => "text/plain",
+        "Transfer-Encoding" => "chunked"
+      }
+      body = %w[4 HTTP 7 Message a Signatures 0]
+      expire_date = "Wed, 9 Nov 2022 07:28:00 GMT"
+      body.define_singleton_method(:trailers) { {"expires" => expire_date} }
+
+      components = %w[@status trailer expires;tr]
+      response = Linzer::Test::RackHelper.new_response(body, 200, headers)
+      message = Linzer::Message.new(response)
+      signature_base = Linzer.signature_base(message, components, {})
+
+      expect(signature_base.lines[0...components.length].join)
+        .to eq(
+          <<~VALUES
+            "@status": 200
+            "trailer": Expires
+            "expires";tr: Wed, 9 Nov 2022 07:28:00 GMT
+          VALUES
+        )
     end
   end
 end
