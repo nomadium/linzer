@@ -27,6 +27,7 @@ module Linzer
         end
 
         def [](field_name)
+          # XXX: to request @status on a request should be an error (see 2.2.9)
           field_id = Field::Identifier.new(field_name: field_name)
           component_name = field_id.item
           return nil if component_name.nil?
