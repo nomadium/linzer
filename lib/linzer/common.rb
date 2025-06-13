@@ -4,19 +4,29 @@ module Linzer
   module Common
     def signature_base(message, components, parameters)
       signature_base = components.each_with_object(+"") do |component, base|
-        component_identifier = Message::Field::Identifier.new(field_name: component)
-        base << "#{component_identifier.serialize}: #{message[component]}\n"
+        base << "%s\n" % signature_base_line(component, message[component])
       end
 
       signature_params =
         Starry.serialize([Starry::InnerList.new(components, parameters)])
 
-      signature_base << "\"@signature-params\": #{signature_params}"
+      signature_base << signature_base_line("@signature-params", signature_params)
       signature_base
     end
     module_function :signature_base
 
     private
+
+    def signature_base_line(component, value)
+      identifier = if !component.include?(";")
+        "\"#{component}\""
+      else
+        Message::Field::Identifier.new(field_name: component)
+          .serialize
+      end
+      "%s: %s" % [identifier, value]
+    end
+    module_function :signature_base_line
 
     def validate_components(message, components)
       if components.include?("@signature-params")
