@@ -371,4 +371,27 @@ RSpec.describe "RFC9421" do
       end
     end
   end
+
+  context "Signature Parameters (Section 2.3)" do
+    it "has the serialization of the signature parameters for a signature" do
+      serialized_params = '("@target-uri" "@authority" "date" "cache-control")' \
+                          ';keyid="test-key-rsa-pss";alg="rsa-pss-sha512";' \
+                          "created=1618884475;expires=1618884775"
+      signature_params = Starry.parse_list(serialized_params).shift
+
+      parameters = signature_params.parameters
+      expect(parameters["keyid"]).to   eq("test-key-rsa-pss")
+      expect(parameters["alg"]).to     eq("rsa-pss-sha512")
+      expect(parameters["created"]).to eq(1618884475)
+      expect(parameters["expires"]).to eq(1618884775)
+
+      components = signature_params.value.map(&:value)
+      expect(components).to eq(%w[@target-uri @authority date cache-control])
+    end
+  end
+
+  context "Signing Request Components in a Response Message (Section 2.4)" do
+    xit "to-do" do
+    end
+  end
 end
