@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
 RSpec.describe "RFC9421" do
-  context "Section 2.1" do
-    def signature_base_lines(message, components)
-      signature_base = Linzer.signature_base(message, components, {})
-      signature_base.lines[0...components.length].join
-    end
+  def signature_base_lines(message, components)
+    signature_base = Linzer.signature_base(message, components, {})
+    signature_base.lines[0...components.length].join
+  end
 
+  context "HTTP Fields (Section 2.1)" do
     let(:uri) { URI("http://www.example.com") }
 
     let(:headers) do
@@ -89,8 +89,8 @@ RSpec.describe "RFC9421" do
       end
     end
 
-    # The example shown in 2.1.3 with the same header but 2 different values
-    # would be representable in rack as one single header:
+    # The example shown in 2.1.3 with the same field but 2 distinct field values
+    # would be received in Rack as one single field:
     #
     # Example-Header: value, with, lots
     # Example-Header: of, commas
@@ -105,13 +105,12 @@ RSpec.describe "RFC9421" do
       it "example 1" do
         request["example-header"] = "value, with, lots, of, commas"
         message = Linzer::Message.new(request)
-        components = %w[example-header]
 
+        components = %w[example-header]
         expect(signature_base_lines(message, components).chomp)
           .to eq('"example-header": value, with, lots, of, commas')
 
         components = %w[example-header;bs]
-
         expect(signature_base_lines(message, components).chomp)
           .to eq('"example-header";bs: :dmFsdWUsIHdpdGgsIGxvdHMsIG9mLCBjb21tYXM=:')
       end
@@ -168,7 +167,7 @@ RSpec.describe "RFC9421" do
     # end
   end
 
-  context "Section 2.2" do
+  context "Derived Components (Section 2.2)" do
     let(:request) do
       Net::HTTP::Post.new(URI("http://www.example.com/path?param=value"))
     end
@@ -325,9 +324,8 @@ RSpec.describe "RFC9421" do
           request = Net::HTTP::Get.new(URI(url))
           message = Linzer::Message.new(request)
           components = %w[baz qux param].map { |p| "@query-param;name=\"#{p}\"" }
-          signature_base = Linzer.signature_base(message, components, {})
 
-          expect(signature_base.lines[0...components.length].join)
+          expect(signature_base_lines(message, components))
             .to eq(
               <<~VALUES
                 "@query-param";name="baz": batman
@@ -349,9 +347,8 @@ RSpec.describe "RFC9421" do
           message = Linzer::Message.new(request)
           component_names = %w[var bar fa%C3%A7ade%22%3A%20]
           components = component_names.map { |p| "@query-param;name=\"#{p}\"" }
-          signature_base = Linzer.signature_base(message, components, {})
 
-          expect(signature_base.lines[0...components.length].join)
+          expect(signature_base_lines(message, components))
             .to eq(
               <<~VALUES
                 "@query-param";name="var": this%20is%20a%20big%0Amultiline%20value
