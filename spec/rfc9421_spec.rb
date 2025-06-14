@@ -159,6 +159,7 @@ RSpec.describe "RFC9421" do
         )
     end
   end
+
   context "Section 2.2" do
     let(:request) do
       Net::HTTP::Post.new(URI("http://www.example.com/path?param=value"))
@@ -173,15 +174,16 @@ RSpec.describe "RFC9421" do
 
     describe "@method (section 2.2.1)" do
       let(:component) { "@method" }
+
       it "returns the HTTP method of a request message" do
-        expect(signature_base_line(message, component))
-          .to eq('"@method": POST')
-        expect(message[component]).to eq("POST")
+        expect(signature_base_line(message, component)).to eq('"@method": POST')
+        expect(message[component]).to                      eq("POST")
       end
     end
 
     describe "@target-uri (section 2.2.2)" do
       let(:component) { "@target-uri" }
+
       it "returns the target URI of a request message" do
         expected_target = "http://www.example.com/path?param=value"
 
@@ -193,6 +195,7 @@ RSpec.describe "RFC9421" do
 
     describe "@authority (section 2.2.3)" do
       let(:component) { "@authority" }
+
       it "returns the authority component of the target URI of the HTTP request" do
         expected_authority = "www.example.com"
 
@@ -204,71 +207,77 @@ RSpec.describe "RFC9421" do
 
     describe "@scheme (section 2.2.4)" do
       let(:component) { "@scheme" }
+
       it "returns the scheme of the target URL of the HTTP request message" do
-        expect(signature_base_line(message, component))
-          .to eq('"@scheme": http')
-        expect(message[component]).to eq("http")
+        expect(signature_base_line(message, component)).to eq('"@scheme": http')
+        expect(message[component]).to                      eq("http")
       end
     end
 
     describe "@request-target (section 2.2.5)" do
       let(:component) { "@request-target" }
-      it "returns the full request target of the HTTP request message, example 1" do
-        expect(signature_base_line(message, component))
-          .to eq('"@request-target": /path?param=value')
-        expect(message[component]).to eq("/path?param=value")
+
+      describe "returns the full request target of the HTTP request message" do
+        it "example 1" do
+          expect(signature_base_line(message, component))
+            .to eq('"@request-target": /path?param=value')
+          expect(message[component]).to eq("/path?param=value")
+        end
+
+        # AFAICT, Net::HTTP doesn't support how to represent requests to an HTTP
+        # proxy with the absolute-form value, containing the fully qualified target
+        # URI
+        #
+        # xit "example 2" do
+        #   request = Net::HTTP::Get.new(URI("http://www.example.com/path?param=value"))
+        #   expect(signature_base_line(component))
+        #     .to eq('"@request-target": https://www.example.com/path?param=value')
+        #   expect(message[component])
+        #     .to eq("https://www.example.com/path?param=value")
+        # end
+
+        # Ditto for:
+        # The following CONNECT request with an authority-form value, containing
+        # the host and port of the target:
+        #
+        # CONNECT www.example.com:80 HTTP/1.1
+        # Host: www.example.com
+        # would result in the following @request-target component value:
+        #
+        # www.example.com:80
+        # and the following signature base line
+        # with the absolute-form value, containing the fully qualified target URI
+        # "@request-target": www.example.com:80
+        #
+        # xit "example 3" do
+        #   ...
+        # end
+
+        # And this one...
+        # fails with 'Net::HTTPGenericRequest#initialize': not an HTTP URI (ArgumentError)
+        #
+        # xit "example 4" do
+        #   request = Net::HTTP::Options.new(URI("*"))
+        #   message = Linzer::Message.new(request)
+        #   expect(signature_base_line(message, component))
+        #     .to eq('"@request-target": *')
+        #   expect(message[component]).to eq("*")
+        # end
       end
-
-      # AFAICT, Net::HTTP doesn't support how to represent requests to an HTTP proxy
-      # with the absolute-form value, containing the fully qualified target URI
-      # xit "returns the full request target of the HTTP request message, example 2" do
-      #   request = Net::HTTP::Get.new(URI("http://www.example.com/path?param=value"))
-      #   expect(signature_base_line(component))
-      #     .to eq('"@request-target": https://www.example.com/path?param=value')
-      #   expect(message[component])
-      #     .to eq("https://www.example.com/path?param=value")
-      # end
-
-      # Ditto for:
-      # The following CONNECT request with an authority-form value, containing
-      # the host and port of the target:
-      #
-      # CONNECT www.example.com:80 HTTP/1.1
-      # Host: www.example.com
-      # would result in the following @request-target component value:
-      #
-      # www.example.com:80
-      # and the following signature base line
-      # with the absolute-form value, containing the fully qualified target URI
-      # "@request-target": www.example.com:80
-      #
-      # xit "returns the full request target of the HTTP request message, example 3" do
-      #   ...
-      # end
-
-      # And this one...
-      # fails with 'Net::HTTPGenericRequest#initialize': not an HTTP URI (ArgumentError)
-      #
-      # xit "returns the full request target of the HTTP request message, example 4" do
-      #   request = Net::HTTP::Options.new(URI("*"))
-      #   message = Linzer::Message.new(request)
-      #   expect(signature_base_line(message, component))
-      #     .to eq('"@request-target": *')
-      #   expect(message[component]).to eq("*")
-      # end
     end
 
     describe "@path (section 2.2.6)" do
       let(:component) { "@path" }
+
       it "returns the target path of the HTTP request message" do
-        expect(signature_base_line(message, component))
-          .to eq('"@path": /path')
-        expect(message[component]).to eq("/path")
+        expect(signature_base_line(message, component)).to eq('"@path": /path')
+        expect(message[component]).to                      eq("/path")
       end
     end
 
     describe "@query (section 2.2.7)" do
       let(:component) { "@query" }
+
       describe "return the query component of the HTTP request message" do
         it "example 1" do
           url = "http://www.example.com/path?param=value&foo=bar&baz=bat%2Dman"
@@ -296,7 +305,7 @@ RSpec.describe "RFC9421" do
           message = Linzer::Message.new(request)
 
           expect(signature_base_line(message, component)).to eq('"@query": ?')
-          expect(message[component]).to eq("?")
+          expect(message[component]).to                      eq("?")
         end
       end
     end
@@ -346,14 +355,14 @@ RSpec.describe "RFC9421" do
       end
     end
 
-    describe "@path (section 2.2.9)" do
+    describe "@status (section 2.2.9)" do
       let(:response)  { Net::HTTPOK.new("1.1", "200", "OK") }
       let(:component) { "@status" }
       let(:message)   { Linzer::Message.new(response) }
 
       it "returns the three-digit numeric HTTP status code of a response message" do
         expect(signature_base_line(message, component)).to eq('"@status": 200')
-        expect(message[component]).to eq(200)
+        expect(message[component]).to                      eq(200)
       end
     end
   end
