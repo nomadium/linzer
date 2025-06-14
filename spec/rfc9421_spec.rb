@@ -2,91 +2,91 @@
 
 RSpec.describe "RFC9421" do
   context "Section 2.1" do
+    def signature_base_lines(message, components)
+      signature_base = Linzer.signature_base(message, components, {})
+      signature_base.lines[0...components.length].join
+    end
+
     let(:uri) { URI("http://www.example.com") }
 
-    let(:env_fields) do
-      # Rack seems to canonicalize component values for header fields as described
-      # https://datatracker.ietf.org/doc/html/rfc9421#section-2.1-5
+    let(:headers) do
+      # Net::HTTP (and also Rack) canonicalizes component values for header fields
+      # as described in https://datatracker.ietf.org/doc/html/rfc9421#section-2.1-5
       {
-        "HTTP_HOST"              => uri.authority,
-        "HTTP_DATE"              => "Tue, 20 Apr 2021 02:07:56 GMT",
-        "HTTP_X_OWS_HEADER"      => "Leading and trailing whitespace.",
-        "HTTP_X_OBS_FOLD_HEADER" => "Obsolete line folding.",
-        "HTTP_CACHE_CONTROL"     => "max-age=60, must-revalidate",
-        "HTTP_EXAMPLE_DICT"      => "a=1,    b=2;x=1;y=2,   c=(a   b   c)"
+        "Host"              => uri.authority,
+        "Date"              => "Tue, 20 Apr 2021 02:07:56 GMT",
+        "X-OWS-Header"      => "   Leading and trailing whitespace.   ",
+        "X-Obs-Fold-Header" => "Obsolete line folding.",
+        "Cache-Control"     => "max-age=60, must-revalidate",
+        "Example-Dict"      => " a=1,    b=2;x=1;y=2,   c=(a   b   c)"
       }
     end
 
-    it "returns the expected component values using signature base format" do
-      request = Rack::Request.new(Rack::MockRequest.env_for(uri, **env_fields))
-      message = Linzer::Message.new(request)
-      components = %w[host date x-ows-header x-obs-fold-header cache-control example-dict]
-      signature_base = Linzer.signature_base(message, components, {})
+    let(:request) { Net::HTTP::Get.new(uri, headers) }
 
-      expect(signature_base.lines[0...components.length].join)
-        .to eq(
-          <<~VALUES
-            "host": www.example.com
-            "date": Tue, 20 Apr 2021 02:07:56 GMT
-            "x-ows-header": Leading and trailing whitespace.
-            "x-obs-fold-header": Obsolete line folding.
-            "cache-control": max-age=60, must-revalidate
-            "example-dict": a=1,    b=2;x=1;y=2,   c=(a   b   c)
-          VALUES
-        )
+    describe "Component values for header fields" do
+      it "example 1" do
+        message = Linzer::Message.new(request)
+        components = %w[host date x-ows-header x-obs-fold-header cache-control example-dict]
+
+        expect(signature_base_lines(message, components))
+          .to eq(
+            <<~VALUES
+              "host": www.example.com
+              "date": Tue, 20 Apr 2021 02:07:56 GMT
+              "x-ows-header": Leading and trailing whitespace.
+              "x-obs-fold-header": Obsolete line folding.
+              "cache-control": max-age=60, must-revalidate
+              "example-dict": a=1,    b=2;x=1;y=2,   c=(a   b   c)
+            VALUES
+          )
+      end
+
+      it "example 2, empty header case" do
+        headers = {"X-Empty-Header" => ""}
+        request = Net::HTTP::Get.new(uri, headers)
+        message = Linzer::Message.new(request)
+        components = %w[x-empty-header]
+
+        expect(signature_base_lines(message, components).chomp)
+          .to eq('"x-empty-header": ')
+      end
     end
 
-    it "returns the expected component values using signature base format, empty header" do
-      uri = URI("http://www.example.com")
-      env_fields = {"HTTP_X_EMPTY_HEADER" => ""}
-      request = Rack::Request.new(Rack::MockRequest.env_for(uri, **env_fields))
-      message = Linzer::Message.new(request)
-      components = %w[x-empty-header]
-      signature_base = Linzer.signature_base(message, components, {})
+    describe "Strict Serialization of HTTP Structured Fields (section 2.1.1)" do
+      it "example 1" do
+        message = Linzer::Message.new(request)
+        components = %w[example-dict]
 
-      expect(signature_base.lines[0...components.length].join.chomp).to eq('"x-empty-header": ')
+        expect(signature_base_lines(message, components).chomp)
+          .to eq('"example-dict": a=1,    b=2;x=1;y=2,   c=(a   b   c)')
+      end
+
+      it "example 2" do
+        message = Linzer::Message.new(request)
+        components = %w[example-dict;sf]
+
+        expect(signature_base_lines(message, components).chomp)
+          .to eq('"example-dict";sf: a=1, b=2;x=1;y=2, c=(a b c)')
+      end
     end
 
-    it "section 2.1.1, example 1" do # XXX: rename?
-      uri = URI("http://www.example.com")
-      request = Rack::Request.new(Rack::MockRequest.env_for(uri, **env_fields))
-      message = Linzer::Message.new(request)
-      components = %w[example-dict]
-      signature_base = Linzer.signature_base(message, components, {})
+    describe "Dictionary Structured Field Members (section 2.1.2)" do
+      it "example 1" do
+        request["Example-Dict"] = "  a=1, b=2;x=1;y=2, c=(a   b    c), d"
+        message = Linzer::Message.new(request)
+        components = %w[a d b c].map { |k| "example-dict;key=\"#{k}\"" }
 
-      expect(signature_base.lines[0...components.length].join.chomp)
-        .to eq('"example-dict": a=1,    b=2;x=1;y=2,   c=(a   b   c)')
-    end
-
-    it "section 2.1.1, example 2" do # XXX: rename?
-      uri = URI("http://www.example.com")
-      request = Rack::Request.new(Rack::MockRequest.env_for(uri, **env_fields))
-      message = Linzer::Message.new(request)
-      components = %w[example-dict;sf]
-      signature_base = Linzer.signature_base(message, components, {})
-
-      expect(signature_base.lines[0...components.length].join.chomp)
-        .to eq('"example-dict";sf: a=1, b=2;x=1;y=2, c=(a b c)')
-    end
-
-    it "returns the expected component values using signature base format, example 2.1.2" do
-      uri = URI("http://www.example.com")
-      env_fields = {"HTTP_EXAMPLE_DICT" => "  a=1, b=2;x=1;y=2, c=(a   b    c), d"}
-
-      request = Rack::Request.new(Rack::MockRequest.env_for(uri, **env_fields))
-      message = Linzer::Message.new(request)
-      components = %w[a d b c].map { |k| "example-dict;key=\"#{k}\"" }
-      signature_base = Linzer.signature_base(message, components, {})
-
-      expect(signature_base.lines[0...components.length].join)
-        .to eq(
-          <<~VALUES
-            "example-dict";key="a": 1
-            "example-dict";key="d": ?1
-            "example-dict";key="b": 2;x=1;y=2
-            "example-dict";key="c": (a b c)
-          VALUES
-        )
+        expect(signature_base_lines(message, components))
+          .to eq(
+            <<~VALUES
+              "example-dict";key="a": 1
+              "example-dict";key="d": ?1
+              "example-dict";key="b": 2;x=1;y=2
+              "example-dict";key="c": (a b c)
+            VALUES
+          )
+      end
     end
 
     # The example shown in 2.1.3 with the same header but 2 different values
@@ -99,65 +99,73 @@ RSpec.describe "RFC9421" do
     #
     # Example-Header: value, with, lots, of, commas
 
-    it "returns the expected component values using signature base format, example 2.1.3" do
-      uri = URI("http://www.example.com")
-      env_fields = {
-        "HTTP_EXAMPLE_HEADER"  => "value, with, lots, of, commas",
-        "HTTP_EXAMPLE_HEADER2" => "value, with, lots",
-        "HTTP_EXAMPLE_HEADER3" => "of, commas"
-      }
+    describe "Binary-Wrapped HTTP Fields (section 2.1.3)" do
+      let(:request) { Net::HTTP::Get.new(uri) }
 
-      request = Rack::Request.new(Rack::MockRequest.env_for(uri, **env_fields))
-      message = Linzer::Message.new(request)
-      components = %w[example-header]
-      signature_base = Linzer.signature_base(message, components, {})
+      it "example 1" do
+        request["example-header"] = "value, with, lots, of, commas"
+        message = Linzer::Message.new(request)
+        components = %w[example-header]
 
-      expect(signature_base.lines[0...components.length].join.chomp)
-        .to eq('"example-header": value, with, lots, of, commas')
+        expect(signature_base_lines(message, components).chomp)
+          .to eq('"example-header": value, with, lots, of, commas')
 
-      components = %w[example-header;bs]
-      signature_base = Linzer.signature_base(message, components, {})
+        components = %w[example-header;bs]
 
-      expect(signature_base.lines[0...components.length].join.chomp)
-        .to eq('"example-header";bs: :dmFsdWUsIHdpdGgsIGxvdHMsIG9mLCBjb21tYXM=:')
+        expect(signature_base_lines(message, components).chomp)
+          .to eq('"example-header";bs: :dmFsdWUsIHdpdGgsIGxvdHMsIG9mLCBjb21tYXM=:')
+      end
 
-      components = %w[example-header2;bs]
-      signature_base = Linzer.signature_base(message, components, {})
+      it "example 2" do
+        request["example-header"] = "value, with, lots"
+        components = %w[example-header;bs]
+        message = Linzer::Message.new(request)
 
-      expect(signature_base.lines[0...components.length].join.chomp)
-        .to eq('"example-header2";bs: :dmFsdWUsIHdpdGgsIGxvdHM=:')
+        expect(signature_base_lines(message, components).chomp)
+          .to eq('"example-header";bs: :dmFsdWUsIHdpdGgsIGxvdHM=:')
+      end
 
-      components = %w[example-header3;bs]
-      signature_base = Linzer.signature_base(message, components, {})
+      it "example 3" do
+        request["example-header"] = "of, commas"
+        components = %w[example-header;bs]
+        message = Linzer::Message.new(request)
 
-      expect(signature_base.lines[0...components.length].join.chomp)
-        .to eq('"example-header3";bs: :b2YsIGNvbW1hcw==:')
+        expect(signature_base_lines(message, components).chomp)
+          .to eq('"example-header";bs: :b2YsIGNvbW1hcw==:')
+      end
     end
 
-    it "[trailers] example 2.1.4" do
-      headers = {
-        "Trailer" => "Expires",
-        "Content-Type" => "text/plain",
-        "Transfer-Encoding" => "chunked"
-      }
-      body = %w[4 HTTP 7 Message a Signatures 0]
-      expire_date = "Wed, 9 Nov 2022 07:28:00 GMT"
-      body.define_singleton_method(:trailers) { {"expires" => expire_date} }
-
-      components = %w[@status trailer expires;tr]
-      response = Linzer::Test::RackHelper.new_response(body, 200, headers)
-      message = Linzer::Message.new(response)
-      signature_base = Linzer.signature_base(message, components, {})
-
-      expect(signature_base.lines[0...components.length].join)
-        .to eq(
-          <<~VALUES
-            "@status": 200
-            "trailer": Expires
-            "expires";tr: Wed, 9 Nov 2022 07:28:00 GMT
-          VALUES
-        )
-    end
+    # unfortunately Net::HTTP doesn't support trailers
+    #
+    # describe "Trailer Fields (section 2.1.4)" do
+    #   xit "[trailers] example 2.1.4" do
+    #     headers = {
+    #       "Trailer" => "Expires",
+    #       "Content-Type" => "text/plain",
+    #       "Transfer-Encoding" => "chunked"
+    #     }
+    #     body = %w[4 HTTP 7 Message a Signatures 0]
+    #     expire_date = "Wed, 9 Nov 2022 07:28:00 GMT"
+    #     body.define_singleton_method(:trailers) { {"expires" => expire_date} }
+    #
+    #     components = %w[@status trailer expires;tr]
+    #     response = Net::HTTPOK.new("1.1", "200", "OK")
+    #     response.body = body
+    #     headers.each { |k, v| response[k] = v }
+    #     response.instance_variable_set(:@read, true)
+    #
+    #     message = Linzer::Message.new(response)
+    #
+    #     expect(signature_base_lines(message, components))
+    #       .to eq(
+    #         <<~VALUES
+    #           "@status": 200
+    #           "trailer": Expires
+    #           "expires";tr: Wed, 9 Nov 2022 07:28:00 GMT
+    #         VALUES
+    #       )
+    #   end
+    # end
   end
 
   context "Section 2.2" do
