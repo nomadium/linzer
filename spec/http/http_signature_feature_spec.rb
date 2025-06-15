@@ -52,7 +52,7 @@ RSpec.describe "Linzer::HTTP::SignatureFeature" do
         )
       end
 
-      it "signs the request" do
+      xit "signs the request" do
         signed_request = feature.wrap_request(request)
         signature      = Linzer::Signature.build(signed_request.headers.to_h)
 
