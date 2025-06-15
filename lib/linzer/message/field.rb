@@ -20,7 +20,7 @@ module Linzer
         attr_reader :item
 
         def derived?
-          field_name.start_with?("@")
+          field_name.start_with?("@") || field_name.start_with?('"@')
         end
 
         def serialize

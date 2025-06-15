@@ -391,7 +391,87 @@ RSpec.describe "RFC9421" do
   end
 
   context "Signing Request Components in a Response Message (Section 2.4)" do
-    xit "to-do" do
+    let(:uri) { URI("http://example.com/foo?param=Value&Pet=dog") }
+
+    let(:request) do
+      headers = {
+        "Host"           => "example.com",
+        "Date"           => "Tue, 20 Apr 2021 02:07:55 GMT",
+        "Content-Digest" => "sha-512=:WZDPaVn/7XgHaAy8pmojAkGWoRx2UFChF41A2svX+T" \
+                            "aPm+AbwAgBWnrIiYllu7BNNyealdVLvRwEmTHWXvJwew==:",
+        "Content-Type"   => "application/json",
+        "Content-Length" => "18"
+      }
+      body = '{"hello": "world"}'
+      request = Net::HTTP::Post.new(uri, headers)
+      request.body = body
+      request
+    end
+
+    let(:response_headers) do
+      {
+        "Date"           => "Tue, 20 Apr 2021 02:07:56 GMT",
+        "Content-Type"   => "application/json",
+        "Content-Length" => "62",
+        "Content-Digest" => "sha-512=:0Y6iCBzGg5rZtoXS95Ijz03mslf6KAMCloESHObfwn" \
+                            "HJDbkkWWQz6PhhU9kxsTbARtY2PTBOzq24uJFpHsMuAg==:"
+      }
+    end
+
+    let(:response) do
+      response = Net::HTTPServiceUnavailable.new("1.1", 503, "Service Unavailable")
+
+      response.body = '{"busy": true, "message": "Your call is very important to us"}'
+      response.instance_variable_set(:@read, true)
+
+      response_headers.each { |h, v| response[h] = v }
+
+      response
+    end
+
+    let(:test_key_ecc_p256_pub) { Linzer::RFC9421::Examples.test_key_ecc_p256_pub }
+    let(:key_id) { "test-key-ecc-p256" }
+
+    it "example signature base" do
+      req_components = %w[@authority;req @method;req @path;req content-digest;req]
+      components = %w[@status content-digest content-type] + req_components
+      parameters = {created: 1618884479, keyid: "test-key-ecc-p256"}
+      message = Linzer::Message.new(response, attached_request: request)
+
+      components_list = [Starry::InnerList.new(components, parameters)]
+      signature_params = Starry.serialize_list(components_list)
+
+      expect(Linzer.signature_base(message, components, parameters))
+        .to eq(
+          <<~VALUES
+            "@status": 503
+            "content-digest": #{response["content-digest"]}
+            "content-type": application/json
+            "@authority";req: example.com
+            "@method";req: POST
+            "@path";req: /foo
+            "content-digest";req: #{request["content-digest"]}
+            "@signature-params": #{signature_params}
+          VALUES
+          .chomp
+        )
+    end
+
+    it "example signed response" do
+      signature_headers = {
+        "signature-input" =>
+          'reqres=("@status" "content-digest" "content-type" ' \
+          '"@authority";req "@method";req "@path";req "content-digest";req)' \
+          ';created=1618884479;keyid="test-key-ecc-p256"',
+        "signature" => "reqres=:dMT/A/76ehrdBTD/2Xx8QuKV6FoyzEP/I9hdzKN8LQJLNgzU" \
+                       "4W767HK05rx1i8meNQQgQPgQp8wq2ive3tV5Ag==:"
+      }
+
+      signature = Linzer::Signature.build(signature_headers)
+      message = Linzer::Message.new(response, attached_request: request)
+      pubkey = Linzer.new_ecdsa_p256_sha256_key(test_key_ecc_p256_pub)
+
+      expect(Linzer.verify(pubkey, message, signature)).to eq(true)
     end
   end
 end

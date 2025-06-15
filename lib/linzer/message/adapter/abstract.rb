@@ -28,10 +28,27 @@ module Linzer
 
         def [](field_name)
           # XXX: to request @status on a request should be an error (see 2.2.9)
+
+          # more hacks...
+          if field_name.start_with?('"') && !field_name.include?(";")
+            field_name = eval(field_name)
+          end
+
           field_id = Field::Identifier.new(field_name: field_name)
           component_name = field_id.item
+
+          if field_name.start_with?('"') && field_name.include?(";")
+            if field_name.start_with?('"@')
+              foo = field_id.item.value.dup
+              foo.slice!(0)
+              field_id.item.value = foo.to_sym
+            else
+            end
+          end
+
           return nil if component_name.nil?
-          retrieve(component_name, field_id.derived? ? :derived : :field)
+          result = retrieve(component_name, field_id.derived? ? :derived : :field)
+          result
         end
 
         def header(name)
@@ -128,6 +145,7 @@ module Linzer
         end
 
         def req(field, method)
+          return nil unless attached_request?
           case method
           when :derived then @attached_request["@#{field}"]
           when :field   then @attached_request[field.to_s]

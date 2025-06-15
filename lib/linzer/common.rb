@@ -7,8 +7,15 @@ module Linzer
         base << "%s\n" % signature_base_line(component, message[component])
       end
 
+      all_serialized = components.all? { |c| c.start_with?('"') }
+      identifiers = if !all_serialized
+        components
+      else
+        components.map { |c| Starry.parse_item(c) }
+      end
+
       signature_params =
-        Starry.serialize([Starry::InnerList.new(components, parameters)])
+        Starry.serialize([Starry::InnerList.new(identifiers, parameters)])
 
       signature_base << signature_base_line("@signature-params", signature_params)
       signature_base
@@ -19,10 +26,14 @@ module Linzer
 
     def signature_base_line(component, value)
       identifier = if !component.include?(";")
-        "\"#{component}\""
+        component.start_with?('"') ? component : "\"#{component}\""
       else
-        Message::Field::Identifier.new(field_name: component)
-          .serialize
+        if component.start_with?('"')
+          component
+        else
+          Message::Field::Identifier.new(field_name: component)
+            .serialize
+        end
       end
       "%s: %s" % [identifier, value]
     end

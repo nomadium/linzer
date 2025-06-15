@@ -56,9 +56,19 @@ module Linzer
 
         fail_due_invalid_components unless input[label].value.respond_to?(:each)
 
-        components = input[label].value.map(&:value)
+        # components = input[label].value.map(&:value)
+        components = input[label].value.map do |c|
+          # binding.irb
+          # c.value.start_with?('"') ? Starry.serialize_item(c) : c.value
+          # c.parameters.empty? ? c.value : c.value + Starry.serialize_parameters(c.parameters)
+          # c.value + Starry.serialize_parameters(c.parameters)
+
+          Starry.serialize_item(c)
+        end
+        # binding.irb
         parameters = input[label].parameters
 
+        # binding.irb
         new(components, raw_signature, label, parameters)
       end
 
