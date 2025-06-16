@@ -23,7 +23,7 @@ RSpec.describe Linzer::Signer do
 
     let(:key_id) { "test-key-rsa-pss" }
 
-    xit "signs message with expected signature" do
+    it "signs message with expected signature" do
       expected_input = 'sig-b23=("date" "@method" "@path" "@query" "@authority" "content-type" "content-digest" "content-length");created=1618884473;keyid="test-key-rsa-pss"'
 
       key = Linzer.new_rsa_pss_sha512_key(key_material, key_id)
@@ -79,7 +79,7 @@ RSpec.describe Linzer::Verifier do
 
       label      = "sig3"
       timestamp  = 1618884473
-      components = %w[date @authority content-type]
+      # components = %w[date @authority content-type]
 
       signature = Linzer::Signature.build({
         "signature-input" => 'sig3=("date" "@authority" "content-type");created=1618884473;keyid="test-key-rsa-pss"',
@@ -100,7 +100,7 @@ RSpec.describe Linzer::Verifier do
       key = Linzer.new_rsa_pss_sha512_public_key(key_material, key_id)
       message = Linzer::Message.new(request)
 
-      components = %w[date @method @path @query @authority content-type content-digest content-length]
+      # components = %w[date @method @path @query @authority content-type content-digest content-length]
       timestamp  = 1618884473
       label      = "sig-b23"
 

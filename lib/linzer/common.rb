@@ -28,19 +28,21 @@ module Linzer
       identifier = if !component.include?(";")
         component.start_with?('"') ? component : "\"#{component}\""
       else
+        # rubocop:disable Style/IfInsideElse
         if component.start_with?('"')
           component
         else
           Message::Field::Identifier.new(field_name: component)
             .serialize
         end
+        # rubocop:enable Style/IfInsideElse
       end
       "%s: %s" % [identifier, value]
     end
     module_function :signature_base_line
 
     def validate_components(message, components)
-      if components.include?("@signature-params")
+      if components.include?('"@signature-params"') || components.include?('"@signature-params";')
         raise Error.new "Invalid component in signature input"
       end
 

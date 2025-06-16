@@ -16,7 +16,7 @@ RSpec.describe Linzer::Signer do
 
     let(:key) { Linzer.new_ed25519_key(test_key_ed25519, key_id) }
 
-    xit "signs message with expected signature" do
+    it "signs message with expected signature" do
       expected_input = 'sig-b26=("date" "@method" "@path" "@authority" "content-type" "content-length");created=1618884473;keyid="test-key-ed25519"'
       expected_signature = "sig-b26=:wqcAqbmYJ2ji2glfAMaRy4gruYYnx2nEFN2HN6jrnDnQCK1u02Gb04v9EDgwUPiu4A0w6vuQv5lIp5WPpBKRCw==:"
 
@@ -57,7 +57,7 @@ RSpec.describe Linzer::Verifier do
 
       label      = "sig1"
       timestamp  = 1618884473
-      components = %w[date @authority content-type]
+      # components = %w[date @authority content-type]
 
       signature = Linzer::Signature.build({
         "signature-input" => 'sig1=("date" "@authority" "content-type");created=1618884473;keyid="test-key-ed25519"',
@@ -80,7 +80,7 @@ RSpec.describe Linzer::Verifier do
 
       label      = "sig-b26"
       timestamp  = 1618884473
-      components = %w[date @method @path @authority content-type content-length]
+      # components = %w[date @method @path @authority content-type content-length]
 
       signature = Linzer::Signature.build({
         "signature-input" => 'sig-b26=("date" "@method" "@path" "@authority" "content-type" "content-length");created=1618884473;keyid="test-key-ed25519"',

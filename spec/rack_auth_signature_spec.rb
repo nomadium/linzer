@@ -1,9 +1,5 @@
 # frozen_string_literal: true
 
-def signature(app, *args, &block)
-  Rack::Lint.new Rack::Auth::Signature.new(app, *args, &block)
-end
-
 RSpec.describe Rack::Auth::Signature do
   let(:code) { 0 }
 
@@ -14,6 +10,10 @@ RSpec.describe Rack::Auth::Signature do
   end
 
   # let(:signature) { described_class.new(app) }
+
+  def signature(app, *args, &block)
+    Rack::Lint.new(Rack::Auth::Signature.new(app, *args, &block))
+  end
 
   context "when used with default or no configuration" do
     it "responds with 401 to any request" do

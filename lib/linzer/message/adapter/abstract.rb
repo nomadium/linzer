@@ -31,7 +31,9 @@ module Linzer
 
           # more hacks...
           if field_name.start_with?('"') && !field_name.include?(";")
+            # rubocop:disable Security/Eval
             field_name = eval(field_name)
+            # rubocop:enable Security/Eval
           end
 
           field_id = Field::Identifier.new(field_name: field_name)
@@ -42,13 +44,11 @@ module Linzer
               foo = field_id.item.value.dup
               foo.slice!(0)
               field_id.item.value = foo.to_sym
-            else
             end
           end
 
           return nil if component_name.nil?
-          result = retrieve(component_name, field_id.derived? ? :derived : :field)
-          result
+          retrieve(component_name, field_id.derived? ? :derived : :field)
         end
 
         def header(name)

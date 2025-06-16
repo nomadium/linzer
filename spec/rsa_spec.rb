@@ -29,7 +29,7 @@ RSpec.describe Linzer::Signer do
 
     let(:key_id) { "test-key-rsa" }
 
-    xit "signs message with expected signature" do
+    it "signs message with expected signature" do
       expected_input = 'proxy_sig=("@method" "@authority" "@path" "content-digest" "content-type" "content-length" "forwarded");created=1618884480;keyid="test-key-rsa";alg="rsa-v1_5-sha256";expires=1618884540'
       expected_signature = "proxy_sig=:S6ZzPXSdAMOPjN/6KXfXWNO/f7V6cHm7BXYUh3YD/fRad4BCaRZxP+JH+8XY1I6+8Cy+CM5g92iHgxtRPz+MjniOaYmdkDcnL9cCpXJleXsOckpURl49GwiyUpZ10KHgOEe11sx3G2gxI8S0jnxQB+Pu68U9vVcasqOWAEObtNKKZd8tSFu7LB5YAv0RAGhB8tmpv7sFnIm9y+7X5kXQfi8NMaZaA8i2ZHwpBdg7a6CMfwnnrtflzvZdXAsD3LH2TwevU+/PBPv0B6NMNk93wUs/vfJvye+YuI87HU38lZHowtznbLVdp770I6VHR6WfgS9ddzirrswsE1w5o0LV/g==:"
 
@@ -90,7 +90,7 @@ RSpec.describe Linzer::Verifier do
 
       label      = "sig3"
       timestamp  = 1618884473
-      components = %w[date @authority content-type]
+      # components = %w[date @authority content-type]
 
       signature = Linzer::Signature.build({
         "signature-input" => 'sig3=("date" "@authority" "content-type");created=1618884473;keyid="test-key-rsa"',
@@ -111,7 +111,7 @@ RSpec.describe Linzer::Verifier do
       key = Linzer.new_rsa_v1_5_sha256_public_key(key_material, key_id)
       message = Linzer::Message.new(request)
 
-      components = %w[@method @authority @path content-digest content-type content-length forwarded]
+      # components = %w[@method @authority @path content-digest content-type content-length forwarded]
       timestamp  = 1618884480
       label      = "proxy_sig"
 

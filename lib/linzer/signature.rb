@@ -29,9 +29,16 @@ module Linzer
     def to_h
       {
         "signature" => Starry.serialize({label => value}),
+        # "signature-input" =>
+        #   Starry.serialize({label =>
+        #     Starry::InnerList.new(components, parameters)})
         "signature-input" =>
-          Starry.serialize({label =>
-            Starry::InnerList.new(components, parameters)})
+          Starry.serialize({
+            label => Starry::InnerList.new(
+              components.map { |c| Starry.parse_item(c) },
+              parameters
+            )
+          })
       }
     end
 

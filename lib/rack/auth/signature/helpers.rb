@@ -45,7 +45,7 @@ module Rack
               tag_required:       false,
               expires_required:   false,
               keyid_required:     false,
-              covered_components: %w[@method @request-target @authority date],
+              covered_components: %w["@method" "@request-target" "@authority" "date"],
               error_response:     {body: [], status: 401, headers: {}}
             },
             keys: {}

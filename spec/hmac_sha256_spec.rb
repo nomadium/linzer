@@ -36,7 +36,7 @@ RSpec.describe Linzer::Signer do
 
     let(:key_id) { "test-shared-secret" }
 
-    xit "signs message with expected signature" do
+    it "signs message with expected signature" do
       expected_input = 'sig-b25=("date" "@authority" "content-type");created=1618884473;keyid="test-shared-secret"'
       expected_signature = "sig-b25=:pxcQw6G3AjtMBQjwo8XzkZf/bws5LelbaMk5rGIGtE8=:"
 
@@ -77,7 +77,7 @@ RSpec.describe Linzer::Verifier do
 
       label      = "sig3"
       timestamp  = 1618884473
-      components = %w[date @authority content-type]
+      # components = %w[date @authority content-type]
 
       signature = Linzer::Signature.build({
         "signature-input" => 'sig3=("date" "@authority" "content-type");created=1618884473;keyid="test-shared-secret"',
@@ -100,7 +100,7 @@ RSpec.describe Linzer::Verifier do
 
       label      = "sig-b25"
       timestamp  = 1618884473
-      components = %w[date @authority content-type]
+      # components = %w[date @authority content-type]
 
       signature = Linzer::Signature.build({
         "signature-input" => 'sig-b25=("date" "@authority" "content-type");created=1618884473;keyid="test-shared-secret"',

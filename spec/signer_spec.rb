@@ -65,7 +65,7 @@ RSpec.describe Linzer::Signer do
     request_data = {headers: {"header1" => "foo", "header2" => 10}}
     path         = "/foo"
     request      = Linzer::Test::RackHelper.new_request(:post, path, {}, request_data[:headers])
-    components   = %w[header1 header2 @signature-params]
+    components   = %w["header1" "header2" "@signature-params"] # XXX: inconsistent
     message      = Linzer::Message.new(request)
 
     expect { described_class.sign(:key, message, components) }
@@ -86,7 +86,7 @@ RSpec.describe Linzer::Signer do
     # RSA-PSS signature result is not deterministic,
     # we can't test for specific values, only its properties
 
-    #expect(signature.components).to            eq(components)
+    # expect(signature.components).to            eq(components)
     expect(signature.parameters["created"]).to eq(parameters[:created])
     expect(signature.parameters["keyid"]).to   eq(parameters[:keyid])
     expect(signature.label).to                 eq(label)

@@ -70,7 +70,7 @@ RSpec.describe Linzer::Verifier do
 
       label      = "sig1"
       timestamp  = 1618884473
-      components = %w[@status content-type content-digest content-length]
+      # components = %w[@status content-type content-digest content-length]
 
       signature = Linzer::Signature.build({
         "signature-input" => 'sig1=("@status" "content-type" "content-digest" "content-length");created=1618884473;keyid="test-key-ecc-p256"',
@@ -94,7 +94,7 @@ RSpec.describe Linzer::Verifier do
 
       label      = "sig-b24"
       timestamp  = 1618884473
-      components = %w[@status content-type content-digest content-length]
+      # components = %w[@status content-type content-digest content-length]
 
       signature = Linzer::Signature.build({
         "signature-input" => 'sig-b24=("@status" "content-type" "content-digest" "content-length");created=1618884473;keyid="test-key-ecc-p256"',
