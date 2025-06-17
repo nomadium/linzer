@@ -13,6 +13,15 @@ require "linzer"
 require_relative "rfc9421_examples"
 require_relative "rack_helper"
 
+module Linzer
+  module Tests
+    def parse_identifiers(components)
+      Array(components)
+        .map { |c| Starry.parse_item(c).value }
+    end
+  end
+end
+
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
   config.example_status_persistence_file_path = ".rspec_status"

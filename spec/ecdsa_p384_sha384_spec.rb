@@ -31,8 +31,7 @@ RSpec.describe Linzer::Signer do
       signature  = Linzer.sign(key, message, components, options)
 
       expect(signature.label).to                 eq(label)
-      # binding.irb
-      # expect(signature.components).to            eq(components)
+      expect(parse_identifiers(signature.components)).to eq(components)
       expect(signature.parameters["created"]).to eq(timestamp)
       expect(signature.parameters["keyid"]).to   eq(key_id)
       expect(signature.value.length).to          eq(96)
