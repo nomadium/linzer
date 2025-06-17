@@ -57,7 +57,7 @@ RSpec.describe Linzer::Verifier do
 
       label      = "sig1"
       timestamp  = 1618884473
-      # components = %w[date @authority content-type]
+      components = %w[date @authority content-type]
 
       signature = Linzer::Signature.build({
         "signature-input" => 'sig1=("date" "@authority" "content-type");created=1618884473;keyid="test-key-ed25519"',
@@ -65,8 +65,7 @@ RSpec.describe Linzer::Verifier do
       })
 
       expect(signature.label).to                 eq(label)
-      # binding.irb
-      # expect(signature.components).to            eq(components)
+      expect(parse_identifiers(signature.components)).to eq(components)
       expect(signature.parameters["created"]).to eq(timestamp)
       expect(signature.parameters["keyid"]).to   eq(key_id)
 
@@ -80,7 +79,7 @@ RSpec.describe Linzer::Verifier do
 
       label      = "sig-b26"
       timestamp  = 1618884473
-      # components = %w[date @method @path @authority content-type content-length]
+      components = %w[date @method @path @authority content-type content-length]
 
       signature = Linzer::Signature.build({
         "signature-input" => 'sig-b26=("date" "@method" "@path" "@authority" "content-type" "content-length");created=1618884473;keyid="test-key-ed25519"',
@@ -88,8 +87,7 @@ RSpec.describe Linzer::Verifier do
       })
 
       expect(signature.label).to                 eq(label)
-      # binding.irb
-      # expect(signature.components).to            eq(components)
+      expect(parse_identifiers(signature.components)).to eq(components)
       expect(signature.parameters["created"]).to eq(timestamp)
       expect(signature.parameters["keyid"]).to   eq(key_id)
 

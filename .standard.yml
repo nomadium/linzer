@@ -7,5 +7,6 @@ ignore:
     - Layout/ExtraSpacing
     - Layout/HashAlignment
     - Layout/ArgumentAlignment
+    - Layout/SpaceBeforeFirstArg
     - Style/EmptyCaseCondition
     - Style/RescueModifier

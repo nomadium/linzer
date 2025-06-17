@@ -81,7 +81,7 @@ RSpec.describe Linzer::Verifier do
 
       label      = "sig384"
       timestamp  = 1618884473
-      # components = %w[@method @authority content-type content-digest content-length]
+      components = %w[@method @authority content-type content-digest content-length]
 
       signature = Linzer::Signature.build({
         "signature-input" => 'sig384=("@method" "@authority" "content-type" "content-digest" "content-length");created=1618884473;keyid="test-key-ecc-p384"',
@@ -89,8 +89,7 @@ RSpec.describe Linzer::Verifier do
       })
 
       expect(signature.label).to                 eq(label)
-      # binding.irb
-      # expect(signature.components).to            eq(components)
+      expect(parse_identifiers(signature.components)).to eq(components)
       expect(signature.parameters["created"]).to eq(timestamp)
       expect(signature.parameters["keyid"]).to   eq(key_id)
       expect(signature.value.length).to          eq(96)
@@ -105,13 +104,12 @@ RSpec.describe Linzer::Verifier do
 
       label      = "sig384"
       timestamp  = 1618884473
-      # components = %w[@method @authority content-type content-digest content-length]
+      components = %w[@method @authority content-type content-digest content-length]
 
       signature = example_valid_signature
 
       expect(signature.label).to                 eq(label)
-      # binding.irb
-      # expect(signature.components).to            eq(components)
+      expect(parse_identifiers(signature.components)).to eq(components)
       expect(signature.parameters["created"]).to eq(timestamp)
       expect(signature.parameters["keyid"]).to   eq(key_id)
       expect(signature.value.length).to          eq(96)

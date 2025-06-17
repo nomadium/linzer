@@ -79,7 +79,7 @@ RSpec.describe Linzer::Verifier do
 
       label      = "sig3"
       timestamp  = 1618884473
-      # components = %w[date @authority content-type]
+      components = %w[date @authority content-type]
 
       signature = Linzer::Signature.build({
         "signature-input" => 'sig3=("date" "@authority" "content-type");created=1618884473;keyid="test-key-rsa-pss"',
@@ -87,8 +87,7 @@ RSpec.describe Linzer::Verifier do
       })
 
       expect(signature.label).to                 eq(label)
-      # binding.irb
-      # expect(signature.components).to            eq(components)
+      expect(parse_identifiers(signature.components)).to            eq(components)
       expect(signature.parameters["created"]).to eq(timestamp)
       expect(signature.parameters["keyid"]).to   eq(key_id)
 
@@ -100,7 +99,7 @@ RSpec.describe Linzer::Verifier do
       key = Linzer.new_rsa_pss_sha512_public_key(key_material, key_id)
       message = Linzer::Message.new(request)
 
-      # components = %w[date @method @path @query @authority content-type content-digest content-length]
+      components = %w[date @method @path @query @authority content-type content-digest content-length]
       timestamp  = 1618884473
       label      = "sig-b23"
 
@@ -110,8 +109,7 @@ RSpec.describe Linzer::Verifier do
       })
 
       expect(signature.label).to                 eq(label)
-      # binding.irb
-      # expect(signature.components).to            eq(components)
+      expect(parse_identifiers(signature.components)).to eq(components)
       expect(signature.parameters["created"]).to eq(timestamp)
       expect(signature.parameters["keyid"]).to   eq(key_id)
 

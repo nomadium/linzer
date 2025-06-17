@@ -36,8 +36,7 @@ RSpec.describe Linzer::Signer do
       signature  = Linzer.sign(key, message, components, options)
 
       expect(signature.label).to                 eq(label)
-      # binding.irb
-      # expect(signature.components).to            eq(components)
+      expect(parse_identifiers(signature.components)).to eq(components)
       expect(signature.parameters["created"]).to eq(timestamp)
       expect(signature.parameters["keyid"]).to   eq(key_id)
       expect(signature.value.length).to          eq(64)
@@ -70,7 +69,7 @@ RSpec.describe Linzer::Verifier do
 
       label      = "sig1"
       timestamp  = 1618884473
-      # components = %w[@status content-type content-digest content-length]
+      components = %w[@status content-type content-digest content-length]
 
       signature = Linzer::Signature.build({
         "signature-input" => 'sig1=("@status" "content-type" "content-digest" "content-length");created=1618884473;keyid="test-key-ecc-p256"',
@@ -78,8 +77,7 @@ RSpec.describe Linzer::Verifier do
       })
 
       expect(signature.label).to                 eq(label)
-      # binding.irb
-      # expect(signature.components).to            eq(components)
+      expect(parse_identifiers(signature.components)).to eq(components)
       expect(signature.parameters["created"]).to eq(timestamp)
       expect(signature.parameters["keyid"]).to   eq(key_id)
       expect(signature.value.length).to          eq(64)
@@ -94,7 +92,7 @@ RSpec.describe Linzer::Verifier do
 
       label      = "sig-b24"
       timestamp  = 1618884473
-      # components = %w[@status content-type content-digest content-length]
+      components = %w[@status content-type content-digest content-length]
 
       signature = Linzer::Signature.build({
         "signature-input" => 'sig-b24=("@status" "content-type" "content-digest" "content-length");created=1618884473;keyid="test-key-ecc-p256"',
@@ -102,8 +100,7 @@ RSpec.describe Linzer::Verifier do
       })
 
       expect(signature.label).to                 eq(label)
-      # binding.irb
-      # expect(signature.components).to            eq(components)
+      expect(parse_identifiers(signature.components)).to eq(components)
       expect(signature.parameters["created"]).to eq(timestamp)
       expect(signature.parameters["keyid"]).to   eq(key_id)
       expect(signature.value.length).to          eq(64)
