@@ -15,11 +15,7 @@ module Linzer
     alias_method :bytes, :value
 
     def components
-      Array(serialized_components)
-        .map do |c|
-          item = Starry.parse_item(c)
-          "%s%s" % [item.value, Starry.serialize_parameters(item.parameters)]
-        end
+      Array(serialized_components).map { |c| component_identifier(c) }
     end
 
     def created
@@ -48,6 +44,11 @@ module Linzer
             )
           })
       }
+    end
+
+    private def component_identifier(c)
+      item = Starry.parse_item(c)
+      "%s%s" % [item.value, Starry.serialize_parameters(item.parameters)]
     end
 
     class << self
