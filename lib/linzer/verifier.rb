@@ -9,7 +9,7 @@ module Linzer
         validate message, key, signature, no_older_than: no_older_than
 
         parameters = signature.parameters
-        components = signature.components
+        components = signature.serialized_components
 
         signature_base = signature_base(message, components, parameters)
 

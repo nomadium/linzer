@@ -30,7 +30,7 @@ RSpec.describe "README usage" do
 
     it "signs an HTTP request message" do
       expect(message.request?).to       eq(true)
-      expect(parse_identifiers(signature.components)).to eq(fields)
+      expect(signature.components).to   eq(fields)
       expect(signature.value.length).to eq(64)
     end
 
@@ -77,7 +77,7 @@ RSpec.describe "README usage" do
 
     it "signs an HTTP response message" do
       expect(message.response?).to      eq(true)
-      expect(parse_identifiers(signature.components)).to eq(fields)
+      expect(signature.components).to   eq(fields)
       expect(signature.value.length).to eq(64)
     end
 

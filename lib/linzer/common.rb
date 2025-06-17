@@ -42,7 +42,8 @@ module Linzer
     module_function :signature_base_line
 
     def validate_components(message, components)
-      if components.include?('"@signature-params"') || components.include?('"@signature-params";')
+      if components.include?("@signature-params") ||
+          components.any? { |c| c.start_with?("@signature-params;") }
         raise Error.new "Invalid component in signature input"
       end
 

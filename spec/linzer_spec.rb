@@ -103,7 +103,7 @@ RSpec.describe Linzer do
         signature = Linzer::Signature.build(signature_headers)
 
         expect(signature.label).to                 eq(label)
-        expect(parse_identifiers(signature.components)).to eq(components)
+        expect(signature.components).to            eq(components)
         expect(signature.parameters["alg"]).to     eq(alg)
         expect(signature.parameters["tag"]).to     eq(tag)
         expect(signature.parameters["expires"]).to eq(expires)

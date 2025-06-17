@@ -103,7 +103,7 @@ RSpec.describe Linzer::Verifier do
       })
 
       expect(signature.label).to                 eq(label)
-      expect(parse_identifiers(signature.components)).to eq(components)
+      expect(signature.components).to            eq(components)
       expect(signature.parameters["created"]).to eq(timestamp)
       expect(signature.parameters["keyid"]).to   eq(key_id)
 
@@ -126,7 +126,7 @@ RSpec.describe Linzer::Verifier do
 
       expect(key.material.private?).to           eq(false)
       expect(signature.label).to                 eq(label)
-      expect(parse_identifiers(signature.components)).to eq(components)
+      expect(signature.components).to            eq(components)
       expect(signature.parameters["created"]).to eq(timestamp)
       expect(signature.parameters["keyid"]).to   eq(key_id)
 
