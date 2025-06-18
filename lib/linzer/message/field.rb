@@ -5,6 +5,7 @@ module Linzer
     class Field
       module IdentifierMethods
         def parse(field_name)
+          # binding.irb
           Starry
             .parse_item(field_name.start_with?("@") ? field_name[1..] : field_name)
         rescue Starry::ParseError => ex
@@ -13,6 +14,7 @@ module Linzer
         module_function :parse
 
         def initialize(field_name:)
+          # binding.irb
           @item = IdentifierMethods.parse(field_name) rescue nil
           super
         end
@@ -24,6 +26,7 @@ module Linzer
         end
 
         def serialize
+          # binding.irb
           raise Error, "Invalid component identifier: '#{field_name}'!" unless @item
           serialized_name = Starry.serialize_bare_item(@item.value)
           serialized_name.prepend("@") if derived?

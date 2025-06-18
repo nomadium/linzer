@@ -14,7 +14,6 @@ module Linzer
 
       # signature_base << signature_base_line(Starry.serialize("@signature-params"), signature_params)
       signature_base << "%s: %s" % [Starry.serialize("@signature-params"), signature_params]
-      binding.irb
       signature_base
     end
     module_function :signature_base
@@ -23,12 +22,13 @@ module Linzer
 
     def signature_base_line(component, message)
       identifier = if component.include?(";")
+        binding.irb
         field_name = Starry.parse_item(component)
-        Message::Field::Identifier.new(field_name: field_name.value).serialize
+        # Message::Field::Identifier.new(field_name: field_name.value).serialize
+        Starry.serialize(Message::Field::Identifier.new(field_name: component).item)
       else
         component
       end
-      binding.irb if component.include?(";")
       "%s: %s" % [identifier, message[identifier]]
     end
 
