@@ -2,36 +2,47 @@
 
 module Linzer
   module Common
-    def signature_base(message, components, parameters)
-      signature_base = components.each_with_object(+"") do |component, base|
-        base << "%s\n" % signature_base_line(component, message[component])
+    def signature_base(message, serialized_components, parameters)
+      signature_base = serialized_components.each_with_object(+"") do |component, base|
+        base << "%s\n" % signature_base_line(component, message)
       end
 
-      all_serialized = components.all? { |c| c.start_with?('"') }
-      identifiers = if !all_serialized
-        components
-      else
-        components.map { |c| Starry.parse_item(c) }
-      end
+      identifiers = serialized_components.map { |c| Starry.parse_item(c) }
 
       signature_params =
         Starry.serialize([Starry::InnerList.new(identifiers, parameters)])
 
-      signature_base << signature_base_line("@signature-params", signature_params)
+      # signature_base << signature_base_line(Starry.serialize("@signature-params"), signature_params)
+      signature_base << "%s: %s" % [Starry.serialize("@signature-params"), signature_params]
+      binding.irb
       signature_base
     end
     module_function :signature_base
 
     private
 
-    def signature_base_line(component, value)
+    def signature_base_line(component, message)
+      identifier = if component.include?(";")
+        field_name = Starry.parse_item(component)
+        Message::Field::Identifier.new(field_name: field_name.value).serialize
+      else
+        component
+      end
+      binding.irb if component.include?(";")
+      "%s: %s" % [identifier, message[identifier]]
+    end
+
+    def signature_base_line2(component, value)
+      # Starry.serialize(Starry.parse_item('"' + Starry.parse_item(component).value.split(";")[0] + '"' + ";" + Starry.parse_item(component).value.split(";")[1..].shift))
+      # binding.irb
       identifier = if !component.include?(";")
-        component.start_with?('"') ? component : "\"#{component}\""
+        component
       else
         # rubocop:disable Style/IfInsideElse
         if component.start_with?('"')
           component
         else
+          binding.irb
           Message::Field::Identifier.new(field_name: component)
             .serialize
         end

@@ -11,7 +11,8 @@ module Linzer
         validate key, message, components
 
         parameters = populate_parameters(key, options)
-        signature_base = signature_base(message, components, parameters)
+        serialized_components = (components.all? { |c| c.start_with?('"') }) ? components : components.map { |c| Starry.serialize(c) }
+        signature_base = signature_base(message, serialized_components, parameters)
 
         signature = key.sign(signature_base)
         label = options[:label] || DEFAULT_LABEL

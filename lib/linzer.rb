@@ -48,7 +48,8 @@ module Linzer
     end
 
     def signature_base(message, components, parameters)
-      Linzer::Common.signature_base(message, components, parameters)
+      serialized_components = (components.all? { |c| c.start_with?('"') }) ? components : components.map { |c| Starry.serialize(c) }
+      Linzer::Common.signature_base(message, serialized_components, parameters)
     end
   end
 end
