@@ -22,12 +22,7 @@ module Linzer
 
     def signature_base_line(component, message)
       identifier = if component.include?(";")
-        if component.match?(/";/)
-          Starry.serialize(Message::Field::Identifier.new(field_name: component).item)
-        else
-          field_name = Starry.parse_item(component)
-          Message::Field::Identifier.new(field_name: field_name.value).serialize
-        end
+        Message::Field::Identifier.new(field_name: component).serialize
       else
         component
       end

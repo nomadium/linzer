@@ -5,17 +5,23 @@ module Linzer
     class Field
       module IdentifierMethods
         def parse(field_name)
-          # binding.irb
-          Starry
-            .parse_item(field_name.start_with?("@") ? field_name[1..] : field_name)
+          case
+          when field_name.match?(/";/), field_name.start_with?('"')
+            Starry.parse_item(field_name)
+          when field_name.match?(/;/)
+            parse_unserialized_input(field_name)
+          when field_name.start_with?("@"), field_name.match?(/^[a-z]/)
+            Starry.parse_item(Starry.serialize(field_name))
+          else
+            raise Error, "Invalid component identifier: '#{field_name}'!"
+          end
         rescue Starry::ParseError => ex
-          raise Error, "Invalid component identifier: '#{field_name}'!", cause: ex
+          parse_error = "Failed to parse component identifier: '#{field_name}'!"
+          raise Error, parse_error, cause: ex
         end
         module_function :parse
 
         def initialize(field_name:)
-          # binding.irb
-          # puts "## field_name: #{field_name}"
           @item = IdentifierMethods.parse(field_name) rescue nil
           super
         end
@@ -27,6 +33,11 @@ module Linzer
         end
 
         def serialize
+          raise Error, "Invalid component identifier: '#{field_name}'!" unless @item
+          Starry.serialize(@item)
+        end
+
+        def serialize2
           # binding.irb
           raise Error, "Invalid component identifier: '#{field_name}'!" unless @item
           serialized_name = Starry.serialize_bare_item(@item.value)
@@ -35,7 +46,19 @@ module Linzer
           '"%s"%s' % [serialized_name, serialized_params]
         end
 
-        alias_method :to_s, :serialize
+        private
+
+        # XXX: this is to ugly, fix!
+        def parse_unserialized_input(field_name)
+          field, *params = field_name.split(/;/)
+          item = Starry.parse_item("foo")
+          item.value = field
+          np = params.map do |p|
+            p.split("=").size == 2 ? Hash[*p.split("=")] : { p => true }
+          end
+          item.parameters = np.shift
+          item
+        end
       end
 
       # Excluded from coverage, as obviously both branches cannot be covered

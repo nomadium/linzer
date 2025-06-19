@@ -64,7 +64,7 @@ RSpec.describe "RFC9421" do
 
       it "example 2" do
         message = Linzer::Message.new(request)
-        components = %w[example-dict;sf]
+        components = %w["example-dict";sf]
 
         expect(signature_base_lines(message, components).chomp)
           .to eq('"example-dict";sf: a=1, b=2;x=1;y=2, c=(a b c)')
@@ -75,7 +75,7 @@ RSpec.describe "RFC9421" do
       it "example 1" do
         request["Example-Dict"] = "  a=1, b=2;x=1;y=2, c=(a   b    c), d"
         message = Linzer::Message.new(request)
-        components = %w[a d b c].map { |k| "example-dict;key=\"#{k}\"" }
+        components = %w[a d b c].map { |k| "\"example-dict\";key=\"#{k}\"" }
 
         expect(signature_base_lines(message, components))
           .to eq(
@@ -110,7 +110,7 @@ RSpec.describe "RFC9421" do
         expect(signature_base_lines(message, components).chomp)
           .to eq('"example-header": value, with, lots, of, commas')
 
-        components = %w[example-header;bs]
+        components = %w["example-header";bs]
         expect(signature_base_lines(message, components).chomp)
           .to eq('"example-header";bs: :dmFsdWUsIHdpdGgsIGxvdHMsIG9mLCBjb21tYXM=:')
       end
