@@ -44,7 +44,14 @@ module Linzer
     end
 
     def sign(key, message, components, options = {})
-      Linzer::Signer.sign(key, message, components, options)
+      serialized_components = components.map do |c|
+        if c.start_with?('"')
+          c.itself
+        else
+          Message::Field::Identifier.new(field_name: c).serialize
+        end
+      end
+      Linzer::Signer.sign(key, message, serialized_components, options)
     end
 
     def signature_base(message, components, parameters)

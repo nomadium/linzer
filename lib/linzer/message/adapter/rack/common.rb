@@ -6,14 +6,14 @@ module Linzer
       module Rack
         module Common
           DERIVED_COMPONENT = {
-            method:           :request_method,
-            authority:        :authority,
-            path:             :path_info,
-            status:           :status,
-            "target-uri":     :url,
-            scheme:           :scheme,
-            "request-target": :fullpath,
-            query:            :query_string
+            "@method"         => :request_method,
+            "@authority"      => :authority,
+            "@path"           => :path_info,
+            "@status"         => :status,
+            "@target-uri"     => :url,
+            "@scheme"         => :scheme,
+            "@request-target" => :fullpath,
+            "@query"          => :query_string
           }.freeze
           private_constant :DERIVED_COMPONENT
 
@@ -51,8 +51,8 @@ module Linzer
             method = DERIVED_COMPONENT[name.value]
 
             value = case name.value
-            when :query         then derive(@operation, method)
-            when :"query-param" then query_param(name)
+            when "@query"       then derive(@operation, method)
+            when "@query-param" then query_param(name)
             end
 
             return nil if !method && !value

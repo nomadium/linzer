@@ -56,9 +56,10 @@ module Linzer
           np = params.map do |p|
             p.split("=").size == 2 ? Hash[*p.split("=")] : { p => true }
           end
-          item.parameters = np.shift
+          item.parameters = np.reduce({}, :merge)
           item
         end
+        module_function :parse_unserialized_input
       end
 
       # Excluded from coverage, as obviously both branches cannot be covered
