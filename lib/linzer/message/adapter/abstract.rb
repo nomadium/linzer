@@ -39,13 +39,14 @@ module Linzer
           field_id = Field::Identifier.new(field_name: field_name)
           component_name = field_id.item
 
-          if field_name.start_with?('"') && field_name.include?(";")
-            if field_name.start_with?('"@')
-              foo = field_id.item.value.dup
-              foo.slice!(0)
-              field_id.item.value = foo.to_sym
-            end
-          end
+          # binding.irb
+          # if field_name.start_with?('"') && field_name.include?(";")
+          #   if field_name.start_with?('"@')
+          #     foo = field_id.item.value.dup
+          #     foo.slice!(0)
+          #     field_id.item.value = foo.to_sym
+          #   end
+          # end
 
           return nil if component_name.nil?
           retrieve(component_name, field_id.derived? ? :derived : :field)
@@ -77,7 +78,7 @@ module Linzer
           value    = name.value
 
           # Section 2.2.8 of RFC 9421
-          return nil if has_name && value != :"query-param"
+          return nil if has_name && value != "@query-param"
 
           # No derived values come from trailers section
           return nil if method == :derived && name.parameters["tr"]
@@ -145,11 +146,11 @@ module Linzer
         end
 
         def req(field, method)
-          return nil unless attached_request?
-          case method
-          when :derived then @attached_request["@#{field}"]
-          when :field   then @attached_request[field.to_s]
-          end
+          attached_request? ? @attached_request[field.to_s] : nil
+          # case method
+          # when :derived then @attached_request["@#{field}"]
+          # when :field   then @attached_request[field.to_s]
+          # end
         end
       end
     end

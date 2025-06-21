@@ -11,12 +11,13 @@ module Linzer
     end
 
     attr_reader  :metadata, :value, :parameters, :label
-    alias_method :serialized_components, :metadata
+    # alias_method :serialized_components, :metadata
+    alias_method :components, :metadata
     alias_method :bytes, :value
 
-    def components
-      Array(serialized_components).map { |c| component_identifier(c) }
-    end
+    # def components
+    #   Array(serialized_components).map { |c| component_identifier(c) }
+    # end
 
     def created
       Integer(parameters["created"])
@@ -36,10 +37,17 @@ module Linzer
         # "signature-input" =>
         #   Starry.serialize({label =>
         #     Starry::InnerList.new(components, parameters)})
+        # "signature-input" =>
+        #   Starry.serialize({
+        #     label => Starry::InnerList.new(
+        #       serialized_components.map { |c| Starry.parse_item(c) },
+        #       parameters
+        #     )
+        #   })
         "signature-input" =>
           Starry.serialize({
             label => Starry::InnerList.new(
-              serialized_components.map { |c| Starry.parse_item(c) },
+              components.map { |c| Starry.parse_item(c) },
               parameters
             )
           })

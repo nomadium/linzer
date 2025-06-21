@@ -26,7 +26,7 @@ module Linzer
 
           def derived(name)
             case name.value
-            when :status then @operation.code.to_i
+            when "@status" then @operation.code.to_i
             end
           end
 

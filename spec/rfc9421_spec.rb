@@ -117,7 +117,7 @@ RSpec.describe "RFC9421" do
 
       it "example 2" do
         request["example-header"] = "value, with, lots"
-        components = %w[example-header;bs]
+        components = %w["example-header";bs]
         message = Linzer::Message.new(request)
 
         expect(signature_base_lines(message, components).chomp)
@@ -126,7 +126,7 @@ RSpec.describe "RFC9421" do
 
       it "example 3" do
         request["example-header"] = "of, commas"
-        components = %w[example-header;bs]
+        components = %w["example-header";bs]
         message = Linzer::Message.new(request)
 
         expect(signature_base_lines(message, components).chomp)
@@ -323,7 +323,8 @@ RSpec.describe "RFC9421" do
           url = "http://www.example.com/path?param=value&foo=bar&baz=batman&qux="
           request = Net::HTTP::Get.new(URI(url))
           message = Linzer::Message.new(request)
-          components = %w[baz qux param].map { |p| "@query-param;name=\"#{p}\"" }
+          components =
+            %w[baz qux param].map { |p| "\"@query-param\";name=\"#{p}\"" }
 
           expect(signature_base_lines(message, components))
             .to eq(
@@ -333,9 +334,9 @@ RSpec.describe "RFC9421" do
                 "@query-param";name="param": value
               VALUES
             )
-          expect(message['@query-param;name="baz"']).to   eq("batman")
-          expect(message['@query-param;name="qux"']).to   eq("")
-          expect(message['@query-param;name="param"']).to eq("value")
+          expect(message['"@query-param";name="baz"']).to   eq("batman")
+          expect(message['"@query-param";name="qux"']).to   eq("")
+          expect(message['"@query-param";name="param"']).to eq("value")
         end
 
         it "example 2" do
@@ -346,7 +347,7 @@ RSpec.describe "RFC9421" do
           request = Net::HTTP::Get.new(URI(url), headers)
           message = Linzer::Message.new(request)
           component_names = %w[var bar fa%C3%A7ade%22%3A%20]
-          components = component_names.map { |p| "@query-param;name=\"#{p}\"" }
+          components = component_names.map { |p| "\"@query-param\";name=\"#{p}\"" }
 
           expect(signature_base_lines(message, components))
             .to eq(
@@ -433,13 +434,15 @@ RSpec.describe "RFC9421" do
     let(:key_id) { "test-key-ecc-p256" }
 
     it "example signature base" do
-      req_components = %w[@authority;req @method;req @path;req content-digest;req]
-      components = %w[@status content-digest content-type] + req_components
-      parameters = {created: 1618884479, keyid: "test-key-ecc-p256"}
       message = Linzer::Message.new(response, attached_request: request)
+      serialized_signature_params =
+        '("@status" "content-digest" "content-type" ' \
+        '"@authority";req "@method";req "@path";req "content-digest";req)' \
+        ';created=1618884479;keyid="test-key-ecc-p256"'
 
-      components_list = [Starry::InnerList.new(components, parameters)]
-      signature_params = Starry.serialize_list(components_list)
+      signature_params = Starry.parse_list(serialized_signature_params).shift
+      components = signature_params.value.map { |i| Starry.serialize(i) }
+      parameters = signature_params.parameters
 
       expect(Linzer.signature_base(message, components, parameters))
         .to eq(
