@@ -14,6 +14,8 @@ require_relative "linzer/options"
 require_relative "linzer/message"
 require_relative "linzer/message/adapter"
 require_relative "linzer/message/wrapper"
+require_relative "linzer/message/field"
+require_relative "linzer/message/field/parser"
 require_relative "linzer/signature"
 require_relative "linzer/key"
 require_relative "linzer/rsa"
@@ -25,7 +27,6 @@ require_relative "linzer/key/helper"
 require_relative "linzer/signer"
 require_relative "linzer/verifier"
 require_relative "linzer/http"
-require_relative "rack/auth/signature"
 
 module Linzer
   class Error < StandardError; end
@@ -50,4 +51,8 @@ module Linzer
       Linzer::Common.signature_base(message, components, parameters)
     end
   end
+
+  FieldId = Message::Field::Identifier
 end
+
+require_relative "rack/auth/signature"
