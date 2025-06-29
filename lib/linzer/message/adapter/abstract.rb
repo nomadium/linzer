@@ -26,15 +26,10 @@ module Linzer
           !!self[f]
         end
 
-        def [](field_name)
-          name = parse_field_name(field_name)
-          return nil if name.nil?
-
-          if field_name.start_with?("@")
-            retrieve(name, :derived)
-          else
-            retrieve(name, :field)
-          end
+        def [](field)
+          field_id = field.is_a?(FieldId) ? field : parse_field_name(field)
+          return nil if field_id.nil? || field_id.item.nil?
+          retrieve(field_id.item, field_id.derived? ? :derived : :field)
         end
 
         def header(name)
@@ -48,13 +43,16 @@ module Linzer
         private
 
         def parse_field_name(field_name)
-          if field_name&.start_with?("@")
-            Starry.parse_item(field_name[1..])
-          else
-            Starry.parse_item(field_name)
-          end
-        rescue => _
-          nil
+          field_id  = FieldId.new(field_name: field_name)
+          component = field_id.item
+
+          return nil if component.nil?
+
+          # 2.2.9
+          invalid = "@status component identifier is invalid in a request message"
+          raise Error, invalid if request? && component.value == "@status"
+
+          field_id
         end
 
         def validate_attached_request(message)
@@ -73,7 +71,7 @@ module Linzer
           value    = name.value
 
           # Section 2.2.8 of RFC 9421
-          return nil if has_name && value != :"query-param"
+          return nil if has_name && value != "@query-param"
 
           # No derived values come from trailers section
           return nil if method == :derived && name.parameters["tr"]
@@ -141,10 +139,7 @@ module Linzer
         end
 
         def req(field, method)
-          case method
-          when :derived then @attached_request["@#{field}"]
-          when :field   then @attached_request[field.to_s]
-          end
+          attached_request? ? @attached_request[String(field)] : nil
         end
       end
     end

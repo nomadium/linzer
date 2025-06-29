@@ -25,14 +25,14 @@ module Linzer
 
           def derived(name)
             case name.value
-            when :method           then @operation.method
-            when :"target-uri"     then @operation.uri.to_s
-            when :authority        then @operation.uri.authority.downcase
-            when :scheme           then @operation.uri.scheme.downcase
-            when :"request-target" then @operation.uri.request_uri
-            when :path             then @operation.uri.path
-            when :query            then "?%s" % String(@operation.uri.query)
-            when :"query-param"    then query_param(name)
+            when "@method"         then @operation.method
+            when "@target-uri"     then @operation.uri.to_s
+            when "@authority"      then @operation.uri.authority.downcase
+            when "@scheme"         then @operation.uri.scheme.downcase
+            when "@request-target" then @operation.uri.request_uri
+            when "@path"           then @operation.uri.path
+            when "@query"          then "?%s" % String(@operation.uri.query)
+            when "@query-param"    then query_param(name)
             end
           end
 

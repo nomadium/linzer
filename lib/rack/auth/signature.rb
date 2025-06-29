@@ -85,7 +85,7 @@ module Rack
       end
 
       def has_required_components?
-        components         = @signature.components || []
+        components         = @signature.serialized_components || []
         covered_components = options[:signatures][:covered_components]
         warning = "Insufficient coverage by signature. Consult S 7.2.1. in RFC"
         logger.warn warning if covered_components.empty?

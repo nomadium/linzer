@@ -11,8 +11,12 @@ module Linzer
     end
 
     attr_reader  :metadata, :value, :parameters, :label
-    alias_method :components, :metadata
+    alias_method :serialized_components, :metadata
     alias_method :bytes, :value
+
+    def components
+      FieldId.deserialize_components(serialized_components)
+    end
 
     def created
       Integer(parameters["created"])
@@ -28,10 +32,13 @@ module Linzer
 
     def to_h
       {
-        "signature" => Starry.serialize({label => value}),
-        "signature-input" =>
-          Starry.serialize({label =>
-            Starry::InnerList.new(components, parameters)})
+        "signature"       => Starry.serialize({label => value}),
+        "signature-input" => Starry.serialize({
+          label => Starry::InnerList.new(
+            serialized_components.map { |c| Starry.parse_item(c) },
+            parameters
+          )
+        })
       }
     end
 
@@ -56,7 +63,7 @@ module Linzer
 
         fail_due_invalid_components unless input[label].value.respond_to?(:each)
 
-        components = input[label].value.map(&:value)
+        components = input[label].value.map { |c| Starry.serialize_item(c) }
         parameters = input[label].parameters
 
         new(components, raw_signature, label, parameters)

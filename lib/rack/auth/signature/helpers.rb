@@ -36,6 +36,11 @@ module Rack
         end
 
         module Configuration
+          def default_covered_components
+            Linzer::Options::DEFAULT[:covered_components]
+          end
+          module_function :default_covered_components
+
           DEFAULT_OPTIONS = {
             signatures: {
               reject_older_than:  900,
@@ -45,7 +50,9 @@ module Rack
               tag_required:       false,
               expires_required:   false,
               keyid_required:     false,
-              covered_components: %w[@method @request-target @authority date],
+              covered_components:
+                Linzer::FieldId
+                  .serialize_components(default_covered_components),
               error_response:     {body: [], status: 401, headers: {}}
             },
             keys: {}

@@ -9,9 +9,9 @@ module Linzer
         validate message, key, signature, no_older_than: no_older_than
 
         parameters = signature.parameters
-        components = signature.components
+        serialized_components = signature.serialized_components
 
-        signature_base = signature_base(message, components, parameters)
+        signature_base = signature_base(message, serialized_components, parameters)
 
         verify_or_fail key, signature.value, signature_base
       end
@@ -31,7 +31,7 @@ module Linzer
         raise VerifyError, "Components cannot be null"             if signature.components.nil?
 
         begin
-          validate_components message, signature.components
+          validate_components message, signature.serialized_components
         rescue Error => ex
           raise VerifyError, ex.message, cause: ex
         end

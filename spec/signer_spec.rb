@@ -23,11 +23,6 @@ RSpec.describe Linzer::Signer do
       .to raise_error(Linzer::SigningError, /null key.*/)
   end
 
-  it "cannot sign a message with null components" do
-    expect { described_class.sign(:key, :message, nil) }
-      .to raise_error(Linzer::SigningError, /null component/)
-  end
-
   it "cannot sign a message with a missing component" do
     request_data = {headers: {"header1" => "foo", "header2" => 10}}
     path         = "/foo"

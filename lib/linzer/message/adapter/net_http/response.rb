@@ -17,15 +17,25 @@ module Linzer
             @operation[name]
           end
 
-          # XXX: this implementation is incomplete, e.g.: ;tr parameter is not supported yet
-          def [](field_name)
-            return @operation.code.to_i if field_name == "@status"
-            @operation[field_name]
-          end
-
           def attach!(signature)
             signature.to_h.each { |h, v| @operation[h] = v }
             @operation
+          end
+
+          private
+
+          def derived(name)
+            case name.value
+            when "@status" then @operation.code.to_i
+            end
+          end
+
+          # XXX: this implementation is incomplete, e.g.: ;bs parameter is not supported yet
+          def field(name)
+            has_tr = name.parameters["tr"]
+            return nil if has_tr # Net::HTTP doesn't support trailers
+            value = @operation[name.value.to_s]
+            value.dup&.strip
           end
         end
       end

@@ -110,10 +110,10 @@ RSpec.describe Linzer::Message::Adapter::HTTPGem::Request do
         uri = "http://www.example.com/path?param=value&foo=bar&baz=batman&qux="
         request = HTTP::Client.new.build_request(:get, URI(uri))
         adapter = described_class.new(request)
-        expect(adapter["@query-param;name=\"baz\""]).to          eq("batman")
-        expect(adapter["@query-param;name=\"qux\""]).to          eq("")
-        expect(adapter["@query-param;name=\"param\""]).to        eq("value")
-        expect(adapter["@query-param;name=\"non-existent\""]).to eq("")
+        expect(adapter['"@query-param";name="baz"']).to          eq("batman")
+        expect(adapter['"@query-param";name="qux"']).to          eq("")
+        expect(adapter['"@query-param";name="param"']).to        eq("value")
+        expect(adapter['"@query-param";name="non-existent"']).to eq("")
       end
     end
 

@@ -141,8 +141,9 @@ RSpec.describe Linzer do
       message            = Linzer::Message.new(request)
       parameters         = {created: 1618884473, keyid: "test-key-rsa-pss"}
       covered_components = %w[@method @authority @path content-digest content-length content-type]
+      serialized_components = Linzer::FieldId.serialize_components(covered_components)
 
-      expect(Linzer.signature_base(message, covered_components, parameters))
+      expect(Linzer.signature_base(message, serialized_components, parameters))
         .to eq(expected_signature_base)
     end
   end
