@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+## [0.7.5] - 2025-06-30
+
+- No changes since 0.7.4.
+  0.7.4 was released by mistake from my laptop instead of from Github Actions
+  as expected.
+
 ## [0.7.4] - 2025-06-30
 
 - Add validation routines on key instances before performing
