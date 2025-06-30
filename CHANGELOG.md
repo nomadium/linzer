@@ -1,5 +1,16 @@
 ## [Unreleased]
 
+## [0.7.4] - 2025-06-30
+
+- Add validation routines on key instances before performing
+  signing and verifying operations. This will catch obvious errors
+  like trying to sign a request with a public key.
+
+- Fix bug with incorrect signature generation and verification on
+  messages with HTTP field identifiers including parameters. Those
+  fields were not serialized correctly and messages were being signed
+  with incorrect signature base.
+
 ## [0.7.3] - 2025-06-01
 
 - Fix broken retrieval of header names from Rack responses.
