@@ -8,25 +8,13 @@ module Linzer
   class Message
     module Adapter
       module HTTPGem
-        class Response < Abstract
-          def initialize(operation, **options)
-            @operation = operation
-            freeze
-          end
+        class Response < Linzer::Message::Adapter::NetHTTP::Response
+          private
 
-          def header(name)
-            @operation[name]
-          end
-
-          # XXX: this implementation is incomplete, e.g.: ;tr parameter is not supported yet
-          def [](field_name)
-            return @operation.code if field_name == "@status"
-            @operation[field_name]
-          end
-
-          def attach!(signature)
-            signature.to_h.each { |h, v| @operation[h] = v }
-            @operation
+          def derived(name)
+            case name.value
+            when "@status" then @operation.status.to_i
+            end
           end
         end
       end

@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+## [0.7.6] - 2025-07-03
+
+- Fix a bug in the `Linzer::Message::Adapter::HTTPGem::Response` class where
+  the serialized id of fields like derived `@status` were not recognized.
+  This issue caused signature creation and verification to fail for `HTTP::Response`
+  instances. (Issue [#16](https://github.com/nomadium/linzer/issues/16))
+
 ## [0.7.5] - 2025-06-30
 
 - No changes since 0.7.4.
