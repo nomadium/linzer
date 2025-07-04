@@ -12,17 +12,7 @@ end
 RSpec.describe Linzer::Signer do
   context "with RSA" do
     let(:request) do
-      request_data = Linzer::RFC9421::Examples.test_request_data
-      path = request_data[:http]["path"]
-      headers = request_data[:headers].merge({
-        "host" => "origin.host.internal.example",
-        "forwarded" => "for=192.0.2.123;host=example.com;proto=https"
-      })
-      request = Linzer::Test::RackHelper.new_request(:post, path, {}, headers)
-      # Workaround the fact that `rack` reports a different `@authority`
-      # than this example from RFC9421 expects
-      allow(request).to receive(:authority).and_return("origin.host.internal.example")
-      request
+      Linzer::Test::RequestHelper.example_proxy_request
     end
 
     let(:key_material) { Linzer::RFC9421::Examples.test_key_rsa }
@@ -68,16 +58,7 @@ end
 RSpec.describe Linzer::Verifier do
   context "with RSA" do
     let(:request) do
-      request_data = Linzer::RFC9421::Examples.test_request_data
-      path = request_data[:http]["path"]
-      headers = request_data[:headers].merge({
-        "Forwarded" => "for=192.0.2.123;host=example.com;proto=https"
-      })
-      request = Linzer::Test::RackHelper.new_request(:post, path, {}, headers)
-      # Workaround the fact that `rack` reports a different `@authority`
-      # than this example from RFC9421 expects
-      allow(request).to receive(:authority).and_return("origin.host.internal.example")
-      request
+      Linzer::Test::RequestHelper.example_proxy_request
     end
 
     let(:key_material) { Linzer::RFC9421::Examples.test_key_rsa_pub }

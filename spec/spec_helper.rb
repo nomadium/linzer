@@ -12,6 +12,7 @@ require "securerandom"
 require "linzer"
 require_relative "rfc9421_examples"
 require_relative "rack_helper"
+require_relative "request_helper"
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
