@@ -527,4 +527,43 @@ RSpec.describe "RFC9421" do
         )
     end
   end
+
+  context "Creating a Signature (Section 3.1)" do
+    let(:test_key_rsa_pss_pub) { Linzer::RFC9421::Examples.test_key_rsa_pss_pub }
+    let(:pubkey) { Linzer.new_rsa_pss_sha512_key(test_key_rsa_pss_pub) }
+
+    def signature_headers(b64_signature, components = [], parameters = {}, label = "sig1")
+      {
+        "signature"       => Base64.strict_decode64(b64_signature),
+        "signature-input" => Starry::InnerList.new(components, parameters)
+      }.transform_values! { |v| Starry.serialize(String(label) => v) }
+    end
+
+    it "example signature value" do
+      signature_value =
+        "HIbjHC5rS0BYaa9v4QfD4193TORw7u9edguPh0AW3dMq9WImrlFrCGUDih47vAxi4L2" \
+        "YRZ3XMJc1uOKk/J0ZmZ+wcta4nKIgBkKq0rM9hs3CQyxXGxHLMCy8uqK488o+9jrptQ" \
+        "+xFPHK7a9sRL1IXNaagCNN3ZxJsYapFj+JXbmaI5rtAdSfSvzPuBCh+ARHBmWuNo1Uz" \
+        "VVdHXrl8ePL4cccqlazIJdC4QEjrF+Sn4IxBQzTZsL9y9TP5FsZYzHvDqbInkTNigBc" \
+        "E9cKOYNFCn4D/WM7F6TNuZO9EgtzepLWcjTymlHzK7aXq6Am6sfOrpIC49yXjj3ae6H" \
+        "RalVc/g=="
+
+      components = %w[@method @authority @path content-digest content-length content-type]
+      parameters = {"created" => 1618884473, "keyid" => "test-key-rsa-pss"}
+
+      signature_headers = signature_headers(signature_value, components, parameters)
+      signature = Linzer::Signature.build(signature_headers)
+
+      request = post_request_example3
+      message = Linzer::Message.new(request)
+
+      # Note that the RSA-PSS algorithm in use here is non-deterministic,
+      # meaning that a different signature value will be created every time
+      # the algorithm is run. The signature value provided here can be validated
+      # against the given keys, but newly generated signature values are not
+      # expected to match the example. See Section 7.3.5.
+      #
+      expect(Linzer.verify(pubkey, message, signature)).to eq(true)
+    end
+  end
 end
