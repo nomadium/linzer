@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+## [0.7.7.beta1] - 2025-07-07
+
+- Introduce generic adapters for typical requests and responses.
+  This allows adapter classes to stop inheriting functionality from totally
+  unrelated implementations by relying on a saner hierarchy class. 
+
 ## [0.7.6] - 2025-07-03
 
 - Fix a bug in the `Linzer::Message::Adapter::HTTPGem::Response` class where
