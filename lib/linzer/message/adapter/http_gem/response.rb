@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
-# Example HTTP message adapter for HTTP::Response class from http ruby gem.
+# HTTP message adapter for HTTP::Response class from http ruby gem.
 # https://github.com/httprb/http
-# It's not required automatically to avoid making http gem a dependency.
+#
+# It's not loaded automatically to avoid making http gem a dependency.
 #
 module Linzer
   class Message

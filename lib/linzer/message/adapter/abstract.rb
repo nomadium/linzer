@@ -16,8 +16,6 @@ module Linzer
           self.class.to_s.include?("Response")
         end
 
-        # XXX: attached request as specified in RFC has to be tested for Net::HTTP classes
-        # and custom HTTP message classes
         def attached_request?
           response? && !!@attached_request
         end
