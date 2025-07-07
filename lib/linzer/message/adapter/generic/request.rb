@@ -24,8 +24,9 @@ module Linzer
           private
 
           def derived(name)
+            unimplemented_method = 'Derived field "@method" lookup is not implemented!'
             case name.value
-            when "@method"         then @operation.method
+            when "@method"         then raise Error, unimplemented_method
             when "@target-uri"     then @operation.uri.to_s
             when "@authority"      then @operation.uri.authority.downcase
             when "@scheme"         then @operation.uri.scheme.downcase

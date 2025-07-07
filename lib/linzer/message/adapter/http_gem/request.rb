@@ -4,11 +4,7 @@ module Linzer
   class Message
     module Adapter
       module HTTPGem
-        class Request < Linzer::Message::Adapter::NetHTTP::Request
-          def header(name)
-            @operation[name]
-          end
-
+        class Request < Generic::Request
           private
 
           def derived(name)

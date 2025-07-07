@@ -8,7 +8,7 @@ module Linzer
   class Message
     module Adapter
       module HTTPGem
-        class Response < Linzer::Message::Adapter::NetHTTP::Response
+        class Response < Generic::Response
           private
 
           def derived(name)
