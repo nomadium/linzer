@@ -11,6 +11,22 @@ RSpec.describe "RFC9421" do
     signature_base.lines[0...serialized_components.length].join
   end
 
+  let(:post_request_example3) do
+    uri = URI("http://example.com/foo?param=Value&Pet=dog")
+    headers = {
+      "Host"           => "example.com",
+      "Date"           => "Tue, 20 Apr 2021 02:07:55 GMT",
+      "Content-Digest" => "sha-512=:WZDPaVn/7XgHaAy8pmojAkGWoRx2UFChF41A2svX+T" \
+                          "aPm+AbwAgBWnrIiYllu7BNNyealdVLvRwEmTHWXvJwew==:",
+      "Content-Type"   => "application/json",
+      "Content-Length" => "18"
+    }
+    body = '{"hello": "world"}'
+    request = Net::HTTP::Post.new(uri, headers)
+    request.body = body
+    request
+  end
+
   context "HTTP Fields (Section 2.1)" do
     let(:uri) { URI("http://www.example.com") }
 
@@ -398,21 +414,6 @@ RSpec.describe "RFC9421" do
   context "Signing Request Components in a Response Message (Section 2.4)" do
     let(:uri) { URI("http://example.com/foo?param=Value&Pet=dog") }
 
-    let(:request) do
-      headers = {
-        "Host"           => "example.com",
-        "Date"           => "Tue, 20 Apr 2021 02:07:55 GMT",
-        "Content-Digest" => "sha-512=:WZDPaVn/7XgHaAy8pmojAkGWoRx2UFChF41A2svX+T" \
-                            "aPm+AbwAgBWnrIiYllu7BNNyealdVLvRwEmTHWXvJwew==:",
-        "Content-Type"   => "application/json",
-        "Content-Length" => "18"
-      }
-      body = '{"hello": "world"}'
-      request = Net::HTTP::Post.new(uri, headers)
-      request.body = body
-      request
-    end
-
     let(:response_headers) do
       {
         "Date"           => "Tue, 20 Apr 2021 02:07:56 GMT",
@@ -438,6 +439,7 @@ RSpec.describe "RFC9421" do
     let(:key_id) { "test-key-ecc-p256" }
 
     it "example signature base" do
+      request = post_request_example3
       message = Linzer::Message.new(response, attached_request: request)
       serialized_signature_params =
         '("@status" "content-digest" "content-type" ' \
@@ -474,11 +476,48 @@ RSpec.describe "RFC9421" do
                        "4W767HK05rx1i8meNQQgQPgQp8wq2ive3tV5Ag==:"
       }
 
+      request = post_request_example3
       signature = Linzer::Signature.build(signature_headers)
       message = Linzer::Message.new(response, attached_request: request)
       pubkey = Linzer.new_ecdsa_p256_sha256_key(test_key_ecc_p256_pub)
 
       expect(Linzer.verify(pubkey, message, signature)).to eq(true)
+    end
+  end
+
+  context "Creating the Signature Base (Section 2.5)" do
+    it "example signature base" do
+      request = post_request_example3
+      message = Linzer::Message.new(request)
+
+      components = %w[@method @authority @path content-digest content-length content-type]
+      serialized_components = Linzer::FieldId.serialize_components(components)
+
+      parameters = {"created" => 1618884473, "keyid" => "test-key-rsa-pss"}
+      signature_params = Starry.serialize_list([Starry::InnerList.new(components, parameters)])
+
+      expected_content_digest = "sha-512=:WZDPaVn/7XgHaAy8pmojAkGWoRx2UFChF41A2svX" \
+                                "+TaPm+AbwAgBWnrIiYllu7BNNyealdVLvRwEmTHWXvJwew==:"
+
+      expected_signature_params = '("@method" "@authority" "@path" ' \
+                                  '"content-digest" "content-length" "content-type")' \
+                                  ';created=1618884473;keyid="test-key-rsa-pss"'
+
+      expect(request["content-digest"]).to eq(expected_content_digest)
+      expect(signature_params).to          eq(expected_signature_params)
+      expect(Linzer.signature_base(message, serialized_components, parameters))
+        .to eq(
+          <<~VALUES
+            "@method": POST
+            "@authority": example.com
+            "@path": /foo
+            "content-digest": #{request["content-digest"]}
+            "content-length": 18
+            "content-type": application/json
+            "@signature-params": #{signature_params}
+          VALUES
+          .chomp
+        )
     end
   end
 end
