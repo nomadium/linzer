@@ -1,5 +1,14 @@
 ## [Unreleased]
 
+## [0.7.7] - 2025-07-08
+
+(No changes since the last beta release, this new stable release just
+bundles all the features/changes introduced during 0.7.7.beta1 release)
+
+- Introduce generic adapters for typical requests and responses.
+  This allows adapter classes to stop inheriting functionality from totally
+  unrelated implementations by relying on a saner hierarchy class.
+
 ## [0.7.7.beta1] - 2025-07-07
 
 - Introduce generic adapters for typical requests and responses.
