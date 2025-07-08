@@ -139,37 +139,44 @@ RSpec.describe "RFC9421" do
       end
     end
 
-    # unfortunately Net::HTTP doesn't support trailers
+    # Unfortunately, in general, Ruby HTTP libraries doesn't support trailers
+    # So, in the example below from the RFC just show that the tests will not pass.
     #
-    # describe "Trailer Fields (section 2.1.4)" do
-    #   xit "[trailers] example 2.1.4" do
-    #     headers = {
-    #       "Trailer" => "Expires",
-    #       "Content-Type" => "text/plain",
-    #       "Transfer-Encoding" => "chunked"
-    #     }
-    #     body = %w[4 HTTP 7 Message a Signatures 0]
-    #     expire_date = "Wed, 9 Nov 2022 07:28:00 GMT"
-    #     body.define_singleton_method(:trailers) { {"expires" => expire_date} }
-    #
-    #     components = %w[@status trailer expires;tr]
-    #     response = Net::HTTPOK.new("1.1", "200", "OK")
-    #     response.body = body
-    #     headers.each { |k, v| response[k] = v }
-    #     response.instance_variable_set(:@read, true)
-    #
-    #     message = Linzer::Message.new(response)
-    #
-    #     expect(signature_base_lines(message, components))
-    #       .to eq(
-    #         <<~VALUES
-    #           "@status": 200
-    #           "trailer": Expires
-    #           "expires";tr: Wed, 9 Nov 2022 07:28:00 GMT
-    #         VALUES
-    #       )
-    #   end
-    # end
+    describe "Trailer Fields (section 2.1.4)" do
+      let(:response) {
+        headers = {
+          "Trailer"           => "Expires",
+          "Content-Type"      => "text/plain",
+          "Transfer-Encoding" => "chunked"
+        }
+
+        response = Net::HTTPOK.new("1.1", "200", "OK")
+        body = %w[4 HTTP 7 Message a Signatures 0]
+        # There is no way to specify trailers in Net::HTTPResponse classes,
+        # so, as expected, those fields can not be retrieved.
+        # expire_date = "Wed, 9 Nov 2022 07:28:00 GMT"
+        # body.define_singleton_method(:trailers) { {"expires" => expire_date} }
+        response.body = body
+        headers.each { |k, v| response[k] = v }
+
+        response
+      }
+
+      it "example 1" do
+        components = %w[@status trailer expires;tr]
+        message = Linzer::Message.new(response)
+
+        expect(message['"expires";tr']).to eq(nil)
+        expect(signature_base_lines(message, components))
+          .to_not eq(
+            <<~VALUES
+              "@status": 200
+              "trailer": Expires
+              "expires";tr: Wed, 9 Nov 2022 07:28:00 GMT
+            VALUES
+          )
+      end
+    end
   end
 
   context "Derived Components (Section 2.2)" do
