@@ -133,7 +133,7 @@ module Linzer
         end
 
         def tr(trailer)
-          @operation.body.trailers[trailer.value.to_s]
+          raise Error, "Sub-classes are required to implement this method!"
         end
 
         def req(field, method)

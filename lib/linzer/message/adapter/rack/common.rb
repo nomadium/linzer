@@ -61,14 +61,17 @@ module Linzer
 
           def field(name)
             has_tr = name.parameters["tr"]
-            if has_tr
-              value = tr(name)
+            return nil if has_tr
+
+            item_value  = String(name.value)
+            field_value = if request?
+              rack_header_name = rack_header_name(item_value)
+              @operation.env[rack_header_name]
             else
-              rack_header_name = rack_header_name(name.value.to_s)
-              value = @operation.env[rack_header_name] if request?
-              value = @operation.get_header(name.value.to_s) if response?
+              @operation.get_header(item_value)
             end
-            value.dup&.strip
+
+            field_value.dup&.strip
           end
 
           def derive(operation, method)

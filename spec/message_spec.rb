@@ -220,18 +220,20 @@ RSpec.describe Linzer::Message do
         expect(message["example-header;bs"]).to eq(encoded_value)
       end
 
-      it "returns field value is from the trailers" do
+      # Linzer cannot return trailer field values because
+      # in this case Rack doesn't support HTTP trailers
+      #
+      it "does not return field value from the trailers" do
         headers = {"Trailer" => "Expires"}
         body = ["Hello", "World"]
         expire_date = "Wed, 9 Nov 2022 07:28:00 GMT"
-        def body.trailers
-          {"expires" => "Wed, 9 Nov 2022 07:28:00 GMT"}
-        end
+
         response = Linzer::Test::RackHelper.new_response(body, 200, headers)
         message = described_class.new(response)
         expect(message["@status"]).to    eq(200)
         expect(message["trailer"]).to    eq("Expires")
-        expect(message["expires;tr"]).to eq(expire_date)
+        expect(message["expires;tr"]).to_not eq(expire_date)
+        expect(message["expires;tr"]).to eq(nil)
       end
 
       it "returns null on invalid field name" do
