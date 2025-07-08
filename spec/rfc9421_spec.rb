@@ -559,4 +559,28 @@ RSpec.describe "RFC9421" do
       expect(Linzer.verify(pubkey, message, signature)).to eq(true)
     end
   end
+
+  context "Verifying a Signature (Section 3.2)" do
+    let(:test_key_rsa_pss_pub) { Linzer::RFC9421::Examples.test_key_rsa_pss_pub }
+    let(:pubkey) { Linzer.new_rsa_pss_sha512_key(test_key_rsa_pss_pub) }
+
+    let(:signed_request) do
+      request = post_request_example3
+      request["Signature-Input"] = 'sig1=("@method" "@authority" "@path" ' \
+                                   '"content-digest" "content-length" "content-type")' \
+                                   ';created=1618884473;keyid="test-key-rsa-pss"'
+
+      request["Signature"] = "sig1=:HIbjHC5rS0BYaa9v4QfD4193TORw7u9edguPh0AW3dMq9WImrl" \
+                             "FrCGUDih47vAxi4L2YRZ3XMJc1uOKk/J0ZmZ+wcta4nKIgBkKq0rM9hs3CQyxXGxH" \
+                             "LMCy8uqK488o+9jrptQ+xFPHK7a9sRL1IXNaagCNN3ZxJsYapFj+JXbmaI5rtAdSf" \
+                             "SvzPuBCh+ARHBmWuNo1UzVVdHXrl8ePL4cccqlazIJdC4QEjrF+Sn4IxBQzTZsL9y" \
+                             "9TP5FsZYzHvDqbInkTNigBcE9cKOYNFCn4D/WM7F6TNuZO9EgtzepLWcjTymlHzK7" \
+                             "aXq6Am6sfOrpIC49yXjj3ae6HRalVc/g==:"
+      request
+    end
+
+    it "passed verification" do
+      expect(Linzer.verify!(signed_request, key: pubkey, no_older_than: nil)).to eq(true)
+    end
+  end
 end
