@@ -37,5 +37,5 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency "logger", "~> 1.7", ">= 1.7.0"
   spec.add_runtime_dependency "forwardable", "~> 1.3", ">= 1.3.3"
   spec.add_runtime_dependency "net-http", "~> 0.6.0"
-  spec.add_runtime_dependency "cgi", "~> 0.4.2"
+  spec.add_runtime_dependency "cgi", ">= 0.4.2", "< 0.6.0"
 end
