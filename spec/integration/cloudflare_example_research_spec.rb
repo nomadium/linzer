@@ -26,7 +26,7 @@ RSpec.describe "Signed requests against cloudflare example server", :integration
   let(:headers) do
     repo_url = "https://github.com/nomadium/linzer"
     {
-      "signature-agent" => uri.authority,
+      "signature-agent" => uri.to_s,
       "user-agent"      => "Linzer/#{Linzer::VERSION} (+#{repo_url})"
     }
   end
