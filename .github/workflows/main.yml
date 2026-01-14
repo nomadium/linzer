@@ -74,7 +74,7 @@ jobs:
         echo "$PWD/ruby-install/bin" >> $GITHUB_PATH
     - name: Build Ruby 3.0
       run: |
-        ruby-install --update
+        ruby-install
         ruby-install 3.0.7
     - name: Install chruby script
       run: |
