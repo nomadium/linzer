@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+set -euo pipefail
+IFS=$'\n\t'
+set -vx
+
+test -f gemset.nix -a -f Gemfile.lock && exit 0
+
+nix run nixpkgs#bundler -- lock
+
+#
+# This feels very hacky, figure out why these platforms end in
+# Gemfile.lock and have to be removed by hand, otherwise the build fail.
+#
+for arch in aarch64 arm x86; do
+    for plat in linux-gnu linux-musl; do
+        nix run nixpkgs#bundler -- lock --remove-platform $arch-$plat
+    done
+done
+for triplet in arm64-darwin x86_64-darwin x86_64-linux-musl; do
+    nix run nixpkgs#bundler -- lock --remove-platform $triplet
+done
+
+nix run github:inscapist/bundix
+
+# I'm also wondering if there is a better way on this...
+# These 2 files are not really meant to be committed and are added to
+# the git index to keep nix flake tooling happy and not fail the build.
+# This is not an app but a library, so at the moment I don't see the point
+# of maintaining those files in the repo.
+git add    gemset.nix
+git add -f Gemfile.lock

@@ -1,0 +1,28 @@
+name: Nix CI
+
+on:
+  push:
+    branches:
+      - '**'
+
+  pull_request:
+
+  schedule:
+  - cron: "58 3 * * *"
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    name: Nix
+    steps:
+    - uses: actions/checkout@v4
+    - uses: DeterminateSystems/determinate-nix-action@v3
+    - run: nix --version
+    - name: Build gemset
+      run: ./bin/nix-setup
+    - name: Show flake outputs
+      run: nix flake show
+    - name: Run unit tests
+      run: nix flake check --show-trace --print-build-logs
+    - name: Run integration tests
+      run: nix develop --command bash -c 'rake integration'
