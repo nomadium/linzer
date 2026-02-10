@@ -14,8 +14,16 @@ module Linzer
         OpenSSL::HMAC.digest(@params[:digest], material, data)
       end
 
+      # Verifies an HMAC signature using constant-time comparison.
+      #
+      # Uses OpenSSL.secure_compare to prevent timing attacks where an
+      # attacker could measure response times to guess valid signatures.
+      #
+      # @param signature [String] The signature bytes to verify
+      # @param data [String] The data that was signed
+      # @return [Boolean] true if the signature is valid, false otherwise
       def verify(signature, data)
-        signature == sign(data)
+        OpenSSL.secure_compare(signature, sign(data))
       end
 
       def private?

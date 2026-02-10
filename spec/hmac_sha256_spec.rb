@@ -21,6 +21,56 @@ RSpec.describe Linzer do
   end
 end
 
+RSpec.describe Linzer::HMAC::Key do
+  describe "#verify" do
+    it "uses constant-time comparison to prevent timing attacks" do
+      key = Linzer.generate_hmac_sha256_key
+      data = "test data"
+      valid_signature = key.sign(data)
+
+      # Verify that OpenSSL.secure_compare is being used
+      expect(OpenSSL).to receive(:secure_compare)
+        .with(valid_signature, valid_signature)
+        .and_call_original
+
+      expect(key.verify(valid_signature, data)).to eq(true)
+    end
+
+    it "returns true for valid signatures" do
+      key = Linzer.generate_hmac_sha256_key
+      data = "test data"
+      signature = key.sign(data)
+
+      expect(key.verify(signature, data)).to eq(true)
+    end
+
+    it "returns false for invalid signatures" do
+      key = Linzer.generate_hmac_sha256_key
+      data = "test data"
+      invalid_signature = "invalid" * 4 # 28 bytes, different from 32-byte HMAC
+
+      expect(key.verify(invalid_signature, data)).to eq(false)
+    end
+
+    it "returns false for tampered data" do
+      key = Linzer.generate_hmac_sha256_key
+      data = "test data"
+      signature = key.sign(data)
+
+      expect(key.verify(signature, "tampered data")).to eq(false)
+    end
+
+    it "returns false for signature from different key" do
+      key1 = Linzer.generate_hmac_sha256_key
+      key2 = Linzer.generate_hmac_sha256_key
+      data = "test data"
+      signature = key1.sign(data)
+
+      expect(key2.verify(signature, data)).to eq(false)
+    end
+  end
+end
+
 RSpec.describe Linzer::Signer do
   context "with HMAC using SHA-256" do
     let(:request) do
