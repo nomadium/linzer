@@ -3,7 +3,18 @@
 module Linzer
   class Message
     module Adapter
+      # http.rb gem message adapters.
+      #
+      # Provides adapters for {HTTP::Request} and {HTTP::Response} objects
+      # from the http.rb gem.
+      #
+      # @note These adapters are loaded on-demand when using the
+      #   {Linzer::HTTP::SignatureFeature}.
       module HTTPGem
+        # Adapter for {HTTP::Request} objects from http.rb gem.
+        #
+        # Extends the generic request adapter with http.rb-specific
+        # method name retrieval.
         class Request < Generic::Request
           private
 

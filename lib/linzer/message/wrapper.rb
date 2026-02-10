@@ -2,7 +2,15 @@
 
 module Linzer
   class Message
+    # Handles wrapping HTTP messages with the appropriate adapter.
+    #
+    # This module maintains a registry of adapter classes for different
+    # HTTP message types (Rack, Net::HTTP, etc.) and selects the correct
+    # one when wrapping a message.
+    #
+    # @api private
     module Wrapper
+      # Default adapter mappings for built-in HTTP library support.
       @adapters = {
         Rack::Request     => Linzer::Message::Adapter::Rack::Request,
         Rack::Response    => Linzer::Message::Adapter::Rack::Response,
@@ -11,6 +19,12 @@ module Linzer
       }
 
       class << self
+        # Wraps an HTTP message with the appropriate adapter.
+        #
+        # @param operation [Object] The HTTP request or response object
+        # @param options [Hash] Additional options (e.g., :attached_request)
+        # @return [Adapter::Abstract] The wrapped message
+        # @raise [Error] If no suitable adapter is found
         def wrap(operation, **options)
           adapter_class = adapters[operation.class]
 
@@ -22,6 +36,10 @@ module Linzer
           (adapter_class || ancestor).new(operation, **options)
         end
 
+        # Registers a custom adapter for an HTTP message class.
+        #
+        # @param operation_class [Class] The HTTP message class
+        # @param adapter_class [Class] The adapter class to use
         def register_adapter(operation_class, adapter_class)
           adapters[operation_class] = adapter_class
         end
@@ -30,6 +48,8 @@ module Linzer
 
         attr_reader :adapters
 
+        # Finds an adapter by checking if operation inherits from a known class.
+        # This allows subclasses of Net::HTTPRequest etc. to work automatically.
         def find_ancestor(operation)
           adapters
             .select { |klz, adpt| operation.is_a? klz }

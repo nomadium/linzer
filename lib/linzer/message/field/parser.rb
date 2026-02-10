@@ -4,9 +4,23 @@ module Linzer
   class Message
     class Field
       class Identifier
+        # Parses component identifier strings into structured items.
+        #
+        # Handles various formats:
+        # - Simple names: `"content-type"`
+        # - Derived components: `"@method"`
+        # - With parameters: `"content-type";bs`, `"example-dict";key="a"`
+        # - Already serialized: `'"content-type"'`
+        #
+        # @api private
         module Parser
           extend self
 
+          # Parses a field name into a structured item.
+          #
+          # @param field_name [String] The component identifier string
+          # @return [Starry::Item] The parsed structured field item
+          # @raise [Error] If the field name cannot be parsed
           def parse(field_name)
             case
             when field_name.match?(/";/), field_name.start_with?('"')

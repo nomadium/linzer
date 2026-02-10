@@ -3,7 +3,12 @@
 module Linzer
   class Message
     module Adapter
+      # Rack HTTP message adapters.
+      #
+      # Provides adapters for {::Rack::Request} and {::Rack::Response} objects.
       module Rack
+        # Shared functionality for Rack request and response adapters.
+        # @api private
         module Common
           DERIVED_COMPONENT = {
             "@method"         => :request_method,

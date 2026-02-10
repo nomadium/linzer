@@ -3,9 +3,38 @@
 require "net/http"
 
 module Linzer
+  # Simple HTTP client with automatic request signing.
+  #
+  # This module provides convenience methods for making signed HTTP requests
+  # using Net::HTTP. It automatically signs outgoing requests with the
+  # provided key.
+  #
+  # For each standard HTTP method (GET, POST, PUT, DELETE, etc.), a
+  # corresponding method is dynamically defined.
+  #
+  # @example Making a signed GET request
+  #   key = Linzer.generate_ed25519_key("my-key")
+  #   response = Linzer::HTTP.get("https://example.com/api", key: key)
+  #
+  # @example Making a signed POST request with body
+  #   response = Linzer::HTTP.post("https://example.com/api",
+  #     key: key,
+  #     data: { "name" => "value" }.to_json,
+  #     headers: { "Content-Type" => "application/json" }
+  #   )
+  #
+  # @example Customizing covered components
+  #   response = Linzer::HTTP.get("https://example.com/api",
+  #     key: key,
+  #     covered_components: %w[@method @authority @path date content-type]
+  #   )
+  #
+  # @see SignatureFeature For http.rb gem integration
   module HTTP
     extend self
 
+    # Returns the list of known HTTP methods from Net::HTTP.
+    # @return [Array<String>] HTTP method names (e.g., "GET", "POST")
     def self.known_http_methods
       Net::HTTP
         .constants
@@ -15,6 +44,29 @@ module Linzer
         .freeze
     end
 
+    # Dynamically define methods for each HTTP verb (get, post, put, etc.)
+    #
+    # @!method get(uri, options)
+    #   Makes a signed GET request.
+    #   @param uri [String] The request URI
+    #   @param options [Hash] Request options
+    #   @option options [Key] :key The signing key (required)
+    #   @option options [Hash] :headers Additional headers
+    #   @option options [Array<String>] :covered_components Components to sign
+    #   @option options [Hash] :params Additional signature parameters
+    #   @option options [Boolean] :debug Enable debug output
+    #   @return [Net::HTTPResponse] The response
+    #
+    # @!method post(uri, options)
+    #   Makes a signed POST request.
+    #   @param uri [String] The request URI
+    #   @param options [Hash] Request options
+    #   @option options [Key] :key The signing key (required)
+    #   @option options [String] :data Request body (required for POST)
+    #   @option options [Hash] :headers Additional headers
+    #   @option options [Array<String>] :covered_components Components to sign
+    #   @option options [Hash] :params Additional signature parameters
+    #   @return [Net::HTTPResponse] The response
     known_http_methods.each do |http_method|  # e.g.:
       method = http_method.downcase.to_sym    #
       define_method(method) do |uri, options| # def post(uri, **options)
@@ -25,6 +77,7 @@ module Linzer
 
     private
 
+    # Executes a signed HTTP request.
     def request(verb, uri, options = {})
       validate_verb(verb)
 
@@ -76,6 +129,7 @@ module Linzer
       request
     end
 
+    # Determines if the HTTP method typically has a request body.
     def with_body?(verb)
       # common HTTP
       return false if %i[get head options trace delete].include?(verb)

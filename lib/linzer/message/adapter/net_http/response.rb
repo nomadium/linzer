@@ -4,6 +4,10 @@ module Linzer
   class Message
     module Adapter
       module NetHTTP
+        # Adapter for {Net::HTTPResponse} objects.
+        #
+        # Extends the generic response adapter with Net::HTTP-specific
+        # status code retrieval.
         class Response < Generic::Response
           private
 

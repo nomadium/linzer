@@ -5,17 +5,44 @@ require "cgi"
 module Linzer
   class Message
     module Adapter
+      # Generic adapters for HTTP messages.
+      #
+      # These adapters provide a base implementation that can be extended
+      # for HTTP libraries not directly supported by Linzer.
       module Generic
+        # Generic HTTP request adapter.
+        #
+        # Provides a base implementation for request message access.
+        # Assumes the operation responds to `[]` for header access and
+        # has a `uri` attribute.
+        #
+        # @example Creating a custom adapter
+        #   class MyRequestAdapter < Linzer::Message::Adapter::Generic::Request
+        #     private
+        #     def derived(name)
+        #       return @operation.http_method if name.value == "@method"
+        #       super
+        #     end
+        #   end
         class Request < Abstract
+          # Creates a new request adapter.
+          # @param operation [Object] The HTTP request object
+          # @param options [Hash] Additional options (unused in base class)
           def initialize(operation, **options)
             @operation = operation
             freeze
           end
 
+          # Retrieves a header value by name.
+          # @param name [String] The header name
+          # @return [String, nil] The header value
           def header(name)
             @operation[name]
           end
 
+          # Attaches a signature to the request.
+          # @param signature [Signature] The signature to attach
+          # @return [Object] The underlying request object
           def attach!(signature)
             signature.to_h.each { |h, v| @operation[h] = v }
             @operation

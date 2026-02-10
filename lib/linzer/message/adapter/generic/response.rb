@@ -4,7 +4,18 @@ module Linzer
   class Message
     module Adapter
       module Generic
+        # Generic HTTP response adapter.
+        #
+        # Provides a base implementation for response message access.
+        # Assumes the operation responds to `[]` for header access.
+        #
+        # @abstract Subclass must implement {#derived} method.
         class Response < Abstract
+          # Creates a new response adapter.
+          # @param operation [Object] The HTTP response object
+          # @param options [Hash] Additional options
+          # @option options [Object] :attached_request An associated request
+          #   for `;req` parameter support
           def initialize(operation, **options)
             @operation = operation
             attached_request = options[:attached_request]
@@ -13,10 +24,16 @@ module Linzer
             freeze
           end
 
+          # Retrieves a header value by name.
+          # @param name [String] The header name
+          # @return [String, nil] The header value
           def header(name)
             @operation[name]
           end
 
+          # Attaches a signature to the response.
+          # @param signature [Signature] The signature to attach
+          # @return [Object] The underlying response object
           def attach!(signature)
             signature.to_h.each { |h, v| @operation[h] = v }
             @operation
