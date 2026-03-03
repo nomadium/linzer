@@ -23,3 +23,5 @@ group :test do
   gem "rackup",    require: false
   gem "jwt-eddsa", require: false
 end
+
+gem "yard", "~> 0.9", group: :development
