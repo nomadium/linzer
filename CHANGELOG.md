@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+## [0.7.9.beta1] - 2026-03-03
+
+(Beta release to test gem release automation; no functional changes)
+
 ## [0.7.8] - 2026-03-03
 
 - Security fix: HMAC signature verification now uses constant-time
