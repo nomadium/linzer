@@ -24,12 +24,18 @@ jobs:
         with:
           egress-policy: audit
 
+      - name: Gemfile before
+        run: ls; cat Gemfile; cat Gemfile.lock
+
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: Set up Ruby
         uses: ruby/setup-ruby@2e007403fc1ec238429ecaa57af6f22f019cc135 # v1.234.0
         with:
           bundler-cache: true
           ruby-version: '3.3'
+
+      - name: Gemfile after
+        run: ls; cat Gemfile; cat Gemfile.lock
 
       - name: Run all tests
         run: bundle exec rake all
