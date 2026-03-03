@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+## [0.7.8] - 2026-03-03
+
+- Security fix: HMAC signature verification now uses constant-time
+  comparison to prevent timing attacks.
+
 ## [0.7.7] - 2025-07-08
 
 (No changes since the last beta release, this new stable release just
