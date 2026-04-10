@@ -35,7 +35,7 @@ jobs:
     continue-on-error: ${{ matrix.experimental }}
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Set up Ruby
       uses: ruby/setup-ruby@v1
       with:
@@ -63,7 +63,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Ruby 3.0
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Install Ruby 3.0 dependencies
       run: |
         sudo sed -i 's/^Types: deb$/Types: deb deb-src/' /etc/apt/sources.list.d/ubuntu.sources
