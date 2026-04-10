@@ -11,6 +11,10 @@
 
 Linzer is a Ruby library for [HTTP Message Signatures (RFC 9421)](https://www.rfc-editor.org/rfc/rfc9421.html).
 
+HTTP Message Signatures (RFC 9421) describes a mechanism for creating, encoding,
+and verifying digital signatures or message authentication codes over components
+of an HTTP message.
+
 ## Install
 
 Add the following line to your `Gemfile`:
