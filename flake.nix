@@ -1,11 +1,23 @@
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    # XXX: should work, not tested yet on MacOS
-    # systems.url = "github:nix-systems/default";
-    systems.url = "github:nix-systems/default-linux";
-    ruby-nix.url = "github:inscapist/ruby-nix";
-    bundix.url = "github:inscapist/bundix";
+
+    systems = {
+      url = "github:nix-systems/default-linux";
+      # XXX: should work, not tested yet on MacOS
+      # url = "github:nix-systems/default";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    ruby-nix = {
+      url = "github:inscapist/ruby-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    bundix = {
+      url = "github:inscapist/bundix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = {
