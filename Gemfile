@@ -17,7 +17,7 @@ gem "standard", "~> 1.3"
 
 group :test do
   gem "simplecov", require: false
-  gem "http",      require: false
+  gem "http", "< 6.0.0", require: false
   gem "sinatra",   require: false
   gem "webrick",   require: false
   gem "rackup",    require: false
