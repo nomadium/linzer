@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+## [0.7.9.beta2] - 2026-04-19
+
+- Add support for http gem 6.x while maintaining compatibility with 5.x.
+  Handles API differences introduced in 6.0.
+- Improve README clarity and align it with current behavior and production usage.
+
 ## [0.7.9.beta1] - 2026-03-03
 
 (Beta release to test gem release automation; no functional changes)
