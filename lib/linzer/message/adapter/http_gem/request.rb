@@ -19,6 +19,7 @@ module Linzer
           private
 
           def derived(name)
+            return @operation.uri.host         if name.value == "@authority"
             return @operation.verb.to_s.upcase if name.value == "@method"
             super
           end
