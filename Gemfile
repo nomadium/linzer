@@ -16,8 +16,8 @@ gem "securerandom", ">= 0.3.2"
 gem "standard", "~> 1.3"
 
 group :test do
+  gem "http", ">= 5.0", "< 7.0", require: false
   gem "simplecov", require: false
-  gem "http",      require: false
   gem "sinatra",   require: false
   gem "webrick",   require: false
   gem "rackup",    require: false

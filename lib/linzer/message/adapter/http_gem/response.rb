@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "linzer/message/adapter/http_gem/common"
+
 module Linzer
   class Message
     module Adapter
@@ -13,6 +15,8 @@ module Linzer
         #
         # @see https://github.com/httprb/http http.rb gem
         class Response < Generic::Response
+          include HTTPGem::Common
+
           private
 
           def derived(name)

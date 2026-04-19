@@ -10,9 +10,9 @@ RSpec.describe Linzer::Message::Adapter::HTTPGem::Request do
 
   describe "#headers" do
     it "returns all headers in HTTP request message" do
-      request = HTTP::Client.new.build_request(:get, URI("http://example.org/something"))
-      request["Test-Header1"] = "value1"
-      request["header2"] = "value2"
+      request = HTTP::Request.new(verb: :get, uri: URI("http://example.org/something"))
+      request.headers["Test-Header1"] = "value1"
+      request.headers["header2"] = "value2"
       adapter = described_class.new(request)
       expect(adapter.header("test-header1")).to eq("value1")
       expect(adapter.header("header2")).to eq("value2")
@@ -21,7 +21,7 @@ RSpec.describe Linzer::Message::Adapter::HTTPGem::Request do
 
   describe "#attach!" do
     it "attaches a signature to the underlying request headers" do
-      request = HTTP::Client.new.build_request(:get, URI("http://example.org/something"))
+      request = HTTP::Request.new(verb: :get, uri: URI("http://example.org/something"))
       adapter = described_class.new(request)
       adapter.attach!(signature)
       expect(adapter["signature"]).to       eq(signature.to_h["signature"])
@@ -33,7 +33,7 @@ RSpec.describe Linzer::Message::Adapter::HTTPGem::Request do
     context "@method" do
       it "returns the HTTP method of the request message" do
         uri = URI("https://www.example.com/path?param=value")
-        request = HTTP::Client.new.build_request(:post, uri)
+        request = HTTP::Request.new(verb: :post, uri: uri)
         adapter = described_class.new(request)
         expect(adapter["@method"]).to eq("POST")
       end
@@ -42,7 +42,7 @@ RSpec.describe Linzer::Message::Adapter::HTTPGem::Request do
     context "@target-uri" do
       it "returns the target URI of a request message" do
         uri = URI("https://www.example.com/path?param=value")
-        request = HTTP::Client.new.build_request(:post, uri)
+        request = HTTP::Request.new(verb: :post, uri: uri)
         adapter = described_class.new(request)
         expect(adapter["@target-uri"]).to eq("https://www.example.com/path?param=value")
       end
@@ -51,7 +51,7 @@ RSpec.describe Linzer::Message::Adapter::HTTPGem::Request do
     context "@authority" do
       it "returns the authority component of the target URI of the HTTP request message" do
         uri = URI("https://www.example.com/path?param=value")
-        request = HTTP::Client.new.build_request(:post, uri)
+        request = HTTP::Request.new(verb: :post, uri: uri)
         adapter = described_class.new(request)
         expect(adapter["@authority"]).to eq("www.example.com")
       end
@@ -60,7 +60,7 @@ RSpec.describe Linzer::Message::Adapter::HTTPGem::Request do
     context "@scheme" do
       it "returns the scheme of the target URL of the HTTP request message" do
         uri = URI("http://www.example.com/path?param=value")
-        request = HTTP::Client.new.build_request(:post, uri)
+        request = HTTP::Request.new(verb: :post, uri: uri)
         adapter = described_class.new(request)
         expect(adapter["@scheme"]).to eq("http")
       end
@@ -69,7 +69,7 @@ RSpec.describe Linzer::Message::Adapter::HTTPGem::Request do
     context "@request-target" do
       it "returns the full request target of the HTTP request message" do
         uri = URI("http://www.example.com/path?param=value")
-        request = HTTP::Client.new.build_request(:post, uri)
+        request = HTTP::Request.new(verb: :post, uri: uri)
         adapter = described_class.new(request)
         expect(adapter["@request-target"]).to eq("/path?param=value")
       end
@@ -78,7 +78,7 @@ RSpec.describe Linzer::Message::Adapter::HTTPGem::Request do
     context "@path" do
       it "returns the target path of the HTTP request message" do
         uri = URI("http://www.example.com/path?param=value")
-        request = HTTP::Client.new.build_request(:post, uri)
+        request = HTTP::Request.new(verb: :post, uri: uri)
         adapter = described_class.new(request)
         expect(adapter["@path"]).to eq("/path")
       end
@@ -87,19 +87,19 @@ RSpec.describe Linzer::Message::Adapter::HTTPGem::Request do
     context "@query" do
       it "returns the the query component of the HTTP request message, example 1" do
         uri = "http://www.example.com/path?param=value&foo=bar&baz=bat%2Dman"
-        request = HTTP::Client.new.build_request(:get, URI(uri))
+        request = HTTP::Request.new(verb: :get, uri: URI(uri))
         adapter = described_class.new(request)
         expect(adapter["@query"]).to eq("?param=value&foo=bar&baz=bat%2Dman")
       end
       it "returns the the query component of the HTTP request message, example 2" do
         uri = "http://www.example.com/path?queryString"
-        request = HTTP::Client.new.build_request(:post, URI(uri))
+        request = HTTP::Request.new(verb: :post, uri: URI(uri))
         adapter = described_class.new(request)
         expect(adapter["@query"]).to eq("?queryString")
       end
       it "returns the the query component of the HTTP request message, example 3" do
         uri = "http://www.example.com/path"
-        request = HTTP::Client.new.build_request(:get, URI(uri))
+        request = HTTP::Request.new(verb: :get, uri: URI(uri))
         adapter = described_class.new(request)
         expect(adapter["@query"]).to eq("?")
       end
@@ -108,7 +108,7 @@ RSpec.describe Linzer::Message::Adapter::HTTPGem::Request do
     context "@query-param" do
       it "returns the individual query parameters of the HTTP request message" do
         uri = "http://www.example.com/path?param=value&foo=bar&baz=batman&qux="
-        request = HTTP::Client.new.build_request(:get, URI(uri))
+        request = HTTP::Request.new(verb: :get, uri: URI(uri))
         adapter = described_class.new(request)
         expect(adapter['"@query-param";name="baz"']).to          eq("batman")
         expect(adapter['"@query-param";name="qux"']).to          eq("")
@@ -120,7 +120,7 @@ RSpec.describe Linzer::Message::Adapter::HTTPGem::Request do
     context "@invalid derived component" do
       it "returns nil" do
         uri = "http://www.example.com/path"
-        request = HTTP::Client.new.build_request(:get, URI(uri))
+        request = HTTP::Request.new(verb: :get, uri: URI(uri))
         adapter = described_class.new(request)
         expect(adapter["@invalid-unknown-field-foo"]).to eq(nil)
       end
@@ -130,7 +130,7 @@ RSpec.describe Linzer::Message::Adapter::HTTPGem::Request do
       context "field found in the request" do
         it "returns its value" do
           uri = "http://www.example.com/path"
-          request = HTTP::Client.new.build_request(:get, URI(uri))
+          request = HTTP::Request.new(verb: :get, uri: URI(uri))
           adapter = described_class.new(request)
           expect(adapter["user-agent"]).not_to be_empty
         end
@@ -138,7 +138,7 @@ RSpec.describe Linzer::Message::Adapter::HTTPGem::Request do
       context "field not found in the request" do
         it "returns nil" do
           uri = "http://www.example.com/path"
-          request = HTTP::Client.new.build_request(:get, URI(uri))
+          request = HTTP::Request.new(verb: :get, uri: URI(uri))
           adapter = described_class.new(request)
           expect(adapter["field-not-found-foo-bar"]).to eq(nil)
         end

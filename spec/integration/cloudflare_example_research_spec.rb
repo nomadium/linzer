@@ -167,8 +167,8 @@ RSpec.describe "Signed requests against cloudflare example server", :integration
 
         puts body if debug
 
-        expect(body).to include("signature: #{request["signature"]}")
-        expect(body).to include("signature-input: #{request["signature-input"]}")
+        expect(body).to include("signature: #{request.headers["signature"]}")
+        expect(body).to include("signature-input: #{request.headers["signature-input"]}")
         expect(body).to include("host: #{uri.authority}")
       end
     end
