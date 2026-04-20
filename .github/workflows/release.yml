@@ -35,4 +35,4 @@ jobs:
         run: bundle exec rake all
 
       # Release
-      - uses: rubygems/release-gem@9e85cb11501bebc2ae661c1500176316d3987059 # v1
+      - uses: rubygems/release-gem@6317d8d1f7e28c24d28f6eff169ea854948bd9f7 # v1.2.0
