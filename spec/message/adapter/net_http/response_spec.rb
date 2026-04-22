@@ -26,7 +26,7 @@ RSpec.describe Linzer::Message::Adapter::NetHTTP::Response do
 
   describe "#[]" do
     context "@status" do
-      it "returnd the three-digit numeric HTTP status code of a response message" do
+      it "returns the three-digit numeric HTTP status code of a response message" do
         status = "201"
         response = Net::HTTPOK.new("1.1", status, "OK")
         adapter = described_class.new(response)

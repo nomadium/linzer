@@ -58,7 +58,7 @@ RSpec.describe "Linzer::Message::Adapter::HTTPGem::Response" do
 
   describe "#[]" do
     context "@status" do
-      it "returnd the three-digit numeric HTTP status code of a response message" do
+      it "returns the three-digit numeric HTTP status code of a response message" do
         status = 200
         expect(adapter["@status"]).to eq(status)
       end
