@@ -24,4 +24,8 @@ group :test do
   gem "jwt-eddsa", require: false
 end
 
-gem "yard", "~> 0.9", group: :development
+group :development do
+  gem "irb"
+  gem "rdoc"
+  gem "yard", "~> 0.9"
+end
