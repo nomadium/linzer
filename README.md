@@ -383,7 +383,7 @@ pubkey = Linzer.new_ed25519_public_key(test_ed25519_key_pub, "some-key-ed25519")
 
 message = Linzer::Message.new(request)
 
-signature = Linzer::Signature.build(message.headers)
+signature = Linzer::Signature.build(request.headers)
 
 Linzer.verify(pubkey, message, signature)
 # => true
