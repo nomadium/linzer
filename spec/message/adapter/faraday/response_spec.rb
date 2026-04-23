@@ -13,7 +13,7 @@ RSpec.describe "Linzer::Message::Adapter::Faraday::Response" do
   end
 
   let(:response) do
-    env = Faraday::Env.new(status: 200, response_headers: response_headers)
+    env = Faraday::Env.from(status: 200, response_headers: response_headers)
     Faraday::Response.new(env)
   end
 
