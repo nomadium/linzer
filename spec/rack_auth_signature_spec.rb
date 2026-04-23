@@ -257,7 +257,8 @@ RSpec.describe Rack::Auth::Signature do
       expect(response[code]).to eq(200)
     end
 
-    it "allows the request to proceed [rsa-pss-sha512]" do
+    it "allows the request to proceed [rsa-pss-sha512]",
+      skip: RUBY_VERSION < "3.1" && "Not supported on Ruby 3.0" do
       key = Linzer.generate_rsa_pss_sha512_key(2048, keyid)
       pubkey = key.material.public_to_pem
       settings[:keys][keyid.to_sym] = {alg: "rsa-pss-sha512", material: pubkey}

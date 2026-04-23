@@ -433,6 +433,14 @@ For deeper details or edge cases, the source code and unit tests are also a good
 
 linzer is built in [Continuous Integration](https://github.com/nomadium/linzer/actions/workflows/main.yml) on Ruby 3.0+.
 
+> [!NOTE]
+>
+> Ruby 3.0 is supported and tested in CI, but RSA-based signature algorithms
+> (RSA-PSS and RSA PKCS#1 v1.5) may not work correctly due to its older
+> OpenSSL bindings. If you need RSA algorithms, use Ruby 3.1 or later.
+> Ruby 3.0 has been EOL since March 2024 — users are advised to upgrade
+> to a supported Ruby release.
+
 ## Security
 
 This gem is provided “as is” without any warranties. It has not

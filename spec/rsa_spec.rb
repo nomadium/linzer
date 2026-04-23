@@ -40,7 +40,8 @@ RSpec.describe Linzer::Signer do
     context "when a public key is given" do
       let(:pubkey) { Linzer::RFC9421::Examples.test_key_rsa_pub }
 
-      it "fails to sign a message" do
+      it "fails to sign a message",
+        skip: RUBY_VERSION < "3.1" && "Not supported on Ruby 3.0" do
         headers = {"Date" => "Time.now.to_s"}
         request = Linzer::Test::RackHelper.new_request(:post, "/test", {}, headers)
         key = Linzer.new_rsa_v1_5_sha256_key(pubkey)
@@ -65,7 +66,8 @@ RSpec.describe Linzer::Verifier do
 
     let(:key_id) { "test-key-rsa" }
 
-    it "fails to verify an invalid signature" do
+    it "fails to verify an invalid signature",
+      skip: RUBY_VERSION < "3.1" && "Not supported on Ruby 3.0" do
       key = Linzer.new_rsa_v1_5_sha256_public_key(key_material, key_id)
       message = Linzer::Message.new(request)
 
@@ -87,7 +89,8 @@ RSpec.describe Linzer::Verifier do
         .to raise_error(Linzer::Error, /Invalid signature/)
     end
 
-    it "verifies a valid signature" do
+    it "verifies a valid signature",
+      skip: RUBY_VERSION < "3.1" && "Not supported on Ruby 3.0" do
       key = Linzer.new_rsa_v1_5_sha256_public_key(key_material, key_id)
       message = Linzer::Message.new(request)
 

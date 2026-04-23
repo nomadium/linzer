@@ -62,7 +62,11 @@ RSpec.describe Linzer do
 
   context "signing messages" do
     it "has a ::sign method aliased to Linzer::Signer::sign" do
-      key = Linzer.generate_rsa_pss_sha512_key(2048)
+      key = if RUBY_VERSION >= "3.1"
+        Linzer.generate_rsa_pss_sha512_key(2048)
+      else
+        Linzer.generate_rsa_v1_5_sha256_key(2048)
+      end
       message    = :message
       components = []
       options    = {}

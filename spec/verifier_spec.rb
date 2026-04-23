@@ -54,7 +54,11 @@ RSpec.describe Linzer::Verifier do
     path = request_data[:http]["path"]
     request = Linzer::Test::RackHelper.new_request(:post, path, {}, test_request_data[:headers])
 
-    pubkey = Linzer.generate_rsa_pss_sha512_key(2048, "foo-key-rsa-pss")
+    pubkey = if RUBY_VERSION >= "3.1"
+      Linzer.generate_rsa_pss_sha512_key(2048, "foo-key-rsa-pss")
+    else
+      Linzer.generate_rsa_v1_5_sha256_key(2048, "foo-key-legacy-rsa")
+    end
     signature = Linzer::Signature.build(test_request_data[:headers])
     message = Linzer::Message.new(request)
 
@@ -62,7 +66,8 @@ RSpec.describe Linzer::Verifier do
       .to raise_error(Linzer::VerifyError, /[dD]uplicated component/)
   end
 
-  it "cannot verify a message with @signature-params component" do
+  it "cannot verify a message with @signature-params component",
+    skip: RUBY_VERSION < "3.1" && "Not supported on Ruby 3.0" do
     signature_with_invalid_component = {
       "signature-input" => "sig1=(\"content-digest\" \"content-length\" \"@signature-params\" \"content-type\");created=1618884473;keyid=\"test-key-rsa-pss\"",
       "signature"       => "sig1=:kRAeUug8ffLM6RE5FfnH9mwQ+1zAJK9ORBp/rbO6u2HXuZbfQP863xo3texBklxWrgOAudCS4I3/7jkEhqEjP7vEJGI0tRSb1q7+PlnTtbANO1HDz2lSXn5KRVfELk+r5054V2IdvF1yYxstgkO8eYxkokkTyp+3v86xqpmP2DRPcVoG8b1jjSh8LraLD8jEBlDkprxdprRBhHVVMCFVmK+/y3/BrDVVpMJ/MdrjOkaNHjk8ASWXw2Imc+Gi/ZeTu26j+aqp295kaG3qyjiPnY93hcgZNo2J/x6Q4tdzBt3ljuN/OtYCL/PegCr3XpQMDrmGpfG1M8kVIph2z/aGig==:"

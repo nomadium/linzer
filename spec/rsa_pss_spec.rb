@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe Linzer do
+RSpec.describe Linzer, if: RUBY_VERSION >= "3.1" do
   context "with RSASSA-PSS" do
     it "creates a RSASSA-PSS key" do
       key = Linzer.generate_rsa_pss_sha512_key(2048)
@@ -52,8 +52,13 @@ RSpec.describe Linzer::Signer do
         components = %w[@method @path "date"]
         options    = {expires: Time.now.to_i + 600}
 
-        expect { Linzer.sign(key, message, components, options) }
-          .to raise_error(Linzer::SigningError, /Private key is needed/)
+        if RUBY_VERSION >= "3.1"
+          expect { Linzer.sign(key, message, components, options) }
+            .to raise_error(Linzer::SigningError, /Private key is needed/)
+        else
+          expect { Linzer.sign(key, message, components, options) }
+            .to raise_error(ArgumentError, /private key is needed/)
+        end
       end
     end
   end
