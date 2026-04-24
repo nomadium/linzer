@@ -101,6 +101,45 @@ RSpec.describe Linzer::Signature do
     expect(signature).to be_a Linzer::Signature
   end
 
+  describe "#expired?" do
+    def build_signature(expires: nil)
+      input = '"@method"'
+      params = ";created=1618884473"
+      params += ";expires=#{expires}" if expires
+      headers = {
+        "signature-input" => "sig1=(#{input})#{params}",
+        "signature"       => "sig1=:dGVzdA==:"
+      }
+      described_class.build(headers)
+    end
+
+    it "returns false when expires parameter is not present" do
+      signature = build_signature
+      expect(signature.expired?).to eq(false)
+    end
+
+    it "returns true when expires is in the past" do
+      signature = build_signature(expires: Time.now.to_i - 60)
+      expect(signature.expired?).to eq(true)
+    end
+
+    it "returns false when expires is in the future" do
+      signature = build_signature(expires: Time.now.to_i + 600)
+      expect(signature.expired?).to eq(false)
+    end
+
+    it "returns true when expires equals current time (boundary)" do
+      signature = build_signature(expires: Time.now.to_i)
+      expect(signature.expired?).to eq(true)
+    end
+
+    it "raises Error when expires is a non-integer value" do
+      signature = build_signature(expires: '"not-a-number"')
+      expect { signature.expired? }
+        .to raise_error(Linzer::Error, /non-integer.*expires/)
+    end
+  end
+
   it "builds signature from a message with a valid signature when label is explicitly indicated and found" do
     headers = {
       "signature-input" => 'proxy_sig=("@method" "@authority" "@path" "content-digest" "content-type" "content-length" "forwarded");created=1618884480;keyid="test-key-rsa";alg="rsa-v1_5-sha256";expires=1618884540',

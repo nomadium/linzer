@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+- Enforce expires signature parameter validation in Verifier.
+
 ## [0.7.9.beta2] - 2026-04-19
 
 - Add support for http gem 6.x while maintaining compatibility with 5.x.

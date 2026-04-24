@@ -23,6 +23,7 @@ module Linzer
       # - All covered components exist in the message
       # - The signature base matches what was signed
       # - The cryptographic signature is valid for the public key
+      # - The signature has not expired (if `expires` parameter is present)
       # - The signature is not older than `no_older_than` (if specified)
       #
       # @param key [Linzer::Key] The public key to verify with. Must respond to
@@ -81,6 +82,13 @@ module Linzer
 
         begin
           validate_components message, signature.serialized_components
+        rescue Error => ex
+          raise VerifyError, ex.message, cause: ex
+        end
+
+        begin
+          exp_sig_msg = "Signature has expired or is invalid"
+          raise VerifyError, exp_sig_msg if signature.expired?
         rescue Error => ex
           raise VerifyError, ex.message, cause: ex
         end

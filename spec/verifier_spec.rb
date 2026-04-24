@@ -214,4 +214,97 @@ RSpec.describe Linzer::Verifier do
       end
     end
   end
+
+  context "when `expires` parameter is present" do
+    let(:key) { Linzer.generate_ed25519_key("test-key-ed25519") }
+    let(:pubkey) { Linzer.new_ed25519_key(key.material.public_to_pem, "test-key-ed25519") }
+
+    let(:request_headers) { {"date" => "Thu, 10 Jul 2025 12:00:00 GMT"} }
+    let(:request) do
+      Linzer::Test::RackHelper.new_request(:get, "/foo", {}, request_headers)
+    end
+    let(:message) { Linzer::Message.new(request) }
+    let(:components) { %w[@method @path date] }
+
+    def sign_with_expires(expires_at)
+      Linzer::Signer.sign(key, message, components,
+        created: Time.now.to_i,
+        expires: expires_at)
+    end
+
+    it "rejects a signature whose `expires` timestamp is in the past" do
+      expired_signature = sign_with_expires(Time.now.to_i - 60)
+
+      expect { described_class.verify(pubkey, message, expired_signature) }
+        .to raise_error(Linzer::VerifyError, /[eE]xpir/)
+    end
+
+    it "accepts a signature whose `expires` timestamp is in the future" do
+      valid_signature = sign_with_expires(Time.now.to_i + 600)
+
+      expect(described_class.verify(pubkey, message, valid_signature)).to eq(true)
+    end
+
+    it "rejects a signature that has just expired (boundary: expires == now)" do
+      # Set expires to current time; by the time verification runs, it should
+      # be considered expired (expires is not strictly in the future).
+      boundary_signature = sign_with_expires(Time.now.to_i)
+
+      expect { described_class.verify(pubkey, message, boundary_signature) }
+        .to raise_error(Linzer::VerifyError, /[eE]xpir/)
+    end
+
+    it "rejects an expired signature even when no_older_than is not set" do
+      # The core Verifier should enforce `expires` unconditionally,
+      # independent of the `no_older_than` option.
+      expired_signature = sign_with_expires(Time.now.to_i - 300)
+
+      expect { described_class.verify(pubkey, message, expired_signature) }
+        .to raise_error(Linzer::VerifyError, /[eE]xpir/)
+    end
+
+    it "rejects an expired signature even when no_older_than check passes" do
+      # Signature was created recently (no_older_than passes) but
+      # has an explicit expires in the past.
+      expired_signature = sign_with_expires(Time.now.to_i - 1)
+
+      expect { described_class.verify(pubkey, message, expired_signature, no_older_than: 9999) }
+        .to raise_error(Linzer::VerifyError, /[eE]xpir/)
+    end
+
+    it "accepts a non-expired signature when expires is absent" do
+      # A signature without `expires` should not be rejected on expiration grounds.
+      signature_without_expires = Linzer::Signer.sign(key, message, components,
+        created: Time.now.to_i)
+
+      expect(described_class.verify(pubkey, message, signature_without_expires)).to eq(true)
+    end
+
+    it "rejects a signature with a non-integer `expires` parameter" do
+      # Build a signature with a string expires value by constructing
+      # raw headers directly.
+      raw_headers = {
+        "signature-input" => 'sig1=("@method" "@path" "date");created=1618884473;expires="not-a-number"',
+        "signature"       => "sig1=:dGVzdA==:"
+      }
+      bad_signature = Linzer::Signature.build(raw_headers)
+
+      expect { described_class.verify(pubkey, message, bad_signature) }
+        .to raise_error(Linzer::VerifyError, /non-integer.*expires/)
+    end
+
+    it "wraps Linzer::Error from expired? as VerifyError with cause" do
+      raw_headers = {
+        "signature-input" => 'sig1=("@method" "@path" "date");created=1618884473;expires="bad"',
+        "signature"       => "sig1=:dGVzdA==:"
+      }
+      bad_signature = Linzer::Signature.build(raw_headers)
+
+      expect { described_class.verify(pubkey, message, bad_signature) }
+        .to raise_error(Linzer::VerifyError) do |error|
+          expect(error.message).to match(/non-integer.*expires/)
+          expect(error.cause).to be_a(Linzer::Error)
+        end
+    end
+  end
 end

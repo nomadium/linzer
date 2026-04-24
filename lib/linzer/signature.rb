@@ -102,6 +102,26 @@ module Linzer
       (Time.now.to_i - created) > seconds
     end
 
+    # Checks if the signature has expired based on the `expires` parameter.
+    #
+    # If the `expires` parameter is not present, the signature is considered
+    # not expired (returns false). If the parameter is present but not a valid
+    # integer, an error is raised.
+    #
+    # @return [Boolean] true if the signature has expired
+    # @raise [Error] If the `expires` parameter is not a valid integer
+    #
+    # @example Check if a signature has expired
+    #   signature.expired?  # => true or false
+    #
+    # @see https://www.rfc-editor.org/rfc/rfc9421.html#section-2.3 RFC 9421 Section 2.3
+    def expired?
+      return false if !parameters.key?("expires")
+      Time.now.to_i >= Integer(parameters["expires"])
+    rescue ArgumentError, TypeError
+      raise Error.new "Signature has a non-integer `expires` parameter"
+    end
+
     # Converts the signature to HTTP header format.
     #
     # Returns a hash suitable for setting as HTTP headers on a request or
