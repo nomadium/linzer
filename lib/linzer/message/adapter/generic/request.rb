@@ -60,22 +60,22 @@ module Linzer
             when "@request-target" then @operation.uri.request_uri
             when "@path"           then @operation.uri.path
             when "@query"          then "?%s" % String(@operation.uri.query)
-            when "@query-param"    then query_param(name)
+            when "@query-param"    then query_param(@operation.uri.query, name)
             end
           end
 
-          def query_param(name)
+          def query_param(uri_query, name)
             param_name = name.parameters["name"]
             return nil if !param_name
             decoded_param_name = URI.decode_uri_component(param_name)
-            params = CGI.parse(@operation.uri.query)
+            params = CGI.parse(uri_query)
             URI.encode_uri_component(params[decoded_param_name]&.first)
           end
 
           def field(name)
             has_tr = name.parameters["tr"]
             return nil if has_tr # HTTP requests don't have trailer fields
-            value = @operation[name.value.to_s]
+            value = header(name.value.to_s)
             value.dup&.strip
           end
         end

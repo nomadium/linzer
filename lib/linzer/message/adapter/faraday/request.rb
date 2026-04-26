@@ -29,21 +29,9 @@ module Linzer
             end
           end
 
-          def query_param(uri_query, name)
-            param_name = name.parameters["name"]
-            return nil if !param_name
-            decoded_param_name = URI.decode_uri_component(param_name)
-            params = CGI.parse(uri_query)
-            URI.encode_uri_component(params[decoded_param_name]&.first)
-          end
-
-          def field(name)
-            has_tr = name.parameters["tr"]
-            return nil if has_tr
-            value = @operation.headers[name.value.to_s]
-            value.dup&.strip
-          end
-
+          # Builds the full URI including query parameters.
+          #
+          # @return [URI] the complete request URI with encoded query string
           def uri
             uri = @operation.path.dup
             uri.query = URI.encode_www_form(@operation.params)
