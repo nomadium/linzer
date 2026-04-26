@@ -30,6 +30,18 @@ Or just `gem install linzer`.
 
 ### Quick start
 
+- To sign/verify HTTP requests and responses, see the
+[Signing Requests](#signing-http-requests-and-responses) and
+[Verifying HTTP signatures](#verifying-http-signatures) or
+[Verifying responses (client-side)](#verifying-responses-client-side)
+sections.
+
+- For a more hands-off approach to enforcing request authentication
+  with HTTP signatures in Rack applications (such as Rails),
+  see the examples in the next section.
+
+### Rack middleware
+
 Add the middleware to your Rack application:
 
 ```ruby
@@ -46,9 +58,6 @@ use Rack::Auth::Signature,
 
 In this example, the middleware requires a valid HTTP Message Signature
 for all endpoints except /login.
-
-To learn how to sign requests, see the
-[Signing Requests](#signing-http-requests-and-responses) section.
 
 #### Using a configuration file
 
@@ -80,10 +89,13 @@ without a valid signature will be rejected.
 
 #### Next steps
 
+- See how to [sign HTTP messages](#signing-http-requests-and-responses)
+or [verify HTTP requests and responses](#verifying-responses-client-side).
+
 - See a full configuration example:
 [examples/sinatra/http-signatures.yml](https://github.com/nomadium/linzer/tree/master/examples/sinatra/http-signatures.yml)
 
-- Browse the middleware implementation for all options:
+- Browse the Rack middleware implementation for all options:
 [lib/rack/auth/signature.rb](https://github.com/nomadium/linzer/tree/master/lib/rack/auth/signature.rb)
 
 - For more specific scenarios and use cases, continue below.
@@ -97,6 +109,7 @@ method, path, headers, etc).
 Choose your client:
 
 - Use the [http gem](https://github.com/httprb/http) → recommended (simplest)
+- Use Faraday and the provided middleware → also recommended (very simple)
 - Use `Net::HTTP` → lower-level control
 - Use `Linzer::HTTP` → quick experiments / debugging
 
@@ -120,6 +133,35 @@ response = HTTP.headers(date: Time.now.to_s, foo: "bar")
 response.body.to_s
 => "protected content..."
 ```
+
+#### Using Faraday
+
+Linzer ships Faraday middleware for signing outbound requests and verifying
+signed responses.
+
+To sign requests:
+
+```ruby
+require "linzer/faraday"
+
+api_url = "https://example.com/api/service"
+components = %w[@target-uri @authority date cache-control]
+signature_params = {alg: "rsa-pss-sha512", keyid: "test-key-rsa-pss",
+                    expires: Time.now.to_i + 300}
+
+conn = Faraday.new(url: api_url) do |builder|
+  builder.headers["Cache-control"] = "no-cache"
+  builder.headers["Date"] = Time.now.httpdate
+  builder.request :http_signature, key: signing_key,
+                                   components: components,
+                                   params: signature_params
+end
+response = conn.post("/task")
+```
+
+This signs the request automatically before dispatch. In this example,
+`Date` and `Cache-Control` are included in the signature to protect
+freshness-related metadata from modification.
 
 #### Using `Net::HTTP` (manual control)
 
@@ -293,8 +335,8 @@ end
 
 #### Dynamic key lookup
 
-In many cases, the verification key depends on the `keyid` parameter provided in
-the signature.
+In many cases, the verification key depends on the `keyid` parameter
+provided in the signature.
 
 You can supply a block to resolve keys dynamically:
 
@@ -331,14 +373,48 @@ result = Linzer.verify!(response, key: pubkey, no_older_than: 600)
 # => true
 ```
 
+Or if you are using Faraday, response verification can be handled by
+middleware as well:
+
+```ruby
+require "linzer/faraday"
+
+...
+
+conn = Faraday.new(url: api_url) do |builder|
+  builder.response :http_signature, key: verify_key
+end
+response = conn.post("/task")
+
+response.env[:http_signature_verified]
+# => true
+
+response.env[:http_signature]
+# => #<Linzer::Signature ...>
+```
+
+After verification, the middleware stores:
+
+- `env[:http_signature_verified]` — whether verification succeeded
+
+- `env[:http_signature]` — the parsed `Linzer::Signature` object (when valid)
+
+Verification failures can optionally raise instead of returning status;
+see middleware options below.
+
 ### Using a custom HTTP library
 
-If you’re using an HTTP library or framework other than Rack, http gem or
-`Net::HTTP`, you can plug in your own adapter with very little effort.
+If you are using another HTTP library, you may not need a custom Linzer
+adapter at all. Because Linzer integrates with Faraday middleware, you can
+often use Faraday together with the appropriate Faraday adapter for your
+HTTP client of choice.
 
-In most cases, implementing an adapter just means mapping your library’s
-request/response objects to the small interface Linzer expects,
-then registering it.
+If you need tighter integration or are not using Faraday, you can also
+implement a native Linzer adapter directly.
+
+In most cases, implementing an adapter just means mapping your library's
+request/response objects to the small interface Linzer expects, then
+registering it.
 
 To do this:
 
