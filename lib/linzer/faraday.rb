@@ -1,8 +1,22 @@
 # frozen_string_literal: true
 
-# Faraday integration for Linzer. Require this file to automatically
-# register Faraday request/response adapters and the HTTP signature
-# (RFC9421) middleware.
+# Faraday integration for Linzer.
+#
+# Require this file to automatically register Faraday message adapters
+# and the HTTP signature (RFC 9421) middleware.
+#
+# This sets up:
+# - {Linzer::Message::Adapter::Faraday::Request} for {::Faraday::Request}
+# - {Linzer::Message::Adapter::Faraday::Response} for {::Faraday::Response}
+# - {Faraday::HttpSignature::Middleware} registered as +:http_signature+
+#   on +Faraday::Request+, +Faraday::Response+ and +Faraday::Middleware+
+#
+# @example
+#   require "linzer/faraday"
+#
+#   conn = Faraday.new(url: "https://example.com") do |f|
+#     f.request :http_signature, key: my_key, components: %w[@method @path]
+#   end
 
 require "faraday"
 require "linzer"
