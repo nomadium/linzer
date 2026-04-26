@@ -19,6 +19,13 @@ module Linzer
 
           private
 
+          # Resolves a derived component value from the response.
+          #
+          # Uses +HTTP::Response#status+ converted to Integer for
+          # the +@status+ component.
+          #
+          # @param name [Starry::Item] the parsed component identifier
+          # @return [Integer, nil] the HTTP status code, or +nil+ if unknown
           def derived(name)
             case name.value
             when "@status" then @operation.status.to_i

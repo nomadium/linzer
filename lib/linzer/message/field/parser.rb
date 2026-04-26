@@ -39,6 +39,14 @@ module Linzer
 
           private
 
+          # Parses an unserialized component identifier with parameters.
+          #
+          # Splits on +;+ to separate the field name from parameters,
+          # then serializes the field name and collects parameters.
+          #
+          # @param field_name [String] e.g. +"content-type;bs"+ or
+          #   +"example-dict;key=\"a\""+
+          # @return [Starry::Item] the parsed item with parameters
           def parse_unserialized_input(field_name)
             field, *raw_params = field_name.split(";")
             item               = Starry.parse_item(Starry.serialize(field))
@@ -46,6 +54,13 @@ module Linzer
             item
           end
 
+          # Parses raw parameter strings into a merged Hash.
+          #
+          # Handles both boolean parameters (+";bs"+ → +{"bs" => true}+)
+          # and key-value parameters (+";key=\"a\""+ → +{"key" => "a"}+).
+          #
+          # @param str [Array<String>] raw parameter strings
+          # @return [Hash] merged parameter hash
           def collect_parameters(str)
             params = str.map do |param|
               if (tokens = param.split("=")) == [param] # e.g.: ";bs"

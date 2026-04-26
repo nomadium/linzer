@@ -15,6 +15,14 @@ module Linzer
 
           private
 
+          # Resolves a derived component value from the request.
+          #
+          # Overrides the generic implementation for http.rb-specific
+          # accessor methods: +uri.host+ for +@authority+ and
+          # +verb+ for +@method+.
+          #
+          # @param name [Starry::Item] the parsed component identifier
+          # @return [String, nil] the derived value
           def derived(name)
             return @operation.uri.host         if name.value == "@authority"
             return @operation.verb.to_s.upcase if name.value == "@method"

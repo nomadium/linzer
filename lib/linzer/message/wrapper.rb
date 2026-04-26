@@ -48,8 +48,14 @@ module Linzer
 
         attr_reader :adapters
 
-        # Finds an adapter by checking if operation inherits from a known class.
-        # This allows subclasses of Net::HTTPRequest etc. to work automatically.
+        # Finds an adapter by checking the operation's ancestry.
+        #
+        # This allows subclasses of registered classes (e.g.
+        # +Net::HTTP::Get < Net::HTTPRequest+) to use the parent's adapter
+        # without explicit registration.
+        #
+        # @param operation [Object] the HTTP message object
+        # @return [Class, nil] the adapter class, or +nil+ if no ancestor matches
         def find_ancestor(operation)
           adapters
             .select { |klz, adpt| operation.is_a? klz }
@@ -57,6 +63,10 @@ module Linzer
             .first
         end
 
+        # Raises an error for unsupported HTTP message types.
+        #
+        # @param operation [Object] the unsupported HTTP message
+        # @raise [Linzer::Error] with a message suggesting +register_adapter+
         def fail_with_unsupported(operation)
           err_msg = <<~EOM
             Unknown/unsupported HTTP message class: '#{operation.class}'!

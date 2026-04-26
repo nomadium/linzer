@@ -78,6 +78,14 @@ module Linzer
     private
 
     # Executes a signed HTTP request.
+    #
+    # Validates inputs, builds and signs the request, then sends it.
+    #
+    # @param verb [Symbol] the HTTP method (e.g. +:get+, +:post+)
+    # @param uri [String] the request URI
+    # @param options [Hash] request options
+    # @return [Net::HTTPResponse] the response
+    # @raise [Linzer::Error] if the verb or key is invalid
     def request(verb, uri, options = {})
       validate_verb(verb)
 
@@ -100,10 +108,16 @@ module Linzer
       do_request(http, uri, verb, options[:data], signature, headers)
     end
 
+    # Returns the default covered components for signing.
+    # @return [Array<String>]
     def default_components
       Linzer::Options::DEFAULT[:covered_components]
     end
 
+    # Validates that the HTTP verb is recognized.
+    #
+    # @param verb [Symbol] the HTTP method
+    # @raise [Linzer::Error] if the verb is unknown
     def validate_verb(verb)
       method_name = verb.to_s.upcase
       if !known_http_methods.include?(method_name)
@@ -111,17 +125,32 @@ module Linzer
       end
     end
 
+    # Validates that the signing key is present and usable.
+    #
+    # @param key [Linzer::Key] the signing key
+    # @return [Linzer::Key] the validated key
+    # @raise [Linzer::Error] if the key is nil or does not respond to +#sign+
     def validate_key(key)
       raise Linzer::Error, "Key can not be nil!"    if !key
       raise Linzer::Error, "Key object is invalid!" if !key.respond_to?(:sign)
       key
     end
 
+    # Builds request headers, adding a default User-Agent if not present.
+    #
+    # @param headers [Hash] user-provided headers
+    # @return [Hash] headers with User-Agent ensured
     def build_headers(headers)
       return headers if headers.transform_keys(&:downcase).key?("user-agent")
       headers.merge({"user-agent" => "Linzer/#{Linzer::VERSION}"})
     end
 
+    # Builds a Net::HTTP request object for the given method and URI.
+    #
+    # @param method [Symbol] the HTTP method
+    # @param uri [String] the request URI
+    # @param headers [Hash] request headers to set
+    # @return [Net::HTTPRequest] the constructed request
     def build_request(method, uri, headers)
       request_class = Net::HTTP.const_get(method.to_s.capitalize)
       request = request_class.new(URI(uri))
@@ -129,7 +158,10 @@ module Linzer
       request
     end
 
-    # Determines if the HTTP method typically has a request body.
+    # Checks if the HTTP method typically carries a request body.
+    #
+    # @param verb [Symbol] the HTTP method
+    # @return [Boolean] +true+ for POST, PUT, PATCH, and WebDAV write methods
     def with_body?(verb)
       # common HTTP
       return false if %i[get head options trace delete].include?(verb)
@@ -142,6 +174,16 @@ module Linzer
       true
     end
 
+    # Sends the HTTP request with the signature headers attached.
+    #
+    # @param http [Net::HTTP] the HTTP connection
+    # @param uri [String] the request URI
+    # @param verb [Symbol] the HTTP method
+    # @param data [String, nil] the request body
+    # @param signature [Linzer::Signature] the generated signature
+    # @param headers [Hash] request headers
+    # @return [Net::HTTPResponse] the response
+    # @raise [Linzer::Error] if a body is required but not provided
     def do_request(http, uri, verb, data, signature, headers)
       if with_body?(verb)
         if !data

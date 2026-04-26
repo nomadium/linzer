@@ -96,7 +96,10 @@ module Linzer
         private
 
         # Parses a field name string into a FieldId.
-        # @return [FieldId, nil] The parsed identifier, or nil if invalid
+        #
+        # @param field_name [String] the component identifier string
+        # @return [FieldId, nil] the parsed identifier, or +nil+ if invalid
+        # @raise [Error] if +@status+ is used in a request message
         def parse_field_name(field_name)
           field_id  = FieldId.new(field_name: field_name)
           component = field_id.item
@@ -117,8 +120,12 @@ module Linzer
           raise Linzer::Error, msg unless message.request?
         end
 
-        # Validates component identifier parameters.
-        # @return [Object, nil] The validated name, or nil if invalid
+        # Validates component identifier parameters against RFC 9421 rules.
+        #
+        # @param name [Starry::Item] the parsed component identifier
+        # @param method [Symbol] +:derived+ or +:field+
+        # @return [Starry::Item, nil] the validated name, or +nil+ if
+        #   the parameter combination is invalid
         def validate_parameters(name, method)
           has_unknown = name.parameters.any? { |p, _| !KNOWN_PARAMETERS.include?(p) }
           return nil if has_unknown
@@ -149,6 +156,13 @@ module Linzer
         private_constant :KNOWN_PARAMETERS
 
         # Retrieves a component value with parameter processing.
+        #
+        # Handles +;req+, +;sf+, +;key+, and +;bs+ parameters by
+        # delegating to the corresponding helper methods.
+        #
+        # @param name [Starry::Item] the parsed component identifier
+        # @param method [Symbol] +:derived+ or +:field+
+        # @return [String, Integer, nil] the component value
         def retrieve(name, method)
           if !name.parameters.empty?
             valid_params = validate_parameters(name, method)
@@ -176,6 +190,10 @@ module Linzer
         end
 
         # Processes a structured field value with optional key extraction.
+        #
+        # @param value [String] the raw header value to parse as a dictionary
+        # @param key [String, nil] if present, extracts a single dictionary member
+        # @return [String] the serialized structured field value
         # @see https://www.rfc-editor.org/rfc/rfc9421.html#section-2.1.1
         def sf(value, key = nil)
           dict = Starry.parse_dictionary(value)
@@ -188,19 +206,31 @@ module Linzer
           end
         end
 
-        # Binary-wraps a field value.
+        # Binary-wraps a field value as a byte sequence.
+        #
+        # @param value [String] the header value to wrap
+        # @return [String] the serialized byte sequence
         # @see https://www.rfc-editor.org/rfc/rfc9421.html#section-2.1.3
         def bs(value)
           Starry.serialize(value.encode(Encoding::ASCII_8BIT))
         end
 
         # Retrieves a trailer field value.
+        #
         # @abstract Subclasses should implement if trailer support is needed.
+        # @param trailer [Object] the trailer field identifier
+        # @return [String, nil] the trailer value
+        # @raise [Error] always, since no built-in adapters support trailers
         def tr(trailer)
           raise Error, "Sub-classes are required to implement this method!"
         end
 
-        # Retrieves a field from the attached request.
+        # Retrieves a field from the attached request (for +;req+ parameter).
+        #
+        # @param field [Starry::Item] the component identifier
+        # @param method [Symbol] +:derived+ or +:field+
+        # @return [String, nil] the value from the attached request, or
+        #   +nil+ if no request is attached
         def req(field, method)
           attached_request? ? @attached_request[String(field)] : nil
         end
