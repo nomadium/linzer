@@ -22,6 +22,7 @@ group :test do
   gem "webrick",   require: false
   gem "rackup",    require: false
   gem "jwt-eddsa", require: false
+  gem "faraday", ">= 2.0", require: false
 end
 
 group :development do
