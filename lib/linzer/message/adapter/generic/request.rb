@@ -51,16 +51,20 @@ module Linzer
           private
 
           def derived(name)
-            unimplemented_method = 'Derived field "@method" lookup is not implemented!'
+            unimplemented_method = 'Derived field "%s" lookup is not implemented!'
+
+            uri = @operation.uri rescue nil
+            raise Error, unimplemented_method % name.value if uri.nil?
+
             case name.value
-            when "@method"         then raise Error, unimplemented_method
-            when "@target-uri"     then @operation.uri.to_s
-            when "@authority"      then @operation.uri.authority.downcase
-            when "@scheme"         then @operation.uri.scheme.downcase
-            when "@request-target" then @operation.uri.request_uri
-            when "@path"           then @operation.uri.path
-            when "@query"          then "?%s" % String(@operation.uri.query)
-            when "@query-param"    then query_param(@operation.uri.query, name)
+            when "@method"         then raise Error, unimplemented_method % name.value
+            when "@target-uri"     then uri.to_s
+            when "@authority"      then uri.authority.downcase
+            when "@scheme"         then uri.scheme.downcase
+            when "@request-target" then uri.request_uri
+            when "@path"           then uri.path
+            when "@query"          then "?%s" % String(uri.query)
+            when "@query-param"    then query_param(uri.query, name)
             end
           end
 
