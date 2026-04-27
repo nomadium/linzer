@@ -1,6 +1,8 @@
 ## [Unreleased]
 
-- Enforce expires signature parameter validation in Verifier.
+## [0.7.9.beta3] - 2026-04-27
+
+- Enforce `expires` signature parameter validation in Verifier.
 
 - Add Faraday middleware and adapters for HTTP message signatures.
 
