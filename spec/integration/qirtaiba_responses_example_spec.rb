@@ -6,8 +6,13 @@ RSpec.describe "Signature verification on responses from a real server", :integr
   # XXX: unclear why some tests are failing with timeout issues opening
   # TCP connections in Github Actions environment.
   # e.g.: https://github.com/nomadium/linzer/actions/runs/24990299135
+  #
+  # The tests succeed when ran in Nix CI environment in Github Actions, so
+  # the issue seems to be specific to Ruby related Github Actions environment/steps.
   before do
-    skip("Temporarily disabled in GitHub Actions") if ENV["GITHUB_ACTIONS"]
+    if ENV["GITHUB_ACTIONS"] && !ENV["NIX_STORE"]
+      skip("Temporarily disabled in GitHub Actions")
+    end
   end
 
   let(:debug) { false }
