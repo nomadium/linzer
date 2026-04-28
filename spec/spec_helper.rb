@@ -5,6 +5,14 @@ SimpleCov.start do
   enable_coverage :branch
   add_filter "/spec/integration/support"
   add_filter "/spec/rack_helper.rb"
+
+  # These files are excluded because is not possible to reach
+  # 100% coverage, a few tests are excluded in older Ruby versions.
+  add_filter "/spec/linzer_spec.rb"
+  add_filter "/spec/rack_auth_signature_spec.rb"
+  add_filter "/spec/rsa_pss_spec.rb"
+  add_filter "/spec/rsa_spec.rb"
+  add_filter "/spec/verifier_spec.rb"
 end
 
 require "securerandom"
