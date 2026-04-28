@@ -4,7 +4,6 @@ require "starry"
 require "openssl"
 require "rack"
 require "uri"
-require "stringio"
 require "net/http"
 
 require_relative "linzer/version"

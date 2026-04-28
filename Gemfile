@@ -22,7 +22,8 @@ group :test do
   gem "webrick",   require: false
   gem "rackup",    require: false
   gem "jwt-eddsa", require: false
-  gem "faraday", ">= 2.0", require: false
+  gem "faraday",  ">= 2.0", require: false
+  gem "stringio", "~> 3.1", ">= 3.1.2", require: false
 end
 
 group :development do
