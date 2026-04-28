@@ -16,15 +16,6 @@ module Linzer
         # @see Generic::Response
         # @see https://github.com/lostisland/faraday faraday gem
         class Response < Generic::Response
-          # Attaches a signature to the underlying response headers.
-          #
-          # @param signature [Linzer::Signature] the signature to attach
-          # @return [::Faraday::Response] the underlying response object
-          def attach!(signature)
-            signature.to_h.each { |h, v| @operation.headers[h] = v }
-            @operation
-          end
-
           private
 
           # Resolves a derived component value from the response.
@@ -36,6 +27,17 @@ module Linzer
             case name.value
             when "@status" then @operation.status.to_i
             end
+          end
+
+          # Sets a header on the underlying HTTP message.
+          #
+          # If a header with the given name already exists, its value is overwritten.
+          #
+          # @param header [String] the header name
+          # @param value [String] the header value
+          # @return [String] the value assigned to the header
+          def set_header!(header, value)
+            @operation.headers[header] = value
           end
         end
       end

@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+- Fix multi-signature header overwrite when calling sign! multiple times.
+
 ## [0.7.9.beta3] - 2026-04-27
 
 - Enforce `expires` signature parameter validation in Verifier.

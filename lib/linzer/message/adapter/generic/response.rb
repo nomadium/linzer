@@ -31,15 +31,18 @@ module Linzer
             @operation[name]
           end
 
-          # Attaches a signature to the response.
-          # @param signature [Signature] The signature to attach
-          # @return [Object] The underlying response object
-          def attach!(signature)
-            signature.to_h.each { |h, v| @operation[h] = v }
-            @operation
-          end
-
           private
+
+          # Sets a header on the underlying HTTP message.
+          #
+          # If a header with the given name already exists, its value is overwritten.
+          #
+          # @param header [String] the header name
+          # @param value [String] the header value
+          # @return [String] the value assigned to the header
+          def set_header!(header, value)
+            @operation[header] = value
+          end
 
           def derived(name)
             raise Linzer::Error, "Sub-classes are required to implement this method!"

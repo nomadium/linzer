@@ -40,14 +40,6 @@ module Linzer
             @operation[name]
           end
 
-          # Attaches a signature to the request.
-          # @param signature [Signature] The signature to attach
-          # @return [Object] The underlying request object
-          def attach!(signature)
-            signature.to_h.each { |h, v| @operation[h] = v }
-            @operation
-          end
-
           private
 
           def derived(name)
@@ -66,6 +58,17 @@ module Linzer
             when "@query"          then "?%s" % String(uri.query)
             when "@query-param"    then query_param(uri.query, name)
             end
+          end
+
+          # Sets a header on the underlying HTTP message.
+          #
+          # If a header with the given name already exists, its value is overwritten.
+          #
+          # @param header [String] the header name
+          # @param value [String] the header value
+          # @return [String] the value assigned to the header
+          def set_header!(header, value)
+            @operation[header] = value
           end
 
           def query_param(uri_query, name)

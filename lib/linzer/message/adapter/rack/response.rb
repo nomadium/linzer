@@ -28,14 +28,17 @@ module Linzer
             @operation.get_header(name)
           end
 
-          # Attaches a signature to the response.
-          # @param signature [Signature] The signature to attach
-          # @return [::Rack::Response] The response with signature headers
-          def attach!(signature)
-            signature.to_h.each do |h, v|
-              @operation.set_header(h, v)
-            end
-            @operation
+          private
+
+          # Sets a header on the underlying HTTP message.
+          #
+          # If a header with the given name already exists, its value is overwritten.
+          #
+          # @param header [String] the header name
+          # @param value [String] the header value
+          # @return [String] the value assigned to the header
+          def set_header!(header, value)
+            @operation.set_header(header, value)
           end
         end
       end
