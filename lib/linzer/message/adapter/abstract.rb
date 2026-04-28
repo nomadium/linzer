@@ -10,8 +10,8 @@ module Linzer
       # implements field retrieval, header access, and signature attachment
       # for a specific HTTP message type.
       #
-      # @abstract Subclass and implement {#header}, {#attach!}, {#derived},
-      #   and {#field} to create a new adapter.
+      # @abstract Subclass and implement {#header}, {#derived}, and {#field}
+      #   to create a new adapter.
       #
       # @see Rack::Request Rack request adapter
       # @see Rack::Response Rack response adapter
@@ -84,13 +84,39 @@ module Linzer
           raise Linzer::Error, "Sub-classes are required to implement this method!"
         end
 
+        # Checks whether the request contains HTTP Message Signature headers.
+        #
+        # Returns true if either the "signature-input" or "signature" header
+        # is present.
+        #
+        # @return [Boolean] true if the request includes HTTP Message Signature headers
+        def has_signature?
+          !!header("signature-input") || !!header("signature")
+        end
+
         # Attaches a signature to the underlying HTTP message.
         #
-        # @abstract Subclasses must implement this method.
         # @param signature [Signature] The signature to attach
         # @return [Object] The underlying HTTP message
         def attach!(signature)
-          raise Linzer::Error, "Sub-classes are required to implement this method!"
+          signature_headers = signature.to_h
+
+          unless has_signature?
+            signature_headers.each { |h, v| set_header!(h, v) }
+            return @operation
+          end
+
+          signature_headers.each do |hdr, value|
+            merged = Starry.parse_dictionary(String(header(hdr)))
+            merged.merge!(Starry.parse_dictionary(value))
+            set_header!(hdr, Starry.serialize_dictionary(merged))
+          end
+
+          @operation
+        rescue Starry::ParseError => e
+          raise Error,
+                "Cannot attach signature, invalid signature header(s)!",
+                cause: e
         end
 
         private
