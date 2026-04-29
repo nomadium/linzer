@@ -4,14 +4,14 @@ require "linzer/faraday"
 
 RSpec.describe "Signature verification on responses from a real server", :integration do
   let(:debug) { false }
-  let(:url)   { "https://qirtaiba.org" }
+  let(:url)   { "https://linzer.lol/example/" }
 
   let(:test_key_ed25519) do
     Linzer.new_ed25519_key(Linzer::RFC9421::Examples.test_key_ed25519)
   end
 
   let(:server_pubkey) do
-    pubkey_response = Faraday.get(url + "/pubkey")
+    pubkey_response = Faraday.get(url + "pubkey")
     Linzer.new_ed25519_key(pubkey_response.body)
   end
 
@@ -19,7 +19,7 @@ RSpec.describe "Signature verification on responses from a real server", :integr
     let(:expected_pubkey) do
       <<~PEM
         -----BEGIN PUBLIC KEY-----
-        MCowBQYDK2VwAyEA/BQkmhWEzpQ1DwYhKAr2hBz8zpz1Q3z2CQ50VYY74YE=
+        MCowBQYDK2VwAyEAZXKoqnNTZ9F7KF29T+xEiznGiz8WJMjfjOb3CAH9SGY=
         -----END PUBLIC KEY-----
       PEM
     end
@@ -37,7 +37,7 @@ RSpec.describe "Signature verification on responses from a real server", :integr
   context "unsigned requests" do
     it "/verify returns 401" do
       conn = Faraday.new(url: url)
-      response = conn.get("/verify")
+      response = conn.get("verify")
 
       expect(response.status).to eq(401)
       expect(response.env.request_headers.key?("signature")).to eq(false)
@@ -51,7 +51,7 @@ RSpec.describe "Signature verification on responses from a real server", :integr
         f.request :http_signature, key: test_key_ed25519, components: components
         f.response :logger if debug
       end
-      response = conn.get("/verify")
+      response = conn.get("verify")
 
       expect(response.status).to eq(200)
       expect(response.env.request_headers.key?("signature")).to eq(true)
@@ -64,7 +64,7 @@ RSpec.describe "Signature verification on responses from a real server", :integr
         f.response :logger if debug
       end
 
-      expect { conn.get("/verify") }
+      expect { conn.get("verify") }
         .to raise_error(Faraday::HttpSignature::SigningError)
     end
 
@@ -74,7 +74,7 @@ RSpec.describe "Signature verification on responses from a real server", :integr
         f.request :http_signature, key: test_key_ed25519, components: components, strict: false
         f.response :logger if debug
       end
-      response = conn.get("/verify")
+      response = conn.get("verify")
 
       # the request goes ahead without signature headers
       expect(response.status).to eq(401)
@@ -89,7 +89,7 @@ RSpec.describe "Signature verification on responses from a real server", :integr
           f.response :http_signature, verify_key: server_pubkey
           f.response :logger if debug
         end
-        response = conn.get("/")
+        response = conn.get("hello")
 
         expect(response.status).to eq(200)
         expect(response.env[:http_signature_verified]).to eq(true)
@@ -115,7 +115,7 @@ RSpec.describe "Signature verification on responses from a real server", :integr
           f.response :http_signature, verify_key: bad_key, strict: false
           f.response :logger if debug
         end
-        response = conn.get("/")
+        response = conn.get("hello")
 
         expect(response.status).to eq(200)
         expect(response.env[:http_signature_verified]).to eq(false)
@@ -137,7 +137,7 @@ RSpec.describe "Signature verification on responses from a real server", :integr
         f.use :http_signature, middleware_opts
         f.response :logger if debug
       end
-      response = conn.get("/verify")
+      response = conn.get("verify")
 
       expect(response.status).to eq(200)
       expect(response.env.request_headers.key?("signature")).to       eq(true)
