@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "linzer/rack"
+
 RSpec.describe Rack::Auth::Signature do
   let(:code) { 0 }
 

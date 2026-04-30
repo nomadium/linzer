@@ -6,6 +6,7 @@ require "digest"
 require "json"
 require "base64"
 require "ed25519"
+require "linzer/rack"
 require "linzer/jws"
 
 module Linzer

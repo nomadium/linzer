@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+- Demote rack dependency to optional.
+
 ## [0.7.9] - 2026-04-30
 
 (No changes since the last beta release, this new stable release just
