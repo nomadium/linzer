@@ -45,6 +45,8 @@ sections.
 Add the middleware to your Rack application:
 
 ```ruby
+require "linzer/rack"
+
 # config.ru
 use Rack::Auth::Signature,
   except: "/login",
@@ -64,6 +66,8 @@ for all endpoints except /login.
 For more complex setups, you can load configuration from a file, e.g.:
 
 ```ruby
+require "linzer/rack"
+
 # config.ru
 use Rack::Auth::Signature,
   except: "/login",
@@ -75,6 +79,8 @@ use Rack::Auth::Signature,
 In a Rails application, add the middleware in your configuration:
 
 ```ruby
+require "linzer/rack"
+
 # config/application.rb
 config.middleware.use Rack::Auth::Signature,
   except: "/login",
@@ -255,6 +261,8 @@ For production use, prefer a full-featured HTTP client).
 You can sign responses using the same API as for requests, e.g.:
 
 ```ruby
+require "linzer/rack"
+
 put "/baz" do
   ...
   response

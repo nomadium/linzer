@@ -24,6 +24,8 @@ group :test do
   gem "jwt-eddsa", require: false
   gem "faraday",  ">= 2.0", require: false
   gem "stringio", "~> 3.1", ">= 3.1.2", require: false
+  gem "rack",     ">= 2.2", "< 4.0"
+  gem "logger",   "~> 1.7", ">= 1.7.0"
 end
 
 group :development do

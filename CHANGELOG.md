@@ -8,6 +8,8 @@
 - Add comprehensive benchmarking and profiling infrastructure across all
   supported algorithms.
 
+- Make Rack an optional dependency.
+
 ## [0.7.9] - 2026-04-30
 
 (No changes since the last beta release, this new stable release just

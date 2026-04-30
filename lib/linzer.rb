@@ -2,7 +2,6 @@
 
 require "starry"
 require "openssl"
-require "rack"
 require "uri"
 require "net/http"
 
@@ -158,5 +157,3 @@ module Linzer
   # Used for serializing and deserializing component identifiers.
   FieldId = Message::Field::Identifier
 end
-
-require_relative "rack/auth/signature"

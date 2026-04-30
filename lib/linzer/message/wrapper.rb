@@ -12,8 +12,6 @@ module Linzer
     module Wrapper
       # Default adapter mappings for built-in HTTP library support.
       @adapters = {
-        Rack::Request     => Linzer::Message::Adapter::Rack::Request,
-        Rack::Response    => Linzer::Message::Adapter::Rack::Response,
         Net::HTTPRequest  => Linzer::Message::Adapter::NetHTTP::Request,
         Net::HTTPResponse => Linzer::Message::Adapter::NetHTTP::Response
       }
