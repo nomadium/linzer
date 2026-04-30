@@ -3,5 +3,5 @@
 module Linzer
   # Current version of the Linzer gem.
   # @return [String]
-  VERSION = "0.7.9.beta3"
+  VERSION = "0.7.9"
 end

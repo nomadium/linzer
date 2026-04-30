@@ -1,6 +1,23 @@
 ## [Unreleased]
 
-- Fix multi-signature header overwrite when calling sign! multiple times.
+## [0.7.9] - 2026-04-30
+
+(No changes since the last beta release, this new stable release just
+bundles all the features/changes introduced during 0.7.9 beta releases)
+
+- Add support for http gem 6.x while maintaining compatibility with 5.x.
+  Handles API differences introduced in 6.0.
+
+- Improve README clarity and align it with current behavior and production
+  usage.
+
+- Enforce `expires` signature parameter validation in Verifier.
+
+- Add Faraday middleware and adapters for HTTP message signatures.
+
+- Add support for multiple signatures on a single HTTP message
+  This fixes a bug on multi-signature header overwrite when calling sign!
+  multiple times.
 
 ## [0.7.9.beta3] - 2026-04-27
 
