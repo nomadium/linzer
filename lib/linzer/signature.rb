@@ -181,6 +181,7 @@ module Linzer
         validate headers
 
         input = parse_structured_field(headers, "signature-input")
+        # input = Utils.parse_dictionary(headers, "signature-input")
         reject_multiple_signatures if input.size > 1 && options[:label].nil?
         label = options[:label] || input.keys.first
 
