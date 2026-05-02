@@ -34,7 +34,7 @@ module Linzer
         # @raise [Error] If the component identifier is invalid
         def serialize
           raise Error, "Invalid component identifier: '#{field_name}'!" unless item
-          Starry.serialize(@item)
+          @serialized || Starry.serialize(@item)
         end
       end
 
@@ -53,6 +53,29 @@ module Linzer
       # :nocov:
 
       Identifier.include Message::Field::IdentifierMethods
+
+      # Lightweight FieldId for simple components (no parameters).
+      # Bypasses Starry parsing entirely. Duck-types with Identifier
+      # for use in the adapter's [] method.
+      # @api private
+      class FastIdentifier
+        def initialize(serialized, item)
+          @field_name = serialized
+          @item       = item
+          @serialized = serialized
+          freeze
+        end
+
+        attr_reader :field_name, :item
+
+        def derived?
+          @item.value.start_with?("@")
+        end
+
+        def serialize
+          @serialized
+        end
+      end
 
       class Identifier
         class << self
@@ -75,8 +98,27 @@ module Linzer
           # @param components [Array<String>] Component names
           # @return [Array(Array<String>, Array<Identifier>)] Serialized strings and FieldId objects
           def serialize_components_with_field_ids(components)
-            field_ids = components.map { |c| new(field_name: c) }
-            serialized = field_ids.map(&:serialize)
+            serialized = Array.new(components.size)
+            field_ids  = Array.new(components.size)
+
+            components.each_with_index do |c, i|
+              if c.include?(";") || c.include?('"')
+                # Complex component with parameters or already serialized:
+                # fall back to full Starry parsing
+                fid = new(field_name: c)
+                field_ids[i]  = fid
+                serialized[i] = fid.serialize
+              else
+                # Simple component (e.g. "@method", "content-type"):
+                # build the Item and serialized string directly,
+                # bypassing Starry.parse_item + Starry.serialize
+                quoted = "\"#{c}\""
+                item   = Starry::Item.new(c, {})
+                field_ids[i]  = FastIdentifier.new(quoted, item)
+                serialized[i] = quoted
+              end
+            end
+
             [serialized, field_ids]
           end
 
