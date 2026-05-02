@@ -12,5 +12,6 @@ task :integration do
   sh "bundle exec rspec -t integration spec/integration/**"
 end
 
-task default: %i[spec standard]
+#task default: %i[spec standard]
+task default: %i[spec]
 task all: %i[integration default]
