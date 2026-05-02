@@ -30,4 +30,5 @@ group :development do
   gem "irb"
   gem "rdoc"
   gem "yard", "~> 0.9"
+  gem "benchmark-ips", require: false
 end
