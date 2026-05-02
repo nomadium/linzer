@@ -77,12 +77,19 @@ module Linzer
         parameters = populate_parameters(key, options)
         signature_base = signature_base(message, serialized_components, parameters, parsed_items: parsed_items)
 
-        signature = key.sign(signature_base)
+        raw_signature = key.sign(signature_base)
         label = options[:label] || DEFAULT_LABEL
 
-        Linzer::Signature.build(
-          serialize(signature, serialized_components, parameters, label, parsed_items: parsed_items),
-          {parsed_items: parsed_items}
+        # Build the Signature directly, bypassing the serialize→parse round-trip
+        headers = serialize(raw_signature, serialized_components, parameters, label, parsed_items: parsed_items)
+
+        Linzer::Signature.from_components(
+          components:    serialized_components,
+          raw_signature: raw_signature,
+          label:         label,
+          parameters:    parameters,
+          parsed_items:  parsed_items,
+          headers:       headers
         )
       end
 
