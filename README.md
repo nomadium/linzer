@@ -482,6 +482,38 @@ anything that to responds to `#to_i`, including an `ActiveSupport::Duration`.
 If the signature is older than the allowed window, verification
 fails with an error.
 
+## Web Bot Auth
+
+Linzer supports the Web Bot Auth authentication mechanism, which allows
+automated clients to identify themselves using HTTP Message Signatures
+(as defined in RFC 9421).
+
+This is useful for distinguishing legitimate automated traffic from
+anonymous or potentially abusive requests.
+
+For more details on Web Bot Auth, refer to the
+[relevant IETF drafts](https://datatracker.ietf.org/wg/webbotauth/documents/)
+or to additional resources such as
+[this Cloudflare article](https://blog.cloudflare.com/web-bot-auth/)
+
+When enabled, as shown in the example belos, Linzer adds the required
+signature headers to identify the client as an automated agent:
+
+```ruby
+
+Linzer.sign!(
+  request,
+  key: key,
+  label: "sig1",
+  web_bot_auth: true,       # use this option to apply defaults,
+  # web_bot_auth: {         # or override specific settings this way:
+  #   nonce: :none,
+  #   agent: "https://example.com/myagent",
+  #   params: :recommended
+  # }
+)
+```
+
 ## Supported algorithms
 
 Linzer currently supports the following signature algorithms:
