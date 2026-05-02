@@ -27,11 +27,12 @@ module Linzer
   class Signature
     # @api private
     # Use {.build} to create Signature instances.
-    def initialize(metadata, value, label, parameters = {})
-      @metadata   = metadata.clone.freeze
-      @value      = value.clone.freeze
-      @parameters = parameters.clone.freeze
-      @label      = label.clone.freeze
+    def initialize(metadata, value, label, parameters = {}, parsed_items: nil)
+      @metadata     = metadata.clone.freeze
+      @value        = value.clone.freeze
+      @parameters   = parameters.clone.freeze
+      @label        = label.clone.freeze
+      @parsed_items = parsed_items&.freeze
       freeze
     end
 
@@ -132,13 +133,11 @@ module Linzer
     # @example Attaching to a Net::HTTP request
     #   signature.to_h.each { |name, value| request[name] = value }
     def to_h
+      items = @parsed_items || serialized_components.map { |c| Starry.parse_item(c) }
       {
         "signature"       => Starry.serialize({label => value}),
         "signature-input" => Starry.serialize({
-          label => Starry::InnerList.new(
-            serialized_components.map { |c| Starry.parse_item(c) },
-            parameters
-          )
+          label => Starry::InnerList.new(items, parameters)
         })
       }
     end
@@ -176,12 +175,14 @@ module Linzer
       # @example Selecting a specific signature by label
       #   signature = Linzer::Signature.build(headers, label: "sig2")
       def build(headers, options = {})
+        parsed_items = options.delete(:parsed_items)
+
         basic_validate headers
         headers.transform_keys!(&:downcase)
         validate headers
 
         input = parse_structured_field(headers, "signature-input")
-        reject_multiple_signatures if input.size > 1 && options[:label].nil?
+        reject_multiple_signatures if input.size > 1 && options[:label].nil? && !parsed_items
         label = options[:label] || input.keys.first
 
         signature = parse_structured_field(headers, "signature")
@@ -191,12 +192,15 @@ module Linzer
           signature[label].value
             .force_encoding(Encoding::ASCII_8BIT)
 
-        fail_due_invalid_components unless input[label].value.respond_to?(:each)
+        unless parsed_items
+          fail_due_invalid_components unless input[label].value.respond_to?(:each)
+          parsed_items = input[label].value
+        end
 
         components = input[label].value.map { |c| Starry.serialize_item(c) }
         parameters = input[label].parameters
 
-        new(components, raw_signature, label, parameters)
+        new(components, raw_signature, label, parameters, parsed_items: parsed_items)
       end
 
       private
