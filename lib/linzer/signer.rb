@@ -135,15 +135,43 @@ module Linzer
       end
 
       # Serializes the signature into HTTP header format.
+      #
+      # Uses direct string building instead of Starry.serialize to avoid
+      # the overhead of generic structured field serialization.
+      #
       # @return [Hash] Hash with "signature" and "signature-input" keys
       def serialize(signature, components, parameters, label, parsed_items: nil)
-        items = parsed_items || components.map { |c| Starry.parse_item(c) }
+        sig_b64 = Base64.strict_encode64(signature)
+        input_params = serialize_parameters(parameters)
+        components_str = components.join(" ")
+
         {
-          "signature" => Starry.serialize({label => signature}),
-          "signature-input" =>
-            Starry.serialize(label =>
-              Starry::InnerList.new(items, parameters))
+          "signature"       => "#{label}=:#{sig_b64}:",
+          "signature-input" => "#{label}=(#{components_str})#{input_params}"
         }
+      end
+
+      # Serializes signature parameters to the RFC 8941 string format.
+      #
+      # Integers are bare, strings are double-quoted. This covers all
+      # parameter types used in RFC 9421 signatures (created, expires,
+      # keyid, nonce, alg, tag).
+      #
+      # @param parameters [Hash{Symbol => Integer, String}] Parameters to serialize
+      # @return [String] Serialized parameters (e.g., ';created=123;keyid="k"')
+      def serialize_parameters(parameters)
+        params_str = +""
+        parameters.each do |key, value|
+          case value
+          when Integer
+            params_str << ";#{key}=#{value}"
+          when String
+            params_str << ";#{key}=\"#{value}\""
+          else
+            params_str << ";#{key}=#{value}"
+          end
+        end
+        params_str
       end
     end
   end

@@ -67,12 +67,10 @@ module Linzer
     private_constant :SERIALIZED_SIGNATURE_PARAMS
 
     def signature_params_line(serialized_components, parameters, parsed_items: nil)
-      identifiers = parsed_items || serialized_components.map { |c| Starry.parse_item(c) }
+      params_str = Signer.send(:serialize_parameters, parameters)
+      components_str = serialized_components.join(" ")
 
-      signature_params =
-        Starry.serialize([Starry::InnerList.new(identifiers, parameters)])
-
-      "%s: %s" % [SERIALIZED_SIGNATURE_PARAMS, signature_params]
+      "%s: (%s)%s" % [SERIALIZED_SIGNATURE_PARAMS, components_str, params_str]
     end
     module_function :signature_params_line
 
