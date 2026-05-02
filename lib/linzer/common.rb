@@ -27,20 +27,24 @@ module Linzer
     #   # "content-type": application/json
     #   # "@signature-params": ("@method" "@path" "content-type");created=1618884473
     def signature_base(message, serialized_components, parameters, parsed_items: nil, field_ids: nil)
-      signature_base =
-        if field_ids
-          serialized_components.zip(field_ids).each_with_object(+"") do |(component, fid), base|
-            base << "%s: %s\n" % [component, message[fid]]
-          end
-        else
-          serialized_components.each_with_object(+"") do |component, base|
-            base << "%s\n" % signature_base_line(component, message)
-          end
+      buf = +""
+
+      if field_ids
+        i = 0
+        len = serialized_components.size
+        while i < len
+          buf << serialized_components[i] << ": " << String(message[field_ids[i]]) << "\n"
+          i += 1
         end
+      else
+        serialized_components.each do |component|
+          buf << signature_base_line(component, message) << "\n"
+        end
+      end
 
-      signature_base << signature_params_line(serialized_components, parameters, parsed_items: parsed_items)
+      buf << signature_params_line(serialized_components, parameters, parsed_items: parsed_items)
 
-      signature_base
+      buf
     end
     module_function :signature_base
 
@@ -70,7 +74,7 @@ module Linzer
       params_str = Signer.send(:serialize_parameters, parameters)
       components_str = serialized_components.join(" ")
 
-      "%s: (%s)%s" % [SERIALIZED_SIGNATURE_PARAMS, components_str, params_str]
+      "#{SERIALIZED_SIGNATURE_PARAMS}: (#{components_str})#{params_str}"
     end
     module_function :signature_params_line
 
@@ -84,23 +88,27 @@ module Linzer
     # @raise [Error] If any component is missing from the message
     # @raise [Error] If any component is duplicated
     def validate_components(message, components, field_ids: nil)
-      if components.include?('"@signature-params"') ||
-          components.any? { |c| c.start_with?('"@signature-params"') }
-        raise Error.new "Invalid component in signature input"
-      end
+      has_params = false
 
-      msg = "Cannot verify signature. Missing component in message: %s"
       if field_ids
-        field_ids.each do |fid|
-          raise Error.new msg % "\"#{fid.field_name}\"" unless message.field?(fid)
+        i = 0
+        len = components.size
+        while i < len
+          c = components[i]
+          raise Error.new "Invalid component in signature input" if c.include?("@signature-params")
+          has_params = true if !has_params && c.include?(";")
+          raise Error.new "Cannot verify signature. Missing component in message: \"#{c}\"" unless message.field?(field_ids[i])
+          i += 1
         end
       else
         components.each do |c|
-          raise Error.new msg % "\"#{c}\"" unless message.field?(c)
+          raise Error.new "Invalid component in signature input" if c.include?("@signature-params")
+          has_params = true if !has_params && c.include?(";")
+          raise Error.new "Cannot verify signature. Missing component in message: \"#{c}\"" unless message.field?(c)
         end
       end
 
-      validate_uniqueness components
+      validate_uniqueness(components) if has_params || components.size != components.uniq.size
     end
 
     # Validates that there are no duplicate components.
@@ -113,15 +121,13 @@ module Linzer
     def validate_uniqueness(components)
       msg = "Invalid signature. Duplicated component in signature input."
 
-      # Fast path: when no component has parameters (the common case),
-      # string comparison is sufficient for uniqueness.
-      if components.none? { |c| c.include?(";") }
-        raise Error.new msg if components.size != components.uniq.size
-        return
-      end
+      # String-level duplicates are always invalid
+      raise Error.new msg if components.size != components.uniq.size
 
-      # Slow path: components have parameters that could differ in order
-      # (e.g. ;bs;req vs ;req;bs are semantically equal)
+      # If any component has parameters, also check for semantic duplicates
+      # (e.g. ;bs;req vs ;req;bs are semantically equal but different strings)
+      return unless components.any? { |c| c.include?(";") }
+
       uniq_components =
         components
           .partition { |c| c.start_with?("@") }

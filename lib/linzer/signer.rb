@@ -119,6 +119,9 @@ module Linzer
         end
       end
 
+      RESERVED_OPTIONS = %i[created keyid label].freeze
+      private_constant :RESERVED_OPTIONS
+
       # Builds the signature parameters hash from options and key.
       # @return [Hash] The populated parameters
       def populate_parameters(key, options)
@@ -129,7 +132,7 @@ module Linzer
         key_id = options[:keyid] || (key.key_id if key.respond_to?(:key_id))
         parameters[:keyid] = key_id             unless key_id.nil?
 
-        (options.keys - %i[created keyid label]).each { |k| parameters[k] = options[k] }
+        options.each { |k, v| parameters[k] = v unless RESERVED_OPTIONS.include?(k) }
 
         parameters
       end

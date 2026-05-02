@@ -190,10 +190,11 @@ module Linzer
         # @param method [Symbol] +:derived+ or +:field+
         # @return [String, Integer, nil] the component value
         def retrieve(name, method)
-          if !name.parameters.empty?
-            valid_params = validate_parameters(name, method)
-            return nil if !valid_params
-          end
+          # Fast path: no parameters means no special handling needed
+          return send(method, name) if name.parameters.empty?
+
+          valid_params = validate_parameters(name, method)
+          return nil if !valid_params
 
           has_req = name.parameters["req"]
           has_sf  = name.parameters["sf"] || name.parameters.key?("key")
