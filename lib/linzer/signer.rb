@@ -68,14 +68,16 @@ module Linzer
       #     tag: "my-app"
       #   )
       def sign(key, message, components, options = {})
-        serialized_components = FieldId.serialize_components(Array(components))
-        validate key, message, serialized_components
+        serialized_components, field_ids =
+          FieldId.serialize_components_with_field_ids(Array(components))
+        validate key, message, serialized_components, field_ids: field_ids
 
-        # Parse component identifiers once and reuse throughout the pipeline
-        parsed_items = serialized_components.map { |c| Starry.parse_item(c) }
+        # Reuse the already-parsed items from field_ids
+        parsed_items = field_ids.map(&:item)
 
         parameters = populate_parameters(key, options)
-        signature_base = signature_base(message, serialized_components, parameters, parsed_items: parsed_items)
+        signature_base = signature_base(message, serialized_components, parameters,
+                                        parsed_items: parsed_items, field_ids: field_ids)
 
         raw_signature = key.sign(signature_base)
         label = options[:label] || DEFAULT_LABEL
@@ -104,14 +106,14 @@ module Linzer
 
       # Validates signing inputs.
       # @raise [SigningError] If any input is invalid
-      def validate(key, message, components)
+      def validate(key, message, components, field_ids: nil)
         msg = "Message cannot be signed with null %s"
         raise SigningError, msg % "value"     if message.nil?
         raise SigningError, msg % "key"       if key.nil?
         raise SigningError, msg % "component" if components.nil?
 
         begin
-          validate_components message, components
+          validate_components message, components, field_ids: field_ids
         rescue Error => ex
           raise SigningError, ex.message, cause: ex
         end

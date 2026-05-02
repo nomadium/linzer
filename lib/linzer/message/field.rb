@@ -70,6 +70,16 @@ module Linzer
             components.map(&method(:serialize))
           end
 
+          # Serializes an array of component identifiers, returning both
+          # the serialized strings and the FieldId objects for reuse.
+          # @param components [Array<String>] Component names
+          # @return [Array(Array<String>, Array<Identifier>)] Serialized strings and FieldId objects
+          def serialize_components_with_field_ids(components)
+            field_ids = components.map { |c| new(field_name: c) }
+            serialized = field_ids.map(&:serialize)
+            [serialized, field_ids]
+          end
+
           # Deserializes component identifiers back to names.
           # @param components [Array<String>] Serialized identifiers
           # @return [Array<String>] Component names
