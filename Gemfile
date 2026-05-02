@@ -31,4 +31,5 @@ group :development do
   gem "rdoc"
   gem "yard", "~> 0.9"
   gem "benchmark-ips", require: false
+  gem "stackprof",     require: false
 end
