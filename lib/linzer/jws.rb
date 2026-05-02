@@ -101,17 +101,17 @@ module Linzer
         algo.verify(data: data, signature: signature, verification_key: verify_key)
       end
 
+      private
+
       # @return [Boolean] true if this key can verify signatures
-      def public?
+      def compute_public?
         !!verify_key
       end
 
       # @return [Boolean] true if this key can create signatures
-      def private?
+      def compute_private?
         !!signing_key
       end
-
-      private
 
       # Resolves the appropriate JWT algorithm implementation.
       # @return [JWT::JWA::SigningAlgorithm] The algorithm implementation

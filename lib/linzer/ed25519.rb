@@ -46,13 +46,15 @@ module Linzer
         material.verify(nil, signature, data)
       end
 
+      private
+
       # @return [Boolean] true if this key contains public key material
-      def public?
+      def compute_public?
         has_pem_public?
       end
 
       # @return [Boolean] true if this key contains private key material
-      def private?
+      def compute_private?
         has_pem_private?
       end
     end
