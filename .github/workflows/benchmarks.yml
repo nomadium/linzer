@@ -1,0 +1,48 @@
+name: Benchmarks
+
+on:
+  push:
+    branches:
+      - '**'
+
+  pull_request:
+
+  schedule:
+  - cron: "35 3 * * *"
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    name: Ruby ${{ matrix.ruby }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - ruby: '3.0'
+          experimental: false
+        - ruby: '3.1'
+          experimental: false
+        - ruby: '3.2'
+          experimental: false
+        - ruby: '3.3'
+          experimental: false
+        - ruby: '3.4'
+          experimental: false
+        - ruby: '4.0'
+          experimental: false
+        - ruby: head
+          experimental: true
+
+    continue-on-error: ${{ matrix.experimental }}
+
+    steps:
+    - uses: actions/checkout@v5
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: ${{ matrix.ruby }}
+        bundler-cache: true
+    - name: Run unit tests
+      run: bundle exec rake spec
+    - name: Run benchmarks
+      run: bundle exec ruby benchmarks/sign_ed25519.rb
