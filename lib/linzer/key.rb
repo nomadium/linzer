@@ -38,6 +38,8 @@ module Linzer
       @material = material
       @params   = Hash(params).clone.freeze
       validate
+      @is_private = compute_private?
+      @is_public  = compute_public?
       freeze
     end
 
@@ -84,14 +86,14 @@ module Linzer
     #
     # @return [Boolean] true if the key contains public key material
     def public?
-      material.public?
+      @is_public
     end
 
     # Checks if this key can be used for signing.
     #
     # @return [Boolean] true if the key contains private key material
     def private?
-      material.private?
+      @is_private
     end
 
     private
@@ -100,6 +102,22 @@ module Linzer
     # @raise [Error] If key material is nil
     def validate
       !material.nil? or raise Error.new "Invalid key. No key material provided."
+    end
+
+    # Computes whether the key contains private key material.
+    # Override in subclasses where the OpenSSL key object does not
+    # respond to +private?+ (e.g. Ed25519, RSA-PSS).
+    # @return [Boolean]
+    def compute_private?
+      material.respond_to?(:private?) ? material.private? : false
+    end
+
+    # Computes whether the key contains public key material.
+    # Override in subclasses where the OpenSSL key object does not
+    # respond to +public?+ (e.g. Ed25519, RSA-PSS).
+    # @return [Boolean]
+    def compute_public?
+      material.respond_to?(:public?) ? material.public? : false
     end
 
     # Validates that a digest algorithm is configured.

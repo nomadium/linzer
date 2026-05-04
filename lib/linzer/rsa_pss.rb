@@ -65,17 +65,17 @@ module Linzer
         )
       end
 
+      private
+
       # @return [Boolean] true if this key contains public key material
-      def public?
+      def compute_public?
         has_pem_public?
       end
 
       # @return [Boolean] true if this key contains private key material
-      def private?
+      def compute_private?
         has_pem_private?
       end
-
-      private
 
       # Returns OpenSSL options for PSS signature operations.
       # @return [Hash] OpenSSL signature options

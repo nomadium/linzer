@@ -54,18 +54,6 @@ module Linzer
         OpenSSL.secure_compare(signature, sign(data))
       end
 
-      # HMAC keys can always sign (they contain the secret).
-      # @return [Boolean] true if key material is present
-      def private?
-        !material.nil?
-      end
-
-      # HMAC keys are symmetric, not public/private.
-      # @return [Boolean] always false for HMAC keys
-      def public?
-        false
-      end
-
       # Returns a safe string representation that doesn't leak the secret.
       #
       # The key material is intentionally excluded from the output to prevent
@@ -81,6 +69,20 @@ module Linzer
             end
         oid = Digest::SHA2.hexdigest(object_id.to_s)[48..63]
         "#<%s:0x%s %s>" % [self.class, oid, vars.join(", ")]
+      end
+
+      private
+
+      # HMAC keys can always sign (they contain the secret).
+      # @return [Boolean] true if key material is present
+      def compute_private?
+        !material.nil?
+      end
+
+      # HMAC keys are symmetric, not public/private.
+      # @return [Boolean] always false for HMAC keys
+      def compute_public?
+        false
       end
     end
   end
