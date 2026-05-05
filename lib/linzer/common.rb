@@ -26,7 +26,7 @@ module Linzer
     #   # "@path": /foo
     #   # "content-type": application/json
     #   # "@signature-params": ("@method" "@path" "content-type");created=1618884473
-    def signature_base(message, serialized_components, parameters, parsed_items: nil, field_ids: nil)
+    def signature_base(message, serialized_components, parameters, field_ids: nil)
       signature_base =
         if field_ids
           serialized_components.zip(field_ids).each_with_object(+"") do |(component, fid), base|
@@ -38,7 +38,7 @@ module Linzer
           end
         end
 
-      signature_base << signature_params_line(serialized_components, parameters, parsed_items: parsed_items)
+      signature_base << signature_params_line(serialized_components, parameters)
 
       signature_base
     end
@@ -66,13 +66,11 @@ module Linzer
     SERIALIZED_SIGNATURE_PARAMS = Starry.serialize("@signature-params").freeze
     private_constant :SERIALIZED_SIGNATURE_PARAMS
 
-    def signature_params_line(serialized_components, parameters, parsed_items: nil)
-      identifiers = parsed_items || serialized_components.map { |c| Starry.parse_item(c) }
+    def signature_params_line(serialized_components, parameters)
+      params_str = HTTP::StructuredField.serialize_parameters(parameters)
+      components_str = serialized_components.join(" ")
 
-      signature_params =
-        Starry.serialize([Starry::InnerList.new(identifiers, parameters)])
-
-      "%s: %s" % [SERIALIZED_SIGNATURE_PARAMS, signature_params]
+      "%s: (%s)%s" % [SERIALIZED_SIGNATURE_PARAMS, components_str, params_str]
     end
     module_function :signature_params_line
 

@@ -77,13 +77,13 @@ module Linzer
 
         parameters = populate_parameters(key, options)
         signature_base = signature_base(message, serialized_components, parameters,
-                                        parsed_items: parsed_items, field_ids: field_ids)
+                                        field_ids: field_ids)
 
         raw_signature = key.sign(signature_base)
         label = options[:label] || DEFAULT_LABEL
 
         # Build the signature directly, bypassing the serialize -> parse round-trip
-        headers = serialize(raw_signature, serialized_components, parameters, label, parsed_items: parsed_items)
+        headers = serialize(raw_signature, serialized_components, parameters, label)
 
         Linzer::Signature.from_components(
           components:    serialized_components,
@@ -135,14 +135,19 @@ module Linzer
       end
 
       # Serializes the signature into HTTP header format.
+      #
+      # Uses direct string building instead of Starry.serialize to avoid
+      # the overhead of generic structured field serialization.
+      #
       # @return [Hash] Hash with "signature" and "signature-input" keys
-      def serialize(signature, components, parameters, label, parsed_items: nil)
-        items = parsed_items || components.map { |c| Starry.parse_item(c) }
+      def serialize(signature, components, parameters, label)
+        sig_b64 = Base64.strict_encode64(signature)
+        input_params = HTTP::StructuredField.serialize_parameters(parameters)
+        components_str = components.join(" ")
+
         {
-          "signature" => Starry.serialize({label => signature}),
-          "signature-input" =>
-            Starry.serialize(label =>
-              Starry::InnerList.new(items, parameters))
+          "signature"       => "#{label}=:#{sig_b64}:",
+          "signature-input" => "#{label}=(#{components_str})#{input_params}"
         }
       end
     end
