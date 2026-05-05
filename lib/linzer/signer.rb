@@ -71,13 +71,19 @@ module Linzer
         serialized_components = FieldId.serialize_components(Array(components))
         validate key, message, serialized_components
 
+        # Parse component identifiers once and reuse throughout the pipeline
+        parsed_items = serialized_components.map { |c| Starry.parse_item(c) }
+
         parameters = populate_parameters(key, options)
-        signature_base = signature_base(message, serialized_components, parameters)
+        signature_base = signature_base(message, serialized_components, parameters, parsed_items: parsed_items)
 
         signature = key.sign(signature_base)
         label = options[:label] || DEFAULT_LABEL
 
-        Linzer::Signature.build(serialize(signature, serialized_components, parameters, label))
+        Linzer::Signature.build(
+          serialize(signature, serialized_components, parameters, label, parsed_items: parsed_items),
+          {parsed_items: parsed_items}
+        )
       end
 
       # Returns the default signature label.
@@ -121,15 +127,13 @@ module Linzer
 
       # Serializes the signature into HTTP header format.
       # @return [Hash] Hash with "signature" and "signature-input" keys
-      def serialize(signature, components, parameters, label)
+      def serialize(signature, components, parameters, label, parsed_items: nil)
+        items = parsed_items || components.map { |c| Starry.parse_item(c) }
         {
           "signature" => Starry.serialize({label => signature}),
           "signature-input" =>
             Starry.serialize(label =>
-              Starry::InnerList.new(
-                components.map { |c| Starry.parse_item(c) },
-                parameters
-              ))
+              Starry::InnerList.new(items, parameters))
         }
       end
     end

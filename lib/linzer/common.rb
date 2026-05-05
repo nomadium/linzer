@@ -26,13 +26,13 @@ module Linzer
     #   # "@path": /foo
     #   # "content-type": application/json
     #   # "@signature-params": ("@method" "@path" "content-type");created=1618884473
-    def signature_base(message, serialized_components, parameters)
+    def signature_base(message, serialized_components, parameters, parsed_items: nil)
       signature_base =
         serialized_components.each_with_object(+"") do |component, base|
           base << "%s\n" % signature_base_line(component, message)
         end
 
-      signature_base << signature_params_line(serialized_components, parameters)
+      signature_base << signature_params_line(serialized_components, parameters, parsed_items: parsed_items)
 
       signature_base
     end
@@ -57,13 +57,16 @@ module Linzer
     # @param serialized_components [Array<String>] The covered components
     # @param parameters [Hash] Signature parameters
     # @return [String] The formatted @signature-params line
-    def signature_params_line(serialized_components, parameters)
-      identifiers = serialized_components.map { |c| Starry.parse_item(c) }
+    SERIALIZED_SIGNATURE_PARAMS = Starry.serialize("@signature-params").freeze
+    private_constant :SERIALIZED_SIGNATURE_PARAMS
+
+    def signature_params_line(serialized_components, parameters, parsed_items: nil)
+      identifiers = parsed_items || serialized_components.map { |c| Starry.parse_item(c) }
 
       signature_params =
         Starry.serialize([Starry::InnerList.new(identifiers, parameters)])
 
-      "%s: %s" % [Starry.serialize("@signature-params"), signature_params]
+      "%s: %s" % [SERIALIZED_SIGNATURE_PARAMS, signature_params]
     end
     module_function :signature_params_line
 
@@ -100,6 +103,15 @@ module Linzer
     def validate_uniqueness(components)
       msg = "Invalid signature. Duplicated component in signature input."
 
+      # Fast path: when no component has parameters (the common case),
+      # string comparison is sufficient for uniqueness.
+      if components.none? { |c| c.include?(";") }
+        raise Error, msg if components.size != components.uniq.size
+        return
+      end
+
+      # Slow path: components have parameters that could differ in order
+      # (e.g. ;bs;req vs ;req;bs are semantically equal)
       uniq_components =
         components
           .partition { |c| c.start_with?("@") }
