@@ -26,13 +26,14 @@ module Linzer
   # @see https://www.rfc-editor.org/rfc/rfc9421.html#section-4 RFC 9421 Section 4
   class Signature
     # @api private
-    # Use {.build} to create Signature instances.
-    def initialize(metadata, value, label, parameters = {}, parsed_items: nil)
+    # Use {.build} or {.from_components} to create Signature instances.
+    def initialize(metadata, value, label, parameters = {}, parsed_items: nil, headers: nil)
       @metadata     = metadata.clone.freeze
       @value        = value.clone.freeze
       @parameters   = parameters.clone.freeze
       @label        = label.clone.freeze
       @parsed_items = parsed_items&.freeze
+      @headers      = headers&.freeze
       freeze
     end
 
@@ -133,6 +134,8 @@ module Linzer
     # @example Attaching to a Net::HTTP request
     #   signature.to_h.each { |name, value| request[name] = value }
     def to_h
+      return @headers if @headers
+
       items = @parsed_items || serialized_components.map { |c| Starry.parse_item(c) }
       {
         "signature"       => Starry.serialize({label => value}),
@@ -144,6 +147,27 @@ module Linzer
 
     class << self
       private :new
+
+      # Creates a Signature directly from its constituent parts.
+      #
+      # This avoids the serialize-then-parse round-trip when the caller
+      # (e.g. {Signer.sign}) already has all the data.
+      #
+      # @api private
+      # @param components [Array<String>] Serialized component identifiers
+      # @param raw_signature [String] The raw signature bytes
+      # @param label [String] The signature label
+      # @param parameters [Hash] Signature parameters (symbol keys)
+      # @param parsed_items [Array<Starry::Item>] Pre-parsed component items
+      # @param headers [Hash] Pre-serialized header strings
+      # @return [Signature] The constructed signature
+      def from_components(components:, raw_signature:, label:, parameters:, parsed_items:, headers:)
+        # Signature stores parameters with string keys (as produced by Starry
+        # parsing). Convert symbol keys from Signer to match.
+        string_params = parameters.transform_keys(&:to_s)
+        new(components, raw_signature, label, string_params,
+            parsed_items: parsed_items, headers: headers)
+      end
 
       # Builds a Signature from HTTP headers.
       #
@@ -175,8 +199,6 @@ module Linzer
       # @example Selecting a specific signature by label
       #   signature = Linzer::Signature.build(headers, label: "sig2")
       def build(headers, options = {})
-        parsed_items = options.delete(:parsed_items)
-
         basic_validate headers
         headers.transform_keys!(&:downcase)
         validate headers
@@ -192,13 +214,10 @@ module Linzer
           signature[label].value
             .force_encoding(Encoding::ASCII_8BIT)
 
-        fail_due_invalid_components if parsed_items && !parsed_items.respond_to?(:each)
-        if !parsed_items
-          fail_due_invalid_components unless input[label].value.respond_to?(:each)
-          parsed_items = input[label].value
-        end
+        fail_due_invalid_components unless input[label].value.respond_to?(:each)
 
-        components = input[label].value.map { |c| Starry.serialize_item(c) }
+        parsed_items = input[label].value
+        components = parsed_items.map { |c| Starry.serialize_item(c) }
         parameters = input[label].parameters
 
         new(components, raw_signature, label, parameters, parsed_items: parsed_items)
