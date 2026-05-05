@@ -70,7 +70,7 @@ module Linzer
         # @example With structured field parameter
         #   adapter['"example-dict";key="a"']  # => "1"
         def [](field)
-          field_id = field.is_a?(FieldId) ? field : parse_field_name(field)
+          field_id = (field.is_a?(FieldId) || field.is_a?(Field::FastIdentifier)) ? field : parse_field_name(field)
           return nil if field_id.nil? || field_id.item.nil?
           retrieve(field_id.item, field_id.derived? ? :derived : :field)
         end
