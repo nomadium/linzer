@@ -164,7 +164,8 @@ module Linzer
       def from_components(components:, raw_signature:, label:, parameters:, parsed_items:, headers:)
         # Signature stores parameters with string keys (as produced by Starry
         # parsing). Convert symbol keys from Signer to match.
-        string_params = parameters.transform_keys(&:to_s)
+        string_params = {}
+        parameters.each { |k, v| string_params[k.to_s] = v }
         new(components, raw_signature, label, string_params,
             parsed_items: parsed_items, headers: headers)
       end
