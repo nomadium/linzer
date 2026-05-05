@@ -26,10 +26,16 @@ module Linzer
     #   # "@path": /foo
     #   # "content-type": application/json
     #   # "@signature-params": ("@method" "@path" "content-type");created=1618884473
-    def signature_base(message, serialized_components, parameters, parsed_items: nil)
+    def signature_base(message, serialized_components, parameters, parsed_items: nil, field_ids: nil)
       signature_base =
-        serialized_components.each_with_object(+"") do |component, base|
-          base << "%s\n" % signature_base_line(component, message)
+        if field_ids
+          serialized_components.zip(field_ids).each_with_object(+"") do |(component, fid), base|
+            base << "%s: %s\n" % [component, message[fid]]
+          end
+        else
+          serialized_components.each_with_object(+"") do |component, base|
+            base << "%s\n" % signature_base_line(component, message)
+          end
         end
 
       signature_base << signature_params_line(serialized_components, parameters, parsed_items: parsed_items)
@@ -79,15 +85,21 @@ module Linzer
     # @raise [Error] If @signature-params is in the components
     # @raise [Error] If any component is missing from the message
     # @raise [Error] If any component is duplicated
-    def validate_components(message, components)
+    def validate_components(message, components, field_ids: nil)
       if components.include?('"@signature-params"') ||
           components.any? { |c| c.start_with?('"@signature-params"') }
-        raise Error.new "Invalid component in signature input"
+        raise Error, "Invalid component in signature input"
       end
 
       msg = "Cannot verify signature. Missing component in message: %s"
-      components.each do |c|
-        raise Error.new msg % "\"#{c}\"" unless message.field?(c)
+      if field_ids
+        field_ids.each do |fid|
+          raise Error, msg % "\"#{fid.field_name}\"" unless message.field?(fid)
+        end
+      else
+        components.each do |c|
+          raise Error, msg % "\"#{c}\"" unless message.field?(c)
+        end
       end
 
       validate_uniqueness components
