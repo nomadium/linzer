@@ -240,17 +240,12 @@ module Linzer
         reject_multiple_signatures if input.size > 1 && options[:label].nil?
         label = options[:label] || input.keys.first
 
-        signature = parse_structured_field(headers, "signature")
-        fail_with_signature_not_found label unless signature.key?(label)
-
-        raw_signature =
-          signature[label].value
-            .force_encoding(Encoding::ASCII_8BIT)
+        raw_signature = extract_raw_signature(headers["signature"], label)
 
         fail_due_invalid_components unless input[label].value.respond_to?(:each)
 
         parsed_items = input[label].value
-        components = parsed_items.map { |c| Starry.serialize_item(c) }
+        components = serialize_parsed_items(parsed_items)
         parameters = input[label].parameters
 
         new(components, raw_signature, label, parameters, parsed_items: parsed_items)
@@ -278,6 +273,79 @@ module Linzer
 
       def fail_due_invalid_components
         raise Error.new "Unexpected value for covered components."
+      end
+
+      # Extracts the raw signature bytes for a given label from the
+      # signature header without a full Starry dictionary parse.
+      #
+      # The signature header format is: label=:base64data:
+      # For multiple signatures: label1=:b64:, label2=:b64:
+      #
+      # Falls back to full Starry parsing for non-trivial cases.
+      #
+      # @param header_value [String] the raw signature header
+      # @param label [String] the signature label to extract
+      # @return [String] the decoded signature bytes (ASCII-8BIT)
+      # @raise [Error] if the label is not found or decoding fails
+      def extract_raw_signature(header_value, label)
+        value = header_value.is_a?(String) ? header_value : header_value.to_s
+        prefix = "#{label}=:"
+
+        # Fast path: single signature (most common case)
+        if value.start_with?(prefix)
+          end_idx = value.index(":", prefix.length)
+          if end_idx
+            encoded = value[prefix.length...end_idx]
+            return Base64.strict_decode64(encoded)
+                .force_encoding(Encoding::ASCII_8BIT)
+          end
+        end
+
+        # Multi-signature or unusual format: find the right entry
+        # Split on comma-separated dictionary members
+        value.split(",").each do |entry|
+          entry = entry.strip
+          if entry.start_with?(prefix)
+            end_idx = entry.index(":", prefix.length)
+            if end_idx
+              encoded = entry[prefix.length...end_idx]
+              return Base64.strict_decode64(encoded)
+                  .force_encoding(Encoding::ASCII_8BIT)
+            end
+          end
+        end
+
+        # Label not found via fast path — fall back to Starry
+        signature = parse_structured_dictionary(
+          value.encode(Encoding::US_ASCII), "signature"
+        )
+        fail_with_signature_not_found label unless signature.key?(label)
+        signature[label].value.force_encoding(Encoding::ASCII_8BIT)
+      rescue ArgumentError
+        # Base64 decode failed — fall back to Starry
+        signature = parse_structured_dictionary(
+          value.encode(Encoding::US_ASCII), "signature"
+        )
+        fail_with_signature_not_found label unless signature.key?(label)
+        signature[label].value.force_encoding(Encoding::ASCII_8BIT)
+      end
+
+      # Serializes parsed Starry items to their string representations
+      # without going through the generic Starry.serialize_item path.
+      #
+      # For simple items (no parameters): builds '"value"' directly.
+      # For items with parameters: falls back to Starry.serialize_item.
+      #
+      # @param items [Array<Starry::Item>] parsed items from signature-input
+      # @return [Array<String>] serialized component identifiers
+      def serialize_parsed_items(items)
+        items.map do |item|
+          if item.parameters.empty?
+            "\"#{item.value}\""
+          else
+            Starry.serialize_item(item)
+          end
+        end
       end
 
       def parse_structured_dictionary(str, field_name = nil)
