@@ -1,5 +1,13 @@
 ## [Unreleased]
 
+- Optimize signature parsing, serialization, and validation performance
+  across signing and verifying flows, improving `sign!` throughput by
+  473% and `verify!` by 136% by minimizing Starry usage in hot paths
+  where possible.
+
+- Add comprehensive benchmarking and profiling infrastructure across all
+  supported algorithms.
+
 ## [0.7.9] - 2026-04-30
 
 (No changes since the last beta release, this new stable release just

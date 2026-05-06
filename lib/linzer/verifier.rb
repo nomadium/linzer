@@ -83,7 +83,7 @@ module Linzer
         end
 
         raise VerifyError, "Signature raw value to cannot be null" if signature.value.nil?
-        raise VerifyError, "Components cannot be null"             if signature.components.nil?
+        raise VerifyError, "Components cannot be null"             if signature.serialized_components.nil?
 
         begin
           validate_components message, signature.serialized_components,
