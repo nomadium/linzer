@@ -76,6 +76,20 @@ module Linzer
       FieldId.deserialize_components(serialized_components)
     end
 
+    # Builds FieldId objects for each covered component.
+    #
+    # Uses {parsed_items} when available to create {FastIdentifier} objects
+    # that bypass Starry re-parsing. Falls back to constructing full
+    # {FieldId} objects from the serialized strings.
+    #
+    # Returns a fresh array each time because some adapter methods may
+    # mutate item parameters during field lookup (e.g., deleting "req").
+    #
+    # @return [Array<FastIdentifier, FieldId>] FieldId objects for each component
+    def field_ids
+      build_field_ids
+    end
+
     # Returns the signature creation timestamp.
     #
     # @return [Integer, nil] Unix timestamp when the signature was created,
@@ -143,6 +157,24 @@ module Linzer
           label => Starry::InnerList.new(items, parameters)
         })
       }
+    end
+
+    private
+
+    def build_field_ids
+      if @parsed_items && @parsed_items.size == @metadata.size
+        @metadata.each_with_index.map do |serialized, i|
+          item = @parsed_items[i]
+          # Clone items that have parameters since the adapter's retrieve
+          # method may mutate parameters (e.g., deleting "req").
+          unless item.parameters.empty?
+            item = Starry::Item.new(item.value, item.parameters.dup)
+          end
+          Message::Field::FastIdentifier.new(serialized, item)
+        end
+      else
+        @metadata.map { |c| FieldId.new(field_name: c) }
+      end
     end
 
     class << self

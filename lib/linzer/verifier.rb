@@ -59,7 +59,12 @@ module Linzer
         parameters = signature.parameters
         serialized_components = signature.serialized_components
 
-        signature_base = signature_base(message, serialized_components, parameters)
+        # Build fresh field_ids for signature_base (validate already
+        # consumed its own set, which may have been mutated by adapters).
+        field_ids = signature.field_ids
+
+        signature_base = signature_base(message, serialized_components, parameters,
+                                        field_ids: field_ids)
 
         verify_or_fail key, signature.value, signature_base
       end
@@ -81,7 +86,8 @@ module Linzer
         raise VerifyError, "Components cannot be null"             if signature.components.nil?
 
         begin
-          validate_components message, signature.serialized_components
+          validate_components message, signature.serialized_components,
+                             field_ids: signature.field_ids
         rescue Error => ex
           raise VerifyError, ex.message, cause: ex
         end
