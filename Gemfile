@@ -32,4 +32,5 @@ group :development do
   gem "yard", "~> 0.9"
   gem "benchmark_driver", require: false
   gem "benchmark",        require: false
+  gem "stackprof",        require: false
 end
