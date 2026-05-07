@@ -50,7 +50,7 @@ module Linzer
     # @example Response with attached request (for `;req` parameter support)
     #   message = Linzer::Message.new(response, attached_request: original_request)
     def initialize(operation, attached_request: nil)
-      @adapter = Wrapper.wrap(operation, attached_request: attached_request)
+      @adapter = Wrapper.wrap(operation).new(operation, attached_request:)
       freeze
     end
 

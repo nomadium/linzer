@@ -23,15 +23,14 @@ module Linzer
         # @param options [Hash] Additional options (e.g., :attached_request)
         # @return [Adapter::Abstract] The wrapped message
         # @raise [Error] If no suitable adapter is found
-        def wrap(operation, **options)
+        def wrap(operation)
           adapter_class = adapters[operation.class]
+          return adapter_class if adapter_class
 
-          if !adapter_class
-            ancestor = find_ancestor(operation)
-            fail_with_unsupported(operation) unless ancestor
-          end
-
-          (adapter_class || ancestor).new(operation, **options)
+          ancestor = find_ancestor(operation)
+          fail_with_unsupported(operation) unless ancestor
+          adapters[operation.class] = ancestor
+          return ancestor
         end
 
         # Registers a custom adapter for an HTTP message class.
