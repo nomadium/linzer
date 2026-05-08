@@ -94,6 +94,17 @@ module Linzer
           !!header("signature-input") || !!header("signature")
         end
 
+        # Sets a header on the underlying HTTP message.
+        #
+        # If a header with the given name already exists, its value is overwritten.
+        #
+        # @param header [String] the header name
+        # @param value [String] the header value
+        # @return [String] the value assigned to the header
+        def set_header!(header, value)
+          raise Error, "Sub-classes are required to implement this method!"
+        end
+
         # Attaches a signature to the underlying HTTP message.
         #
         # @param signature [Signature] The signature to attach
