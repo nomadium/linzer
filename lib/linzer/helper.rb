@@ -53,9 +53,14 @@ module Linzer
       label = args[:label]
       options[:label] = label if label
       options.merge!(args.fetch(:params, {}))
+      components = args.fetch(:components)
+
+      if args[:web_bot_auth]
+        Linzer::Options.prepare_web_bot_auth!(message, args, components, options)
+      end
 
       key = args.fetch(:key)
-      signature = Linzer::Signer.sign(key, message, args.fetch(:components), options)
+      signature = Linzer::Signer.sign(key, message, components, options)
       message.attach!(signature)
     end
 

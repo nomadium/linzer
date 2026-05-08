@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+- Add support for Web Bot Auth spec.
+
 ## [0.8.0.beta1] - 2026-05-07
 
 - Optimize signature parsing, serialization, and validation performance
