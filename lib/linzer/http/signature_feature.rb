@@ -74,9 +74,7 @@ module Linzer
       # @param request [HTTP::Request] The outgoing request
       # @return [HTTP::Request] The request with signature headers added
       def wrap_request(request)
-        message   = Linzer::Message.new(request)
-        signature = Linzer.sign(key, message, fields, **params)
-        request.headers.merge!(signature.to_h)
+        Linzer.sign! request, key: key, components: fields, params: params
         request
       end
 
