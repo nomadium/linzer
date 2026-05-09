@@ -201,7 +201,7 @@ module Linzer
           has_bs  = name.parameters["bs"]
 
           if has_req
-            name.parameters.delete("req")
+            name.parameters.delete("req") # XXX: fix this
             return req(name, method)
           end
 
