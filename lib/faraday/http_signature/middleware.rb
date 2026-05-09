@@ -186,10 +186,14 @@ module Faraday
 
         key = resolve_signing_key
         request = Linzer::Faraday::Utils.create_request(env)
-        message = Linzer::Message.new(request)
 
-        signature = Linzer.sign(key, message, options.components, options.params)
-        env.request_headers.merge!(signature.to_h)
+        Linzer.sign! request,
+                     key:        key,
+                     components: options.components,
+                     params:     options.params
+
+        signature_headers = request.headers.slice("signature", "signature-input")
+        env.request_headers.merge!(signature_headers)
         env
       rescue Linzer::Error => e
         raise SigningError, e if options.strict?
