@@ -67,7 +67,7 @@ module Linzer
     # @param serialized_components [Array<String>] The covered components
     # @param parameters [Hash] Signature parameters
     # @return [String] The formatted @signature-params line
-    SERIALIZED_SIGNATURE_PARAMS = Starry.serialize("@signature-params").freeze
+    SERIALIZED_SIGNATURE_PARAMS = HTTP::StructuredField.serialize("@signature-params").freeze
     private_constant :SERIALIZED_SIGNATURE_PARAMS
 
     def signature_params_line(serialized_components, parameters)
@@ -136,7 +136,7 @@ module Linzer
           .flat_map
           .with_index do |group, idx|
             group
-              .map  { |comp| Starry.parse_item(idx.zero? ? comp[1..] : comp) }
+              .map  { |comp| HTTP::StructuredField.parse_item(idx.zero? ? comp[1..] : comp) }
               .uniq { |comp| [comp.value, comp.parameters] }
           end
 

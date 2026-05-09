@@ -24,11 +24,11 @@ module Linzer
           def parse(field_name)
             case
             when field_name.match?(/";/), field_name.start_with?('"')
-              Starry.parse_item(field_name)
+              HTTP::StructuredField.parse_item(field_name)
             when field_name.match?(/;/)
               parse_unserialized_input(field_name)
             when field_name.start_with?("@"), field_name.match?(/^[a-z]/)
-              Starry.parse_item(Starry.serialize(field_name))
+              HTTP::StructuredField.parse_item(HTTP::StructuredField.serialize(field_name))
             else
               raise Error, "Invalid component identifier: '#{field_name}'!"
             end
@@ -49,7 +49,7 @@ module Linzer
           # @return [Starry::Item] the parsed item with parameters
           def parse_unserialized_input(field_name)
             field, *raw_params = field_name.split(";")
-            item               = Starry.parse_item(Starry.serialize(field))
+            item               = HTTP::StructuredField.parse_item(HTTP::StructuredField.serialize(field))
             item.parameters    = collect_parameters(raw_params)
             item
           end
@@ -67,7 +67,7 @@ module Linzer
                 {param => true}
               else
                 Hash[*tokens.first(2)]                  # e.g.: ";key=\"foo\""
-                  .transform_values! { |v| Starry.parse_item(v).value }
+                  .transform_values! { |v| HTTP::StructuredField.parse_item(v).value }
               end
             end
             params.reduce({}, :merge)

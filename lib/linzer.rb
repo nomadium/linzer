@@ -6,6 +6,8 @@ require "uri"
 require "net/http"
 
 require_relative "linzer/version"
+require_relative "linzer/http"
+require_relative "linzer/http/structured_field"
 require_relative "linzer/common"
 require_relative "linzer/helper"
 require_relative "linzer/options"
@@ -24,8 +26,8 @@ require_relative "linzer/ecdsa"
 require_relative "linzer/key/helper"
 require_relative "linzer/signer"
 require_relative "linzer/verifier"
-require_relative "linzer/http"
-require_relative "linzer/http/structured_field"
+# require_relative "linzer/http"
+# require_relative "linzer/http/structured_field"
 
 # Linzer is a Ruby library for HTTP Message Signatures as defined in RFC 9421.
 #

@@ -150,11 +150,11 @@ module Linzer
     def to_h
       return @headers if @headers
 
-      items = @parsed_items || serialized_components.map { |c| Starry.parse_item(c) }
+      items = @parsed_items || serialized_components.map { |c| HTTP::StructuredField.parse_item(c) }
       {
-        "signature"       => Starry.serialize({label => value}),
-        "signature-input" => Starry.serialize({
-          label => Starry::InnerList.new(items, parameters)
+        "signature"       => HTTP::StructuredField.serialize({label => value}),
+        "signature-input" => HTTP::StructuredField.serialize({
+          label => HTTP::StructuredField::InnerList.new(items, parameters)
         })
       }
     end
@@ -168,7 +168,7 @@ module Linzer
           # Clone items that have parameters since the adapter's retrieve
           # method may mutate parameters (e.g., deleting "req").
           unless item.parameters.empty?
-            item = Starry::Item.new(item.value, item.parameters.dup)
+            item = HTTP::StructuredField::Item.new(item.value, item.parameters.dup)
           end
           Message::Field::FastIdentifier.new(serialized, item)
         end
@@ -236,7 +236,11 @@ module Linzer
         headers.transform_keys!(&:downcase)
         validate headers
 
-        input = parse_structured_field(headers, "signature-input")
+        input = HTTP::StructuredField.parse_dictionary(
+          headers["signature-input"],
+          field_name: "signature-input"
+        )
+
         reject_multiple_signatures if input.size > 1 && options[:label].nil?
         label = options[:label] || input.keys.first
 
@@ -245,7 +249,7 @@ module Linzer
         fail_due_invalid_components unless input[label].value.respond_to?(:each)
 
         parsed_items = input[label].value
-        components = serialize_parsed_items(parsed_items)
+        components = HTTP::StructuredField.serialize_parsed_items(parsed_items)
         parameters = input[label].parameters
 
         new(components, raw_signature, label, parameters, parsed_items: parsed_items)
@@ -316,51 +320,14 @@ module Linzer
         end
 
         # Label not found via fast path — fall back to Starry
-        signature = parse_structured_dictionary(
-          value.encode(Encoding::US_ASCII), "signature"
-        )
+        signature = HTTP::StructuredField.parse_dictionary(value, field_name: "signature")
         fail_with_signature_not_found label unless signature.key?(label)
         signature[label].value.force_encoding(Encoding::ASCII_8BIT)
       rescue ArgumentError
         # Base64 decode failed — fall back to Starry
-        signature = parse_structured_dictionary(
-          value.encode(Encoding::US_ASCII), "signature"
-        )
+        signature = HTTP::StructuredField.parse_dictionary(value, field_name: "signature")
         fail_with_signature_not_found label unless signature.key?(label)
         signature[label].value.force_encoding(Encoding::ASCII_8BIT)
-      end
-
-      # Serializes parsed Starry items to their string representations
-      # without going through the generic Starry.serialize_item path.
-      #
-      # For simple items (no parameters): builds '"value"' directly.
-      # For items with parameters: falls back to Starry.serialize_item.
-      #
-      # @param items [Array<Starry::Item>] parsed items from signature-input
-      # @return [Array<String>] serialized component identifiers
-      def serialize_parsed_items(items)
-        items.map do |item|
-          if item.parameters.empty?
-            "\"#{item.value}\""
-          else
-            Starry.serialize_item(item)
-          end
-        end
-      end
-
-      def parse_structured_dictionary(str, field_name = nil)
-        Starry.parse_dictionary(str)
-      rescue Starry::ParseError => _
-        raise Error.new "Cannot parse \"#{field_name}\" field. Bailing out!"
-      end
-
-      # Parses a structured field value as a dictionary.
-      # @see https://datatracker.ietf.org/doc/html/rfc8941 RFC 8941
-      def parse_structured_field(hsh, field_name)
-        # Serialized Structured Field values for HTTP are ASCII strings.
-        # See: RFC 8941 (https://datatracker.ietf.org/doc/html/rfc8941)
-        value = hsh[field_name].encode(Encoding::US_ASCII)
-        parse_structured_dictionary(value, field_name)
       end
     end
   end
