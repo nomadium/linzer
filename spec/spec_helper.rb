@@ -1,18 +1,21 @@
 # frozen_string_literal: true
 
-require "simplecov"
-SimpleCov.start do
-  enable_coverage :branch
-  add_filter "/spec/integration/support"
-  add_filter "/spec/rack_helper.rb"
+# XXX: figure out what's wrong with SimpleCov and truffleruby
+if RUBY_ENGINE != "truffleruby"
+  require "simplecov"
+  SimpleCov.start do
+    enable_coverage :branch
+    add_filter "/spec/integration/support"
+    add_filter "/spec/rack_helper.rb"
 
-  # These files are excluded because is not possible to reach
-  # 100% coverage, a few tests are excluded in older Ruby versions.
-  add_filter "/spec/linzer_spec.rb"
-  add_filter "/spec/rack_auth_signature_spec.rb"
-  add_filter "/spec/rsa_pss_spec.rb"
-  add_filter "/spec/rsa_spec.rb"
-  add_filter "/spec/verifier_spec.rb"
+    # These files are excluded because is not possible to reach
+    # 100% coverage, a few tests are excluded in older Ruby versions.
+    add_filter "/spec/linzer_spec.rb"
+    add_filter "/spec/rack_auth_signature_spec.rb"
+    add_filter "/spec/rsa_pss_spec.rb"
+    add_filter "/spec/rsa_spec.rb"
+    add_filter "/spec/verifier_spec.rb"
+  end
 end
 
 require "securerandom"

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
-SimpleCov.command_name "test:integration"
+# XXX: figure out what's wrong with SimpleCov and truffleruby
+SimpleCov.command_name "test:integration" unless RUBY_ENGINE == "truffleruby"
 
 #
 # https://blog.cloudflare.com/web-bot-auth/

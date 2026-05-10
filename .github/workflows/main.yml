@@ -32,6 +32,12 @@ jobs:
           experimental: false
         - ruby: head
           experimental: true
+        # XXX: OpenSSL::PKey.generate_key is missing in JRuby
+        # and this breaks >= 40 unit tests and all integration tests
+        # - ruby: jruby-head
+        #   experimental: true
+        - ruby: truffleruby-head
+          experimental: true
 
     continue-on-error: ${{ matrix.experimental }}
 
