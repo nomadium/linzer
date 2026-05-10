@@ -26,3 +26,5 @@ jobs:
       run: nix flake check --show-trace --print-build-logs
     - name: Run integration tests
       run: nix develop --command bash -c 'rake integration'
+    - name: Run benchmarks
+      run: nix develop --command bash -c 'rake benchmarks' 2>/dev/null
