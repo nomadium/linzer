@@ -32,12 +32,7 @@ RSpec.describe "Signed requests against cloudflare example server", :integration
     }
   end
 
-  # test private key defined in Appendix B.1.4 of RFC 9421.
-  let(:test_key_ed25519) do
-    material = Linzer::RFC9421::Examples.test_key_ed25519
-    Linzer.new_ed25519_key(material, "test-key-ed25519")
-  end
-
+  # Test JWS key defined in Appendix B.1.4 of RFC 9421.
   let(:test_jws_key_ed25519) do
     jwk = Linzer::RFC9421::Examples.test_key_ed25519_jwk_format
     Linzer::JWS.jwk_import(JWT::JWK.import(jwk))
@@ -51,21 +46,13 @@ RSpec.describe "Signed requests against cloudflare example server", :integration
     http
   end
 
-  let(:bot_tag) { "web-bot-auth" }
-
   def linzer_http_get(uri, key)
-    now = Time.now.utc.to_i
     Linzer::HTTP.get(uri,
       key:    key,
       debug:  debug,
-      params: {
-        created: now,
-        expires: now + 500,
-        keyid:   key.key_id,
-        tag:     bot_tag
-      },
       covered_components: %w[@authority signature-agent],
-      headers:            headers)
+      headers:            headers,
+      web_bot_auth: true)
   end
 
   def http_gem_client(key)
@@ -89,17 +76,11 @@ RSpec.describe "Signed requests against cloudflare example server", :integration
   end
 
   def sign!(key, request_or_response)
-    now = Time.now.utc.to_i
     Linzer.sign!(
       request_or_response,
       key: key,
       components: %w[@authority signature-agent],
-      params: {
-        created: now,
-        expires: now + 500,
-        keyid:   key.key_id,
-        tag:     bot_tag
-      }
+      web_bot_auth: true
     )
   end
 
@@ -108,7 +89,7 @@ RSpec.describe "Signed requests against cloudflare example server", :integration
 
     context "using Linzer::HTTP client" do
       it "authenticates successfully when using key defined in Appendix B.1.4" do
-        response = linzer_http_get(uri, test_key_ed25519)
+        response = linzer_http_get(uri, test_jws_key_ed25519)
 
         expect(response.code).to eq("200")
         expect(response.body).to match expected_msg
@@ -173,7 +154,7 @@ RSpec.describe "Signed requests against cloudflare example server", :integration
       it "dumps incoming request headers" do
         request = Net::HTTP::Get.new(uri, headers)
 
-        sign!(test_key_ed25519, request)
+        sign!(test_jws_key_ed25519, request)
         response = net_http_client(uri).request(request)
         body     = response.body.to_s
 
@@ -191,7 +172,7 @@ RSpec.describe "Signed requests against cloudflare example server", :integration
       it "dumps incoming request headers" do
         request = HTTP::Request.new(verb: :get, uri: uri, headers: headers)
 
-        sign!(test_key_ed25519, request)
+        sign!(test_jws_key_ed25519, request)
         response = HTTP::Client.new.perform(request, HTTP::Options.new({}))
         body     = response.body.to_s
 
