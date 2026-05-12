@@ -107,7 +107,11 @@ module Faraday
       #   @return [Boolean] when +true+ (default), raises
       #     {VerifyError} on verification failure; when +false+,
       #     sets +env[:http_signature_verified]+ to +false+ and continues
-      class Options < Faraday::Options.new(:key, :sign_request, :sign_key, :components, :verify_response, :verify_key, :params, :strict)
+      # @!attribute [rw] web_bot_auth
+      #   @return [Hash, Boolean] Enables Web Bot Auth signing when truthy.
+      #     A Hash may be provided to customize Web Bot Auth parameters.
+      #     (e.g. +{ agent: "https://example.com/myagent" }+)
+      class Options < Faraday::Options.new(:key, :sign_request, :sign_key, :components, :verify_response, :verify_key, :params, :strict, :web_bot_auth)
         # Returns the generic key.
         # @return [Linzer::Key, nil]
         def key
@@ -145,6 +149,12 @@ module Faraday
         # @return [Hash]
         def params
           Hash(self[:params])
+        end
+
+        # Returns Web Bot Auth parameters to sign.
+        # @return [Hash, Boolean]
+        def web_bot_auth
+          self[:web_bot_auth]
         end
       end
 
@@ -187,10 +197,14 @@ module Faraday
         key = resolve_signing_key
         request = Linzer::Faraday::Utils.create_request(env)
 
+        extra_options = {}
+        extra_options[:web_bot_auth] = options.web_bot_auth if options.web_bot_auth
+
         Linzer.sign! request,
                      key:        key,
                      components: options.components,
-                     params:     options.params
+                     params:     options.params,
+                     **extra_options
 
         signature_headers = request.headers.slice("signature", "signature-input")
         env.request_headers.merge!(signature_headers)
@@ -245,8 +259,12 @@ module Faraday
       def resolve_signing_key
         key = options.sign_key
         key ||= options.key unless options.sign_request? && options.verify_response?
+
         raise Linzer::Error, "No signing key provided!" if !key
         raise Linzer::Error, "Invalid key!" if !key.is_a?(Linzer::Key)
+        if options.web_bot_auth && !key.is_a?(Linzer::JWS::Key)
+          raise Linzer::Error, "Web Bot Auth requires a Linzer::JWS::Key key!"
+        end
 
         key
       end

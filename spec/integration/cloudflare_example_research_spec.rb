@@ -78,6 +78,16 @@ RSpec.describe "Signed requests against cloudflare example server", :integration
     HTTP.use(http_signature: http_signature_opts)
   end
 
+  def faraday_client(key)
+    require "linzer/faraday"
+
+    Faraday.new do |b|
+      b.request :http_signature, key: key,
+                                 components: %w[@authority signature-agent],
+                                 web_bot_auth: true
+    end
+  end
+
   def sign!(key, request_or_response)
     now = Time.now.utc.to_i
     Linzer.sign!(
@@ -127,6 +137,29 @@ RSpec.describe "Signed requests against cloudflare example server", :integration
           http_gem_client(other_key)
             .headers(headers)
             .get(url)
+
+        expect(response.body.to_s).to_not match expected_msg
+      end
+    end
+
+    context "with faraday client" do
+      it "authenticates successfully when using key defined in Appendix B.1.4" do
+        response =
+          faraday_client(test_jws_key_ed25519)
+            .get(url,
+                 nil,      # params
+                 headers)
+
+        expect(response.status).to    eq(200)
+        expect(response.body.to_s).to match expected_msg
+      end
+
+      it "does not authenticate request when an unknown key is used" do
+        response =
+          faraday_client(other_key)
+            .get(url,
+                 nil,      # params
+                 headers)
 
         expect(response.body.to_s).to_not match expected_msg
       end
