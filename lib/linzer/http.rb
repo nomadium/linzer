@@ -100,12 +100,17 @@ module Linzer
 
       headers    = build_headers(options[:headers] || {})
       request    = build_request(verb, uri, headers)
-      message    = Linzer::Message.new(request)
       components = options[:covered_components] || default_components
       params     = options[:params] || {}
-      signature  = Linzer.sign(key, message, components, **params)
 
-      do_request(http, uri, verb, options[:data], signature, headers)
+      Linzer.sign! request,
+                   key: key,
+                   components: components,
+                   params: params
+
+      signature_headers  = request.each_header.to_h.slice("signature-input", "signature")
+
+      do_request(http, uri, verb, options[:data], signature_headers, headers)
     end
 
     # Returns the default covered components for signing.
@@ -180,19 +185,19 @@ module Linzer
     # @param uri [String] the request URI
     # @param verb [Symbol] the HTTP method
     # @param data [String, nil] the request body
-    # @param signature [Linzer::Signature] the generated signature
+    # @param signature_headers [Hash] the generated signature headers
     # @param headers [Hash] request headers
     # @return [Net::HTTPResponse] the response
     # @raise [Linzer::Error] if a body is required but not provided
-    def do_request(http, uri, verb, data, signature, headers)
+    def do_request(http, uri, verb, data, signature_headers, headers)
       if with_body?(verb)
         if !data
           missed_body = "Missing request body on HTTP request: '#{verb.upcase}'"
           raise Linzer::Error, missed_body
         end
-        http.public_send(verb, uri, data, headers.merge(signature.to_h))
+        http.public_send(verb, uri, data, headers.merge(signature_headers))
       else
-        http.public_send(verb, uri,       headers.merge(signature.to_h))
+        http.public_send(verb, uri,       headers.merge(signature_headers))
       end
     end
   end
