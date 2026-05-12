@@ -11,6 +11,7 @@ SimpleCov.command_name "test:integration"
 RSpec.describe "Signed requests against cloudflare example server", :integration do
   before(:all) do
     require "linzer/http/signature_feature"
+    require "linzer/jws"
   end
 
   let(:debug) { false }
@@ -37,7 +38,12 @@ RSpec.describe "Signed requests against cloudflare example server", :integration
     Linzer.new_ed25519_key(material, "test-key-ed25519")
   end
 
-  let(:other_key) { Linzer.generate_ed25519_key("other_key") }
+  let(:test_jws_key_ed25519) do
+    jwk = Linzer::RFC9421::Examples.test_key_ed25519_jwk_format
+    Linzer::JWS.jwk_import(JWT::JWK.import(jwk))
+  end
+
+  let(:other_key) { Linzer.generate_jws_key(algorithm: "EdDSA") }
 
   def net_http_client(uri)
     http = Net::HTTP.new(uri.host, uri.port)
@@ -63,17 +69,10 @@ RSpec.describe "Signed requests against cloudflare example server", :integration
   end
 
   def http_gem_client(key)
-    now = Time.now.utc.to_i
-
     http_signature_opts = {
       key: key,
       covered_components: %w[@authority signature-agent],
-      params: {
-        created: now,
-        expires: now + 500,
-        keyid:   key.key_id,
-        tag:     bot_tag
-      }
+      web_bot_auth: true
     }
 
     HTTP.use(http_signature: http_signature_opts)
@@ -115,7 +114,7 @@ RSpec.describe "Signed requests against cloudflare example server", :integration
     context "with http gem client" do
       it "authenticates successfully when using key defined in Appendix B.1.4" do
         response =
-          http_gem_client(test_key_ed25519)
+          http_gem_client(test_jws_key_ed25519)
             .headers(headers)
             .get(url)
 

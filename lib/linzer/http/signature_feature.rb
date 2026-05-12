@@ -55,10 +55,11 @@ module Linzer
       #   `@authority`, and `date`.
       #
       # @raise [HTTP::Error] If key is nil or invalid
-      def initialize(key:, params: {}, covered_components: default_components)
+      def initialize(key:, params: {}, covered_components: default_components, **extra_options)
         @fields = Array(covered_components)
         @key    = validate_key(key)
         @params = Hash(params)
+        @extra_options  = extra_options
       end
 
       # @return [Array<String>] The components to include in signatures
@@ -67,6 +68,12 @@ module Linzer
       # @return [Hash] Additional signature parameters
       attr_reader :params
 
+      # @return [Hash] Extra options forwarded to {Linzer.sign!}
+      #
+      # These allow callers to enable optional signing behaviors such as
+      # Web Bot Auth support without changing the HTTP feature API.
+      attr_reader :extra_options
+
       # Wraps an outgoing request to add signature headers.
       #
       # Called automatically by http.rb for each request.
@@ -74,7 +81,8 @@ module Linzer
       # @param request [HTTP::Request] The outgoing request
       # @return [HTTP::Request] The request with signature headers added
       def wrap_request(request)
-        Linzer.sign! request, key: key, components: fields, params: params
+        Linzer.sign! request, key: key, components: fields, params: params,
+                     **extra_options
         request
       end
 
