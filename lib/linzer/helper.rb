@@ -46,17 +46,27 @@ module Linzer
     #     label: "my-sig",
     #     params: { nonce: SecureRandom.hex(16), tag: "my-app" }
     #   )
-    def sign!(request_or_response, **args)
+    def sign!(request_or_response, key:, components:, label: nil, params: {}, profile: nil)
       message = Message.new(request_or_response)
-      options = {}
 
-      label = args[:label]
-      options[:label] = label if label
-      options.merge!(args.fetch(:params, {}))
+      ctx = SigningContext.new(
+        message:    message,
+        key:        key,
+        label:      label,
+        components: Array(components),
+        params:     Hash(params)
+      )
 
-      key = args.fetch(:key)
-      signature = Linzer::Signer.sign(key, message, args.fetch(:components), options)
-      message.attach!(signature)
+      profile&.apply(ctx)
+
+      signature = Linzer::Signer.sign(
+        ctx.key,
+        ctx.message,
+        ctx.components,
+        ctx.params
+      )
+
+      ctx.message.attach!(signature)
     end
 
     # Verifies a signed HTTP request or response.
