@@ -9,8 +9,8 @@ module Linzer
         @components = components.dup
         @params     = label ? params.dup.merge(label: label) : params.dup
       end
-      attr_reader :message, :key, :components, :params 
-  
+      attr_reader :message, :key, :components, :params
+
       # def params
       #   return @params if !@label
       #   @params.merge(label: @label)

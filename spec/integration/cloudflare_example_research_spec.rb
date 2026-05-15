@@ -52,8 +52,7 @@ RSpec.describe "Signed requests against cloudflare example server", :integration
       debug:  debug,
       covered_components: %w[@authority signature-agent],
       headers:            headers,
-      profile:            :web_bot_auth
-    )
+      profile:            :web_bot_auth)
   end
 
   def http_gem_client(key)

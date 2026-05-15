@@ -159,8 +159,7 @@ RSpec.describe "Linzer.sign!" do
         label:        "my-sig",
         profile:      Linzer::Signing::Profile::WebBotAuth.new(
           agent:  "https://example.com/someagent"
-        )
-      )
+        ))
       headers = signed_request.each_header.to_h
       signature = Linzer::Signature.build(headers)
 

@@ -20,7 +20,7 @@ module Linzer
 
           if @nonce == :generate
             ctx.params[:nonce] = generate_web_bot_auth_nonce
-         end
+          end
 
           if @agent
             set_web_auth_agent!(@agent, ctx.params[:label], ctx.message, ctx.components)
@@ -79,28 +79,28 @@ module Linzer
                 cause: ex
         end
 
-#        def prepare_web_bot_auth!(message, args, components, options)
-#       #
-#       if !args[:web_bot_auth].respond_to?(:to_h)
-#         raise Error, "Unsupported value for web_both_auth configuration"
-#       end
-# 
-#       settings = args[:web_bot_auth]
-#       agent    = settings[:agent]
-#       set_web_auth_agent!(agent, options[:label], message, components) if agent
-# 
-#       if (!settings[:nonce] && !options[:nonce]) || settings[:nonce] == :generate
-#         options[:nonce] = generate_web_bot_auth_nonce
-#       end
-# 
-#       if !settings[:params] || settings[:params] == :recommended
-#         set_web_bot_auth_options!(key, components, options)
-#       end
-#     end
-# 
-# 
-#   end
-# end
+        #        def prepare_web_bot_auth!(message, args, components, options)
+        #       #
+        #       if !args[:web_bot_auth].respond_to?(:to_h)
+        #         raise Error, "Unsupported value for web_both_auth configuration"
+        #       end
+        #
+        #       settings = args[:web_bot_auth]
+        #       agent    = settings[:agent]
+        #       set_web_auth_agent!(agent, options[:label], message, components) if agent
+        #
+        #       if (!settings[:nonce] && !options[:nonce]) || settings[:nonce] == :generate
+        #         options[:nonce] = generate_web_bot_auth_nonce
+        #       end
+        #
+        #       if !settings[:params] || settings[:params] == :recommended
+        #         set_web_bot_auth_options!(key, components, options)
+        #       end
+        #     end
+        #
+        #
+        #   end
+        # end
         def self.default
           new
         end

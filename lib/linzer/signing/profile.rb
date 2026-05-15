@@ -6,11 +6,11 @@ module Linzer
       def self.resolve(profile)
         case profile
         when NilClass, Profile::Base
-          return profile
+          profile
         when Symbol
           case profile
           when :web_bot_auth
-            return Linzer::Signing::Profile::WebBotAuth.default
+            Linzer::Signing::Profile::WebBotAuth.default
           else
             raise Error, "Unknown/unsupported signing profile!"
           end
@@ -18,6 +18,7 @@ module Linzer
           raise Error, "Unknown/unsupported signing profile!"
         end
       end
+
       def self.web_bot_auth(**options)
         Linzer::Signing::Profile::WebBotAuth(**options)
       end
