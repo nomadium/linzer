@@ -113,28 +113,7 @@ module Linzer
     #     message.attach!(signature)
     def_delegators :@adapter, :attach!
 
-    # @!method set_header!(header, value)
-    #   Sets a header on the underlying HTTP message.
-    #
-    #   If a header with the given name already exists, its value is overwritten.
-    #
-    #   @param header [String] the header name
-    #   @param value [String] the header value
-    #   @return [String] the value assigned to the header
-    #
-    #   @example
-    #     message.set_header!("Date", "Fri, 08 May 2026 16:40:52 GMT")
-    def_delegators :@adapter, :set_header!
-
-    # Sets a header on the underlying HTTP message.
-    #
-    # If a header with the given name already exists, its value is overwritten.
-    #
-    # @param header [String] the header name
-    # @param value [String] the header value
-    # @return [String] the value assigned to the header
-    alias_method :[]=, :set_header!
-
+    # XXX: to-do document
     def with_headers(headers)
       Overlay.new(self, headers)
     end

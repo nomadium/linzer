@@ -31,6 +31,8 @@ module Linzer
             @operation[name]
           end
 
+          private
+
           # Sets a header on the underlying HTTP message.
           #
           # If a header with the given name already exists, its value is overwritten.
@@ -41,8 +43,6 @@ module Linzer
           def set_header!(header, value)
             @operation[header] = value
           end
-
-          private
 
           def derived(name)
             raise Linzer::Error, "Sub-classes are required to implement this method!"

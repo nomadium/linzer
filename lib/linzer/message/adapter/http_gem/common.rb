@@ -20,17 +20,6 @@ module Linzer
             @operation.headers[name]
           end
 
-          # Sets a header on the underlying HTTP message.
-          #
-          # If a header with the given name already exists, its value is overwritten.
-          #
-          # @param header [String] the header name
-          # @param value [String] the header value
-          # @return [String] the value assigned to the header
-          def set_header!(header, value)
-            @operation.headers[header] = value
-          end
-
           private
 
           # Retrieves an HTTP field value from the request or response headers.
@@ -43,6 +32,17 @@ module Linzer
             return nil if has_tr # XXX: is there a library actually supporting trailers?
             value = @operation.headers[name.value.to_s]
             value.dup&.strip
+          end
+
+          # Sets a header on the underlying HTTP message.
+          #
+          # If a header with the given name already exists, its value is overwritten.
+          #
+          # @param header [String] the header name
+          # @param value [String] the header value
+          # @return [String] the value assigned to the header
+          def set_header!(header, value)
+            @operation.headers[header] = value
           end
         end
       end

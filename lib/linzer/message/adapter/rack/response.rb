@@ -28,6 +28,8 @@ module Linzer
             @operation.get_header(name)
           end
 
+          private
+
           # Sets a header on the underlying HTTP message.
           #
           # If a header with the given name already exists, its value is overwritten.
