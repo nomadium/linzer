@@ -49,7 +49,7 @@ module Linzer
     def sign!(request_or_response, key:, components:, label: nil, params: {}, profile: nil)
       message = Message.new(request_or_response)
 
-      ctx = SigningContext.new(
+      ctx = Signing::Context.new(
         message:    message,
         key:        key,
         label:      label,
@@ -57,7 +57,8 @@ module Linzer
         params:     Hash(params)
       )
 
-      profile&.apply(ctx)
+      resolved_profile = Signing::Profile.resolve(profile)
+      resolved_profile&.apply(ctx)
 
       signature = Linzer::Signer.sign(
         ctx.key,
