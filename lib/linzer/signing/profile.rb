@@ -5,7 +5,7 @@ module Linzer
     module Profile
       def self.resolve(profile)
         case profile
-        when NilClass, Linzer::Signing::Profile
+        when NilClass, Profile::Base
           return profile
         when Symbol
           case profile

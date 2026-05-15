@@ -145,21 +145,27 @@ RSpec.xdescribe "Linzer::Options.prepare_web_bot_auth!" do
   end
 end
 
-RSpec.xdescribe "Linzer.sign!" do
+RSpec.describe "Linzer.sign!" do
   context "with Web Bot Auth" do
     let(:uri)     { URI("https://example.com/api/resource") }
     let(:request) { Net::HTTP::Post.new(uri) }
     let(:key)     { Linzer::JWS.generate_key(algorithm: "EdDSA") }
 
     it "signs the request as specified by web bot auth spec" do
+      params = {}
+      components = %w[@method @path]
+      binding.irb
       signed_request = Linzer.sign!(request,
         key:          key,
-        components:   %w[@method @path],
+        # components:   %w[@method @path],
+        components:   components,
         label:        "my-sig",
-        web_bot_auth: {
-          params: :recommended,
+        params:       params,
+        profile:      Linzer::Signing::Profile::WebBotAuth.new(
           agent:  "https://example.com/someagent"
-        })
+        )
+      )
+      binding.irb
       headers = signed_request.each_header.to_h
       signature = Linzer::Signature.build(headers)
 

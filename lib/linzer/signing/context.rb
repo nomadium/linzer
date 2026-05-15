@@ -6,16 +6,15 @@ module Linzer
       def initialize(message:, key:, label:, components:, params:)
         @message    = message
         @key        = key
-        @label      = label
-        @components = components
-        @params     = params
+        @components = components.dup
+        @params     = label ? params.dup.merge(label: label) : params.dup
       end
-      attr_reader :message, :key, :components
+      attr_reader :message, :key, :components, :params 
   
-      def params
-        return @params if !@label
-        @params.merge(label: @label)
-      end
+      # def params
+      #   return @params if !@label
+      #   @params.merge(label: @label)
+      # end
     end
   end
 end
