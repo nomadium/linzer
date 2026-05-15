@@ -10,6 +10,7 @@ RSpec.xdescribe "Linzer::Options.prepare_web_bot_auth!" do
 
   context "when no key is provided" do
     it "raises error" do
+      # def prepare_web_bot_auth!(message, args, components, options)
       expect { Linzer::Options.prepare_web_bot_auth!(message, {}, [], {}) }
         .to raise_error(Linzer::Error, /invalid key/)
     end
@@ -152,20 +153,14 @@ RSpec.describe "Linzer.sign!" do
     let(:key)     { Linzer::JWS.generate_key(algorithm: "EdDSA") }
 
     it "signs the request as specified by web bot auth spec" do
-      params = {}
-      components = %w[@method @path]
-      binding.irb
       signed_request = Linzer.sign!(request,
         key:          key,
-        # components:   %w[@method @path],
-        components:   components,
+        components:   %w[@method @path],
         label:        "my-sig",
-        params:       params,
         profile:      Linzer::Signing::Profile::WebBotAuth.new(
           agent:  "https://example.com/someagent"
         )
       )
-      binding.irb
       headers = signed_request.each_header.to_h
       signature = Linzer::Signature.build(headers)
 

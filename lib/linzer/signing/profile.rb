@@ -18,6 +18,9 @@ module Linzer
           raise Error, "Unknown/unsupported signing profile!"
         end
       end
+      def self.web_bot_auth(**options)
+        Linzer::Signing::Profile::WebBotAuth(**options)
+      end
 
       class Base
         def apply(ctx)
