@@ -135,6 +135,10 @@ module Linzer
     # @return [String] the value assigned to the header
     alias_method :[]=, :set_header!
 
+    def with_headers(headers)
+      binding.irb
+    end
+
     class << self
       # Registers a custom adapter for an HTTP message class.
       #

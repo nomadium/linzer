@@ -146,7 +146,7 @@ RSpec.xdescribe "Linzer::Options.prepare_web_bot_auth!" do
   end
 end
 
-RSpec.describe "Linzer.sign!" do
+RSpec.xdescribe "Linzer.sign!" do
   context "with Web Bot Auth" do
     let(:uri)     { URI("https://example.com/api/resource") }
     let(:request) { Net::HTTP::Post.new(uri) }

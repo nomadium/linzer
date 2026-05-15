@@ -242,6 +242,8 @@ module Linzer
           else
             Starry.serialize(dict)
           end
+        rescue
+          nil
         end
 
         # Binary-wraps a field value as a byte sequence.

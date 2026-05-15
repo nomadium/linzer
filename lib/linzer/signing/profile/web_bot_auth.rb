@@ -22,7 +22,7 @@ module Linzer
           end
 
           if @agent
-            set_web_auth_agent!(@agent, ctx.params[:label], ctx.message, ctx.components)
+            set_web_auth_agent!(@agent, ctx.params[:label], ctx.message, ctx.components, ctx.extra_headers)
           end
         end
 
@@ -73,9 +73,9 @@ module Linzer
         # @param components [Array<String>] covered signature components
         # @return [void]
         # @raise [Linzer::Error] if the header value cannot be serialized
-        def set_web_auth_agent!(agent, label, message, components)
+        def set_web_auth_agent!(agent, label, message, components, extra_headers)
           if !message["signature-agent"] || message["signature-agent"] != agent
-            message["signature-agent"] = Starry.serialize_dictionary(label => agent)
+            extra_headers["signature-agent"] = Starry.serialize_dictionary(label => agent)
             components << "\"signature-agent\";key=\"#{label}\""
           end
         rescue Starry::SerializeError => ex

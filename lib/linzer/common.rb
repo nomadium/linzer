@@ -99,6 +99,7 @@ module Linzer
           c = components[i]
           raise Error, invalid if c.include?("@signature-params")
           has_params = true if !has_params && c.include?(";")
+          binding.irb if field_ids[i].field_name == "\"signature-agent\";key=\"my-sig\""
           raise Error, "#{missing}: \"#{c}\"" unless message.field?(field_ids[i])
           i += 1
         end
