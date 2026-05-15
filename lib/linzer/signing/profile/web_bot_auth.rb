@@ -4,9 +4,9 @@ module Linzer
   module Signing
     module Profile
       class WebBotAuth < Base
-        # def apply(ctx)
-        #   binding.irb
-        # end
+        def apply(ctx)
+          binding.irb
+        end
 
         def self.default
           new
