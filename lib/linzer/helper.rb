@@ -48,6 +48,19 @@ module Linzer
     #   )
     def sign!(request_or_response, key:, components:, label: nil, params: {}, profile: nil)
       message = Message.new(request_or_response)
+      resolved_profile = Signing::Profile.resolve(profile)
+
+      # XXX: maybe message mutation is not required is the message is
+      # if Message.build were available, there would not be a need to mutate message with set_header!
+      # however, it would require this ugly special case shown in the comment below:
+      # is there a better way to do this?
+      #
+      # if resolved_profile == :web_bot_auth && resolved_profile.agent
+      #   message = Message.build(request_or_response, additional_headers: {"signature-agent" => agent})
+      #   raise Error unless message.request?
+      # else
+      #   message = Message.new(request_or_response)
+      # end
 
       ctx = Signing::Context.new(
         message:    message,
@@ -57,7 +70,6 @@ module Linzer
         params:     Hash(params)
       )
 
-      resolved_profile = Signing::Profile.resolve(profile)
       resolved_profile&.apply(ctx)
 
       signature = Linzer::Signer.sign(
@@ -67,7 +79,7 @@ module Linzer
         ctx.params
       )
 
-      ctx.message.attach!(signature)
+      message.attach!(signature)
     end
 
     # Verifies a signed HTTP request or response.

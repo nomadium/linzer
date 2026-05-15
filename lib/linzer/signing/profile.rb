@@ -4,6 +4,8 @@ module Linzer
   module Signing
     module Profile
       def self.resolve(profile)
+        unsupported = "Unknown/unsupported signing profile!"
+
         case profile
         when NilClass, Profile::Base
           profile
@@ -12,10 +14,10 @@ module Linzer
           when :web_bot_auth
             Linzer::Signing::Profile::WebBotAuth.default
           else
-            raise Error, "Unknown/unsupported signing profile!"
+            raise Error, unsupported
           end
         else
-          raise Error, "Unknown/unsupported signing profile!"
+          raise Error, unsupported
         end
       end
 
@@ -25,7 +27,7 @@ module Linzer
 
       class Base
         def apply(ctx)
-          raise Error, "Sub-classes must implement this method"
+          raise Error, "Sub-classes are required to implement this method!"
         end
       end
     end

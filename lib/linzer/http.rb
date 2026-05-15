@@ -104,10 +104,10 @@ module Linzer
       params     = options[:params] || {}
 
       Linzer.sign! request,
-                   key: key,
+                   key:        key,
                    components: components,
-                   params: params,
-                   **Hash(profile: options[:profile])
+                   params:     params,
+                   profile:    options[:profile]
 
       signature_headers  = request.each_header.to_h.slice("signature-input", "signature")
 

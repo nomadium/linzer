@@ -79,10 +79,10 @@ module Linzer
       # @return [HTTP::Request] The request with signature headers added
       def wrap_request(request)
         Linzer.sign! request,
-                     key: key,
+                     key:        key,
                      components: fields,
-                     params: params,
-                     profile: profile
+                     params:     params,
+                     profile:    profile
         request
       end
 

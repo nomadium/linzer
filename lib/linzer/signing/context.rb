@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+# XXX: This could be a struct
+# XXX: Document
 module Linzer
   module Signing
     class Context
@@ -10,11 +12,6 @@ module Linzer
         @params     = label ? params.dup.merge(label: label) : params.dup
       end
       attr_reader :message, :key, :components, :params
-
-      # def params
-      #   return @params if !@label
-      #   @params.merge(label: @label)
-      # end
     end
   end
 end

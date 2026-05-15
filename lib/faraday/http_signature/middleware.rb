@@ -107,6 +107,8 @@ module Faraday
       #   @return [Boolean] when +true+ (default), raises
       #     {VerifyError} on verification failure; when +false+,
       #     sets +env[:http_signature_verified]+ to +false+ and continues
+      # @!attribute [rw] profile
+      #   @return [XXX] TO-DO: describe
       class Options < Faraday::Options.new(:key, :sign_request, :sign_key, :components, :verify_response, :verify_key, :params, :strict, :profile)
         # Returns the generic key.
         # @return [Linzer::Key, nil]
@@ -147,6 +149,10 @@ module Faraday
           Hash(self[:params])
         end
 
+        # Returns signing profile
+        # XXX: Figure out the return type, it could be a symbol or a signing
+        # profile instance object
+        # @return [XXX]
         def profile
           self[:profile]
         end
