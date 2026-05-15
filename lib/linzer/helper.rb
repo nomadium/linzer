@@ -60,12 +60,9 @@ module Linzer
       resolved_profile = Signing::Profile.resolve(profile)
       resolved_profile&.apply(ctx)
 
-      # signing_message = ctx.message.with_headers({})
-
       signature = Linzer::Signer.sign(
         ctx.key,
         ctx.message,
-        # signing_message,
         ctx.components,
         ctx.params
       )

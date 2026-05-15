@@ -136,7 +136,7 @@ module Linzer
     alias_method :[]=, :set_header!
 
     def with_headers(headers)
-      binding.irb
+      Overlay.new(self, headers)
     end
 
     class << self
