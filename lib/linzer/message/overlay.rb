@@ -122,7 +122,7 @@ module Linzer
         value = @message[name]
         return value unless value.nil?
 
-        return nil if name.start_with?("@")
+        return nil if Linzer::FieldId.new(name).derived?
         @overlay[name]
       end
 
