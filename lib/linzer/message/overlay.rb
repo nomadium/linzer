@@ -6,6 +6,7 @@ module Linzer
       def initialize(message, headers)
         @message = message
         @headers = headers
+        # @headers = Headers.new
       end
 
       def field?(header)
@@ -19,6 +20,14 @@ module Linzer
         return @message[name] if @message[name]
         return "https://example.com/someagent" if name.field_name == "\"signature-agent\";key=\"my-sig\""
         nil
+      end
+
+      class Headers
+        include Net::HTTPHeader
+
+        def initialize
+          initialize_http_header({})
+        end
       end
     end
   end

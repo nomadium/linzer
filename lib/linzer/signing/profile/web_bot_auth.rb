@@ -3,29 +3,51 @@
 module Linzer
   module Signing
     module Profile
+      # Implements the Web Bot Auth signing profile.
+      #
+      # This profile applies the recommendations defined by the
+      # Web Bot Auth drafts for HTTP Message Signatures, including:
+      #
+      # - recommended signature parameters
+      # - nonce generation
+      # - Signature-Agent header handling
+      #
+      # @see https://datatracker.ietf.org/wg/webbotauth/documents/
       class WebBotAuth < Base
+        # @param params [:recommended, nil]
+        #   when set to `:recommended`, applies the recommended
+        #   Web Bot Auth signature parameters
+        #
+        # @param nonce [:generate, nil]
+        #   when set to `:generate`, generates a nonce automatically
+        #
+        # @param agent [String, nil]
+        #   optional Signature-Agent identifier URI
         def initialize(params: :recommended, nonce: :generate, agent: nil)
           @params = params
           @nonce  = nonce
           @agent  = agent
         end
 
+        # Applies the Web Bot Auth profile to the signing context.
+        #
+        # @param ctx [Linzer::Signing::Context]
+        # @return [void]
         def apply(ctx)
           validate ctx
 
           if @params == :recommended
-            set_web_bot_auth_options!(ctx.key, ctx.components, ctx.params)
+            set_params!(ctx.key, ctx.components, ctx.params)
           end
 
-          if @nonce == :generate
-            ctx.params[:nonce] = generate_web_bot_auth_nonce
-          end
+          ctx.params[:nonce] = generate_nonce if @nonce == :generate
 
           if @agent
-            set_web_auth_agent!(@agent, ctx.params[:label], ctx.message, ctx.components, ctx.extra_headers)
+            set_agent!(@agent, ctx.params[:label], ctx.message, ctx.components, ctx.extra_headers)
           end
         end
 
+        # XXX: document
         def self.default
           new(params: :recommended, nonce: :generate)
         end
@@ -39,9 +61,9 @@ module Linzer
         #
         # @param key [Linzer::JWS::Key] signing key
         # @param components [Array<String>] covered signature components
-        # @param options [Hash] signature parameters/options to mutate
+        # @param params [Hash] signature parameters/options to mutate
         # @return [void]
-        def set_web_bot_auth_options!(key, components, options)
+        def set_params!(key, components, params)
           # 4.2. Generating HTTP Message Signature
           #
           # Agents MUST include at least one of the following components:
@@ -60,9 +82,9 @@ module Linzer
           #
           # options[:created] is set by default by linzer at signature creation time
           #
-          options[:expires] = Time.now.to_i + 3600     unless options[:expires]
-          options[:tag]     = "web-bot-auth"           unless options[:tag]
-          options[:keyid]   = key.material.key_digest  unless options[:keyid]
+          params[:expires] = Time.now.to_i + 3600     unless params[:expires]
+          params[:tag]     = "web-bot-auth"           unless params[:tag]
+          params[:keyid]   = key.material.key_digest  unless params[:keyid]
         end
 
         # Sets the Signature-Agent header and adds it to the covered components.
@@ -73,7 +95,7 @@ module Linzer
         # @param components [Array<String>] covered signature components
         # @return [void]
         # @raise [Linzer::Error] if the header value cannot be serialized
-        def set_web_auth_agent!(agent, label, message, components, extra_headers)
+        def set_agent!(agent, label, message, components, extra_headers)
           if !message["signature-agent"] || message["signature-agent"] != agent
             extra_headers["signature-agent"] = Starry.serialize_dictionary(label => agent)
             components << "\"signature-agent\";key=\"#{label}\""
@@ -92,7 +114,7 @@ module Linzer
         # Generates a nonce suitable for Web Bot Auth signatures.
         #
         # @return [String] a URL-safe random nonce
-        def generate_web_bot_auth_nonce
+        def generate_nonce
           SecureRandom.urlsafe_base64(64)
         end
       end

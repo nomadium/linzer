@@ -16,12 +16,22 @@ module Linzer
     #
     # @param request_or_response [Net::HTTPRequest, Net::HTTPResponse, Rack::Request,
     #   Rack::Response, HTTP::Request] The HTTP message to sign
-    # @param args [Hash] Keyword arguments
-    # @option args [Linzer::Key] :key The private key to sign with (required)
-    # @option args [Array<String>] :components The components to include in the
-    #   signature (required). Example: `%w[@method @path content-type]`
-    # @option args [String] :label Optional signature label (defaults to "sig1")
-    # @option args [Hash] :params Additional signature parameters (created, nonce, etc.)
+    #
+    # @param key [Linzer::Key]
+    #   The private key to sign with (required)
+    #
+    # @param components [Array<String>]
+    #   The components to include in the signature (required).
+    #   Example: `%w[@method @path content-type]`
+    #
+    # @param label [String, nil]
+    #   Optional signature label (defaults to "sig1")
+    #
+    # @param params [Hash]
+    #   Additional signature parameters (created, nonce, etc.)
+    #
+    # @param profile [Symbol, Linzer::Signing::Profile::Base, nil]
+    #   optional signing profile
     #
     # @return [Object] The original HTTP message with signature headers attached
     #

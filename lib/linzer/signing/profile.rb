@@ -2,7 +2,13 @@
 
 module Linzer
   module Signing
+    # XXX: add rubydoc?
     module Profile
+      # Resolves a signing profile configuration.
+      #
+      # @param profile [Symbol, Profile::Base, nil]
+      # @return [Profile::Base, nil]
+      # @raise [Linzer::Error] if the profile is unsupported
       def self.resolve(profile)
         unsupported = "Unknown/unsupported signing profile!"
 
@@ -21,11 +27,24 @@ module Linzer
         end
       end
 
+      # Builds a Web Bot Auth signing profile.
+      #
+      # @param options [Hash]
+      # @return [Profile::WebBotAuth]
       def self.web_bot_auth(**options)
-        Linzer::Signing::Profile::WebBotAuth(**options)
+        Linzer::Signing::Profile::WebBotAuth.new(**options)
       end
 
+      # Abstract base class for signing profiles.
+      #
+      # Signing profiles can mutate a signing context before
+      # the HTTP Message Signature is generated.
       class Base
+        # Applies profile-specific behavior to the signing context.
+        #
+        # @param ctx [Linzer::Signing::Context]
+        # @return [void]
+        # @raise [Linzer::Error] when not implemented
         def apply(ctx)
           raise Error, "Sub-classes are required to implement this method!"
         end

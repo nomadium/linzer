@@ -68,7 +68,7 @@ module Linzer
       # @return [Hash] Additional signature parameters
       attr_reader :params
 
-      # @return XXX
+      # @return [Linzer::Signing::Profile::Base, Symbol, nil] Optional signing profile
       attr_reader :profile
 
       # Wraps an outgoing request to add signature headers.
