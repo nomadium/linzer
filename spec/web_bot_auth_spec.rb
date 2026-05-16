@@ -2,6 +2,7 @@
 
 require "linzer/jws"
 
+# XXX: fix/rewrite
 RSpec.xdescribe "Linzer::Options.prepare_web_bot_auth!" do
   let(:uri)       { URI("https://example.com/api/resource") }
   let(:request)   { Net::HTTP::Post.new(uri) }
