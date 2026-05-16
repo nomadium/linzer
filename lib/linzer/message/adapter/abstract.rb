@@ -239,14 +239,9 @@ module Linzer
             Starry.serialize(dict)
           end
         rescue
-          # rescue Starry:ParseError instead?
-          # XXX: fix and use narrow rescue.
-          # Maybe I just need to send a PR to Starry.
-          # NOTE:
-          # Starry may raise unexpected exceptions (NoMethodError) for invalid
-          # values (such as nil) instead of consistently raising
-          # Starry::ParseError. Invalid values are treated as unserializable
-          # and omitted.
+          # rescue Starry:ParseError instead
+          # XXX: Adjust once https://github.com/takemar/starry/pull/4 is merged
+          # and released.
           nil
         end
 

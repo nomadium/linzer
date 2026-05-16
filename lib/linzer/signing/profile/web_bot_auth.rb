@@ -50,6 +50,9 @@ module Linzer
           @agent  = agent
         end
 
+        SIGNATURE_AGENT = "signature-agent"
+        private_constant :SIGNATURE_AGENT
+
         # Applies the Web Bot Auth profile to a signing context.
         #
         # This method mutates:
@@ -153,16 +156,16 @@ module Linzer
         # @raise [Linzer::Error]
         #   If the header cannot be serialized as a structured field
         def set_agent!(agent, label, message, components, overlay_headers)
-          # XXX: hide this Starry parsing/serialization work
-          if message["signature-agent"] != agent
+          if message[SIGNATURE_AGENT] != agent
             overlay_headers["signature-agent"] =
               Starry.serialize_dictionary(label => agent)
 
-            components << "\"signature-agent\";key=\"#{label}\""
+            item = Starry::Item.new(SIGNATURE_AGENT, key: label)
+            components << Starry.serialize(item)
           end
         rescue Starry::SerializeError => ex
           raise Error,
-                "Invalid signature-agent header value!",
+                "Invalid #{SIGNATURE_AGENT} header value!",
                 cause: ex
         end
 
