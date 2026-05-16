@@ -238,7 +238,7 @@ module Linzer
             Starry.serialize(dict)
           end
         rescue # XXX: Is this a bug in Starry. If value == nil, then Starry crashes
-               # instead of just raising Starry::ParseError
+          # instead of just raising Starry::ParseError
           nil
         end
 
