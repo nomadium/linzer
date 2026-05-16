@@ -231,6 +231,11 @@ module Linzer
           else
             Starry.serialize(dict)
           end
+        rescue => _ex
+          # XXX: TODO: rescue Starry::ParseError once
+          # https://github.com/takemar/starry/pull/4 is released or
+          # Starry related method calls are refactored.
+          nil
         end
 
         # Binary-wraps a field value as a byte sequence.
