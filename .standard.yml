@@ -9,3 +9,4 @@ ignore:
     - Layout/ArgumentAlignment
     - Style/EmptyCaseCondition
     - Style/RescueModifier
+    - Layout/MultilineMethodCallBraceLayout
