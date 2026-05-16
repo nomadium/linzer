@@ -238,10 +238,10 @@ module Linzer
           else
             Starry.serialize(dict)
           end
-        rescue
-          # rescue Starry:ParseError instead
-          # XXX: Adjust once https://github.com/takemar/starry/pull/4 is merged
-          # and released.
+        rescue => _ex
+          # XXX: TODO: rescue Starry::ParseError once
+          # https://github.com/takemar/starry/pull/4 is released or
+          # Starry related method calls are refactored.
           nil
         end
 

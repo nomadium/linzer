@@ -53,6 +53,8 @@ module Linzer
         SIGNATURE_AGENT = "signature-agent"
         private_constant :SIGNATURE_AGENT
 
+        REQUIRED_AUTH_COMPONENTS = %w[@authority @target-uri].freeze
+
         # Applies the Web Bot Auth profile to a signing context.
         #
         # This method mutates:
@@ -120,8 +122,8 @@ module Linzer
           # - @authority
           # - @target-uri
           #
-          if (components & ["@authority", "@target-uri"]).empty?
-            components << %w[@authority @target-uri].sample
+          if (components & REQUIRED_AUTH_COMPONENTS).empty?
+            components << REQUIRED_AUTH_COMPONENTS.sample
           end
 
           # Agents MUST include the following @signature-params:
@@ -161,7 +163,10 @@ module Linzer
               Starry.serialize_dictionary(label => agent)
 
             item = Starry::Item.new(SIGNATURE_AGENT, key: label)
-            components << Starry.serialize(item)
+            serialized_item = Starry.serialize(item)
+            if !components.include?(serialized_item)
+              components << serialized_item
+            end
           end
         rescue Starry::SerializeError => ex
           raise Error,

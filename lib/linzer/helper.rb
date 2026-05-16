@@ -56,7 +56,7 @@ module Linzer
     #     label: "my-sig",
     #     params: { nonce: SecureRandom.hex(16), tag: "my-app" }
     #   )
-    def sign!(request_or_response, key:, components:, label: nil, params: {}, profile: nil)
+    def sign!(request_or_response, key:, components: nil, label: nil, params: {}, profile: nil)
       message = Message.new(request_or_response)
 
       ctx = Signing::Context.new(
