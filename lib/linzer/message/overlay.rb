@@ -89,7 +89,7 @@ module Linzer
       # The URI is a placeholder because only header and field resolution
       # behavior is required; no network request is performed.
       def build_overlay_message(headers)
-        request = Net::HTTP::Get.new(URI("https://example.org/"))
+        request = Net::HTTP::Get.new(URI("https://example.invalid/"))
         request.initialize_http_header(headers.to_h)
         Adapter::Generic::Request.new(request)
       end

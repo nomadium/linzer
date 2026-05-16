@@ -316,6 +316,21 @@ RSpec.describe Linzer::Message do
     end
   end
 
+  describe "#with_headers" do
+    it "returns an overlay message" do
+      request = Linzer::Test::RackHelper.new_request(:get, "/foo", {}, {"User-Agent" => "linzer"})
+      message = described_class.new(request)
+
+      overlay_headers = {"foo" => "bar", "baz" => "data"}
+      overlay_message = message.with_headers(overlay_headers)
+
+      expect(overlay_message).to                      be_a(Linzer::Message::Overlay)
+      expect(overlay_message.header("foo")).to        eq("bar")
+      expect(overlay_message.header("user-agent")).to eq("linzer")
+      expect(overlay_message.header("Baz")).to        eq("data")
+    end
+  end
+
   describe "#attach!" do
     let(:headers) { {"content-type" => "application/json", "foo" => "bar"} }
 
