@@ -77,7 +77,9 @@ module Linzer
         ctx.params
       )
 
-      message.attach!(signature)
+      # binding.irb
+      ctx.message.attach!(signature)
+      # message.attach!(signature)
     end
 
     # Verifies a signed HTTP request or response.

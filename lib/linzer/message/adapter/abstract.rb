@@ -98,11 +98,14 @@ module Linzer
         #
         # @param signature [Signature] The signature to attach
         # @return [Object] The underlying HTTP message
-        def attach!(signature)
+        def attach!(signature, additional_headers: {})
           signature_headers = signature.to_h
 
           unless has_signature?
             signature_headers.each { |h, v| set_header!(h, v) }
+            if !additional_headers.empty?
+              additional_headers.each { |h, v| set_header!(h, v) }
+            end
             return @operation
           end
 
@@ -112,6 +115,9 @@ module Linzer
             set_header!(hdr, Starry.serialize_dictionary(merged))
           end
 
+          if !additional_headers.empty?
+            additional_headers.each { |h, v| set_header!(h, v) }
+          end
           @operation
         rescue Starry::ParseError => e
           raise Error,

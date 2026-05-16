@@ -34,7 +34,7 @@ module Linzer
         # @param ctx [Linzer::Signing::Context]
         # @return [void]
         def apply(ctx)
-          validate ctx
+          validate ctx.key, ctx.message
 
           if @params == :recommended
             set_params!(ctx.key, ctx.components, ctx.params)
@@ -106,9 +106,9 @@ module Linzer
                 cause: ex
         end
 
-        def validate(ctx)
-          raise Error, "Unsupported/invalid key!" unless ctx.key.is_a?(Linzer::JWS::Key)
-          raise Error, "Web Bot Auth is defined only for requests!" unless ctx.message.request?
+        def validate(key, message)
+          raise Error, "Unsupported/invalid key!" unless key.is_a?(Linzer::JWS::Key)
+          raise Error, "Web Bot Auth is defined only for requests!" unless message.request?
         end
 
         # Generates a nonce suitable for Web Bot Auth signatures.
