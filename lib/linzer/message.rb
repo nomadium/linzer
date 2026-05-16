@@ -113,9 +113,22 @@ module Linzer
     #     message.attach!(signature)
     def_delegators :@adapter, :attach!
 
-    # XXX: to-do document
-    def with_headers(headers)
-      Overlay.new(self, headers)
+    # Returns a new message wrapper with additional or overridden headers.
+    #
+    # The returned message preserves the original message contents while
+    # overlaying the provided headers for component resolution and
+    # signature generation.
+    #
+    # @param headers [#to_h] Headers to overlay onto the message
+    # @return [Linzer::Message::Overlay] A message wrapper using the
+    #   merged header set
+    #
+    # @example Add related signature headers without mutating the message
+    #   signed_message = message.with_headers(
+    #     "signature-agent" => "https://example.org/automated-agent"
+    #   )
+    def with_headers(overlay_headers)
+      Overlay.new(self, overlay_headers)
     end
 
     class << self

@@ -159,7 +159,8 @@ RSpec.describe "Linzer.sign!" do
         label:        "my-sig",
         profile:      Linzer::Signing::Profile::WebBotAuth.new(
           agent:  "https://example.com/someagent"
-        ))
+        )
+      )
       headers = signed_request.each_header.to_h
       signature = Linzer::Signature.build(headers)
 
@@ -169,7 +170,6 @@ RSpec.describe "Linzer.sign!" do
       expect(signature.parameters["keyid"]).to eq(key.material.key_digest)
       expect(signature.parameters).to          have_key("nonce")
       expect(signature.metadata).to            include('"@authority"').or include('"@target-uri"')
-      # XXX: it doesn't mutate the underlying request, maybe revisit this?
       expect(headers["signature-agent"]).to    eq("my-sig=\"https://example.com/someagent\"")
     end
   end

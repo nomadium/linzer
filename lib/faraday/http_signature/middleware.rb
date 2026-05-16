@@ -108,7 +108,14 @@ module Faraday
       #     {VerifyError} on verification failure; when +false+,
       #     sets +env[:http_signature_verified]+ to +false+ and continues
       # @!attribute [rw] profile
-      #   @return [Symbol, Linzer::Signing::Profile::Base, nil] # XXX: is description complete?
+      #   Optional HTTP Message Signatures signing profile.
+      #
+      #   When set, the profile is passed to {Linzer.sign!} and may provide
+      #   default covered components and signature parameters.
+      #
+      #   @return [Symbol, Linzer::Signing::Profile::Base, nil]
+      #     a registered profile name, a profile instance, or +nil+ to use
+      #     the default signing behavior
       class Options < Faraday::Options.new(:key, :sign_request, :sign_key, :components, :verify_response, :verify_key, :params, :strict, :profile)
         # Returns the generic key.
         # @return [Linzer::Key, nil]
@@ -150,6 +157,7 @@ module Faraday
         end
 
         # Returns the signing profile configuration.
+        #
         # @return [Symbol, Linzer::Signing::Profile::Base, nil]
         def profile
           self[:profile]

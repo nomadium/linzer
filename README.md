@@ -517,7 +517,7 @@ Linzer.sign!(
   label:   "sig1",
   profile: :web_bot_auth
   # or override/set specific parameters like the following:
-  # profile: Linzer::Profiles::WebBotAuth.new(agent: "https://...")
+  # profile: Linzer::Signing::Profile.web_bot_auth(agent: "https://...")
 )
 ```
 

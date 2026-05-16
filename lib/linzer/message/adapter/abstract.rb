@@ -97,27 +97,28 @@ module Linzer
         # Attaches a signature to the underlying HTTP message.
         #
         # @param signature [Signature] The signature to attach
+        # @param additional_headers [#each]
+        #   Additional headers to attach after signature processing.
+        #   Header values overwrite existing values with the same field name.
+        #
         # @return [Object] The underlying HTTP message
         def attach!(signature, additional_headers: {})
           signature_headers = signature.to_h
 
-          unless has_signature?
+          if !has_signature?
             signature_headers.each { |h, v| set_header!(h, v) }
-            if !additional_headers.empty?
-              additional_headers.each { |h, v| set_header!(h, v) }
+          else
+            signature_headers.each do |hdr, value|
+              merged = Starry.parse_dictionary(String(header(hdr)))
+              merged.merge!(Starry.parse_dictionary(value))
+              set_header!(hdr, Starry.serialize_dictionary(merged))
             end
-            return @operation
-          end
-
-          signature_headers.each do |hdr, value|
-            merged = Starry.parse_dictionary(String(header(hdr)))
-            merged.merge!(Starry.parse_dictionary(value))
-            set_header!(hdr, Starry.serialize_dictionary(merged))
           end
 
           if !additional_headers.empty?
             additional_headers.each { |h, v| set_header!(h, v) }
           end
+
           @operation
         rescue Starry::ParseError => e
           raise Error,
@@ -237,8 +238,15 @@ module Linzer
           else
             Starry.serialize(dict)
           end
-        rescue # XXX: Is this a bug in Starry. If value == nil, then Starry crashes
-          # instead of just raising Starry::ParseError
+        rescue
+          # rescue Starry:ParseError instead?
+          # XXX: fix and use narrow rescue.
+          # Maybe I just need to send a PR to Starry.
+          # NOTE:
+          # Starry may raise unexpected exceptions (NoMethodError) for invalid
+          # values (such as nil) instead of consistently raising
+          # Starry::ParseError. Invalid values are treated as unserializable
+          # and omitted.
           nil
         end
 

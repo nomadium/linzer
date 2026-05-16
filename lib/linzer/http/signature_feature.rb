@@ -53,6 +53,10 @@ module Linzer
       # @param covered_components [Array<String>] Components to include
       #   in the signature. Defaults to `@method`, `@request-target`,
       #   `@authority`, and `date`.
+      # @param profile [Symbol, Linzer::Signing::Profile::Base, nil]
+      #   Optional signing profile used when generating signatures.
+      #   When provided, the profile may supply default covered components
+      #   and signature parameters.
       #
       # @raise [HTTP::Error] If key is nil or invalid
       def initialize(key:, params: {}, covered_components: default_components, profile: nil)
@@ -68,7 +72,8 @@ module Linzer
       # @return [Hash] Additional signature parameters
       attr_reader :params
 
-      # @return [Linzer::Signing::Profile::Base, Symbol, nil] Optional signing profile
+      # @return [Linzer::Signing::Profile::Base, Symbol, nil]
+      #  Optional signing profile used during signature generation
       attr_reader :profile
 
       # Wraps an outgoing request to add signature headers.

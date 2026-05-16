@@ -2,60 +2,96 @@
 
 module Linzer
   class Message
-    class Overlay < Adapter::Generic::Request
-      # class Overlay
-      def initialize(message, headers)
-        @message = message
-        # @headers = headers
-        @headers = Headers.new(headers)
+    # Overlay is a non-mutating wrapper around a Linzer::Message that provides
+    # an additional header layer used during field resolution and signature
+    # generation.
+    #
+    # Resolution precedence:
+    #   1. Underlying message (Linzer::Message)
+    #   2. Overlay headers
+    #
+    # Overlay headers are only used when the underlying message does not
+    # provide a value for a given header or field.
+    # A message wrapper that overlays additional headers onto an existing
+    # message without mutating the original message state.
+    #
+    # Overlay headers participate in component resolution and are attached
+    # to the underlying message when signatures are applied.
+    #
+    # This is primarily used for derived or generated headers that should
+    # be visible during signature generation before being persisted onto
+    # the underlying HTTP message.
+    class Overlay
+      # Creates a new overlay message.
+      #
+      # @param message [Linzer::Message]
+      #   The underlying message to wrap
+      # @param overlay_headers [#to_h, Hash]
+      #   Additional headers to overlay onto the message
+      #   A hash-like object containing HTTP headers to use as an overlay layer.
+      #   Keys and values must be compatible with Net::HTTP header semantics.
+      def initialize(message, overlay_headers)
+        @message         = message
+        @overlay_headers = overlay_headers
+
+        # Internal adapter-backed overlay used to reuse Linzer's field
+        # resolution logic for header/field evaluation.
+        @overlay         = build_overlay_message(overlay_headers)
       end
 
+      # Returns an overlaid header value.
+      #
+      # @param name [String]
+      # @return [String, nil]
       def header(name)
-        # binding.irb
-        @headers[name]
+        @message.header(name) || @overlay.header(name)
       end
 
-      def field?(header)
-        return true if @message.field?(header)
-        super
+      # Returns true if the field is resolvable from either:
+      #   - the underlying message (including derived fields), or
+      #   - the overlay adapter (including derived fields)
+      #
+      # @param field [Linzer::FieldId]
+      # @return [Boolean]
+      def field?(field)
+        @message.field?(field) || @overlay.field?(field)
       end
 
+      # Attaches signature headers to the underlying message together
+      # with the overlay headers.
+      #
+      # Overlay headers are included only at attachment time and do not
+      # mutate the underlying message state.
+      #
+      # @param signature [Linzer::Signature] The signature to attach
+      # @return [Object]
+      #   The underlying message returned by Linzer::Message#attach!
       def attach!(signature)
-        @message.attach!(signature, additional_headers: @headers)
+        @message.attach!(signature, additional_headers: @overlay_headers.to_h)
       end
 
-      #       def field?(header)
-      #         return true if @message.field?(header)
-      #         binding.irb
-      #         # @message.field?(header) || @headers.key?(header)
-      #         return true if header.field_name == "\"signature-agent\";key=\"my-sig\"" && @headers.key?("signature-agent")
-      #         false
-      #       end
-
-      #       def [](name)
-      #         return @message[name] if @message[name]
-      #         binding.irb
-      #         # field_id = (field.is_a?(FieldId) || field.is_a?(Field::FastIdentifier)) ? field : parse_field_name(field)
-      #         # retrieve(field_id.item, field_id.derived? ? :derived : :field)
-      #         return "https://example.com/someagent" if name.field_name == "\"signature-agent\";key=\"my-sig\""
-      #         nil
-      #       end
-
+      # Retrieves a resolved field value.
+      #
+      # Values from the underlying message take precedence over overlay
+      # header values.
+      #
+      # @param name [Linzer::FieldId]
+      # @return [Object, nil]
       def [](name)
-        return @message[name] if @message[name]
-        super
+        @message[name] || @overlay[name]
       end
 
-      class Headers
-        include Net::HTTPHeader
+      private
 
-        def initialize(headers)
-          initialize_http_header(headers)
-        end
-
-        def empty?
-          @header.empty?
-        end
+      # Builds a synthetic Net::HTTP request used solely to reuse Linzer's
+      # Generic::Request field resolution logic.
+      #
+      # The URI is a placeholder because only header and field resolution
+      # behavior is required; no network request is performed.
+      def build_overlay_message(headers)
+        request = Net::HTTP::Get.new(URI("https://example.org/"))
+        request.initialize_http_header(headers.to_h)
+        Adapter::Generic::Request.new(request)
       end
     end
   end

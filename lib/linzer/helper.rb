@@ -31,7 +31,7 @@ module Linzer
     #   Additional signature parameters (created, nonce, etc.)
     #
     # @param profile [Symbol, Linzer::Signing::Profile::Base, nil]
-    #   optional signing profile
+    #   Optional signing profile
     #
     # @return [Object] The original HTTP message with signature headers attached
     #
@@ -77,9 +77,7 @@ module Linzer
         ctx.params
       )
 
-      # binding.irb
       ctx.message.attach!(signature)
-      # message.attach!(signature)
     end
 
     # Verifies a signed HTTP request or response.
