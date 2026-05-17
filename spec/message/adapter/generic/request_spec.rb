@@ -23,6 +23,22 @@ RSpec.describe Linzer::Message::Adapter::Generic::Request do
         expect(adapter.header("signature")).to       include("sig1")
         expect(adapter.header("signature-input")).to include("sig1")
       end
+
+      context "and with additional headers to attach" do
+        it "attaches a signature header and additional headers to the message" do
+          signature = Linzer::Signature.build({
+            "Signature"       => "sig1=:abc123=:",
+            "Signature-Input" => 'sig1=("@method");created=123'
+          })
+
+          adapter.attach!(signature, additional_headers: {"additional" => "value"})
+
+          expect(adapter.header("signature")).to       include("sig1")
+          expect(adapter.header("signature-input")).to include("sig1")
+          expect(adapter.header("additional")).to      eq("value")
+          expect(request["additional"]).to             eq("value")
+        end
+      end
     end
 
     # RFC 9421 Section 4.3 allows multiple signatures on a single message.
