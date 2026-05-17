@@ -16,12 +16,22 @@ module Linzer
     #
     # @param request_or_response [Net::HTTPRequest, Net::HTTPResponse, Rack::Request,
     #   Rack::Response, HTTP::Request] The HTTP message to sign
-    # @param args [Hash] Keyword arguments
-    # @option args [Linzer::Key] :key The private key to sign with (required)
-    # @option args [Array<String>] :components The components to include in the
-    #   signature (required). Example: `%w[@method @path content-type]`
-    # @option args [String] :label Optional signature label (defaults to "sig1")
-    # @option args [Hash] :params Additional signature parameters (created, nonce, etc.)
+    #
+    # @param key [Linzer::Key]
+    #   The private key to sign with (required)
+    #
+    # @param components [Array<String>]
+    #   The components to include in the signature (required).
+    #   Example: `%w[@method @path content-type]`
+    #
+    # @param label [String, nil]
+    #   Optional signature label (defaults to "sig1")
+    #
+    # @param params [Hash]
+    #   Additional signature parameters (created, nonce, etc.)
+    #
+    # @param profile [Symbol, Linzer::Signature::Profile::Base, nil]
+    #   Optional signing profile
     #
     # @return [Object] The original HTTP message with signature headers attached
     #
@@ -46,17 +56,28 @@ module Linzer
     #     label: "my-sig",
     #     params: { nonce: SecureRandom.hex(16), tag: "my-app" }
     #   )
-    def sign!(request_or_response, **args)
+    def sign!(request_or_response, key:, components: nil, label: nil, params: {}, profile: nil)
       message = Message.new(request_or_response)
-      options = {}
 
-      label = args[:label]
-      options[:label] = label if label
-      options.merge!(args.fetch(:params, {}))
+      ctx = Signature::Context.new(
+        message:    message,
+        key:        key,
+        label:      label,
+        components: Array(components),
+        params:     Hash(params)
+      )
 
-      key = args.fetch(:key)
-      signature = Linzer::Signer.sign(key, message, args.fetch(:components), options)
-      message.attach!(signature)
+      resolved_profile = Signature::Profile.resolve(profile)
+      resolved_profile&.apply(ctx)
+
+      signature = Linzer::Signer.sign(
+        ctx.key,
+        ctx.message,
+        ctx.components,
+        ctx.params
+      )
+
+      ctx.message.attach!(signature)
     end
 
     # Verifies a signed HTTP request or response.
