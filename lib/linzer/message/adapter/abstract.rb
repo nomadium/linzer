@@ -97,19 +97,26 @@ module Linzer
         # Attaches a signature to the underlying HTTP message.
         #
         # @param signature [Signature] The signature to attach
+        # @param additional_headers [#each]
+        #   Additional headers to attach after signature processing.
+        #   Header values overwrite existing values with the same field name.
+        #
         # @return [Object] The underlying HTTP message
-        def attach!(signature)
+        def attach!(signature, additional_headers: {})
           signature_headers = signature.to_h
 
-          unless has_signature?
+          if !has_signature?
             signature_headers.each { |h, v| set_header!(h, v) }
-            return @operation
+          else
+            signature_headers.each do |hdr, value|
+              merged = Starry.parse_dictionary(String(header(hdr)))
+              merged.merge!(Starry.parse_dictionary(value))
+              set_header!(hdr, Starry.serialize_dictionary(merged))
+            end
           end
 
-          signature_headers.each do |hdr, value|
-            merged = Starry.parse_dictionary(String(header(hdr)))
-            merged.merge!(Starry.parse_dictionary(value))
-            set_header!(hdr, Starry.serialize_dictionary(merged))
+          if !additional_headers.empty?
+            additional_headers.each { |h, v| set_header!(h, v) }
           end
 
           @operation
