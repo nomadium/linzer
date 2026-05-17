@@ -53,12 +53,17 @@ module Linzer
       # @param covered_components [Array<String>] Components to include
       #   in the signature. Defaults to `@method`, `@request-target`,
       #   `@authority`, and `date`.
+      # @param profile [Symbol, Linzer::Signature::Profile::Base, nil]
+      #   Optional signing profile used when generating signatures.
+      #   When provided, the profile may supply default covered components
+      #   and signature parameters.
       #
       # @raise [HTTP::Error] If key is nil or invalid
-      def initialize(key:, params: {}, covered_components: default_components)
+      def initialize(key:, params: {}, covered_components: default_components, profile: nil)
         @fields = Array(covered_components)
         @key    = validate_key(key)
         @params = Hash(params)
+        @profile = profile
       end
 
       # @return [Array<String>] The components to include in signatures
@@ -67,6 +72,10 @@ module Linzer
       # @return [Hash] Additional signature parameters
       attr_reader :params
 
+      # @return [Linzer::Signature::Profile::Base, Symbol, nil]
+      #  Optional signing profile used during signature generation
+      attr_reader :profile
+
       # Wraps an outgoing request to add signature headers.
       #
       # Called automatically by http.rb for each request.
@@ -74,7 +83,11 @@ module Linzer
       # @param request [HTTP::Request] The outgoing request
       # @return [HTTP::Request] The request with signature headers added
       def wrap_request(request)
-        Linzer.sign! request, key: key, components: fields, params: params
+        Linzer.sign! request,
+                     key:        key,
+                     components: fields,
+                     params:     params,
+                     profile:    profile
         request
       end
 
