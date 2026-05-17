@@ -7,6 +7,7 @@ require "net/http"
 
 require_relative "linzer/version"
 require_relative "linzer/common"
+require_relative "linzer/signature/context"
 require_relative "linzer/helper"
 require_relative "linzer/options"
 require_relative "linzer/message"
