@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "profile/base"
+require_relative "profile/web_bot_auth"
 
 module Linzer
   class Signature
@@ -39,9 +40,30 @@ module Linzer
         case profile
         when NilClass, Profile::Base
           profile
+        when Symbol
+          case profile
+          when :web_bot_auth
+            WebBotAuth.default
+          else
+            raise Error, unsupported
+          end
         else
           raise Error, unsupported
         end
+      end
+
+      # Convenience constructor for a Web Bot Auth signing profile.
+      #
+      # This is a helper for constructing a profile instance directly
+      # without using {Profile.resolve}.
+      #
+      # @param options [Hash]
+      #   Options passed through to WebBotAuth initializer
+      #
+      # @return [Profile::WebBotAuth]
+      #   A configured WebBotAuth profile instance
+      def self.web_bot_auth(**options)
+        WebBotAuth.new(**options)
       end
     end
   end
