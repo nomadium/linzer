@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+- Add Web Bot Auth support, implementing the current IETF draft
+  (draft-meunier-web-bot-auth-architecture-05).
+  Includes recommended signature parameter defaults, nonce generation,
+  and optional Signature-Agent header handling.
+
 ## [0.8.0.beta1] - 2026-05-07
 
 - Optimize signature parsing, serialization, and validation performance

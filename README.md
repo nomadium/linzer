@@ -490,6 +490,61 @@ anything that to responds to `#to_i`, including an `ActiveSupport::Duration`.
 If the signature is older than the allowed window, verification
 fails with an error.
 
+## Web Bot Auth
+
+Linzer supports the Web Bot Auth authentication mechanism, which allows
+automated clients to identify themselves using HTTP Message Signatures
+(as defined in RFC 9421).
+
+This is useful for distinguishing legitimate automated traffic from
+anonymous or potentially abusive requests.
+
+For more details on Web Bot Auth, refer to the
+[relevant IETF drafts](https://datatracker.ietf.org/wg/webbotauth/documents/)
+or to additional resources such as
+[this Cloudflare article](https://blog.cloudflare.com/web-bot-auth/).
+
+When enabled, as shown in the examples below, Linzer adds the required
+signature headers to identify the client as an automated agent:
+
+- Plain Linzer:
+
+```ruby
+
+Linzer.sign!(
+  request,
+  key:     key,
+  label:   "sig1",
+  profile: :web_bot_auth
+  # or override/set specific parameters like the following:
+  # profile: Linzer::Signing::Profile.web_bot_auth(agent: "https://...")
+)
+```
+
+- http.rb gem:
+
+```ruby
+require "linzer/http/signature_feature"
+
+response = HTTP.headers(date: Time.now.utc.httpdate, foo: "bar")
+               .use(http_signature: {key: key, profile: :web_bot_auth}
+               .get(url)
+```
+
+- Faraday:
+
+```ruby
+require "linzer/faraday"
+
+conn = Faraday.new(url: api_url) do |builder|
+  builder.request :http_signature, key: signing_key,
+                                   components: components,
+                                   profile: :web_bot_auth,
+                                   params: signature_params
+end
+response = conn.post("/task")
+```
+
 ## Supported algorithms
 
 Linzer currently supports the following signature algorithms:
