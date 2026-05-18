@@ -208,8 +208,9 @@ module Linzer
           has_bs  = name.parameters["bs"]
 
           if has_req
-            name.parameters.delete("req")
-            return req(name, method)
+            request_field = Starry::Item.new(name.value,
+                                             name.parameters.except("req"))
+            return req(request_field, method)
           end
 
           value = send(method, name)
