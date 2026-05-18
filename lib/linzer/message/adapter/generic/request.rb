@@ -72,6 +72,7 @@ module Linzer
           end
 
           def query_param(uri_query, name)
+            return nil if !uri_query
             param_name = name.parameters["name"]
             return nil if !param_name
             decoded_param_name = URI.decode_uri_component(param_name)
