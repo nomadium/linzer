@@ -234,6 +234,7 @@ module Linzer
       def build(headers, options = {})
         basic_validate headers
         headers.transform_keys!(&:downcase)
+        headers.transform_values! { |v| v.encode(Encoding::ASCII) }
         validate headers
 
         input = parse_structured_field(headers, "signature-input")
