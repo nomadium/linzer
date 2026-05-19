@@ -331,22 +331,21 @@ module Linzer
         signature[label].value.force_encoding(Encoding::ASCII_8BIT)
       end
 
-      # Serializes parsed Starry items to their string representations
-      # without going through the generic Starry.serialize_item path.
+      # Serializes parsed structured field items to their RFC 8941
+      # string representations.
       #
-      # For simple items (no parameters): builds '"value"' directly.
-      # For items with parameters: falls back to Starry.serialize_item.
+      # Serialization is delegated to `Starry.serialize_item` to ensure
+      # consistent RFC-compliant formatting of structured field items and
+      # parameters.
       #
-      # @param items [Array<Starry::Item>] parsed items from signature-input
-      # @return [Array<String>] serialized component identifiers
+      # @param items [Array<Starry::Item>]
+      #   Parsed structured field items.
+      #
+      # @return [Array<String>]
+      #   The serialized structured field item representations.
+      #
       def serialize_parsed_items(items)
-        items.map do |item|
-          if item.parameters.empty?
-            "\"#{item.value}\""
-          else
-            Starry.serialize_item(item)
-          end
-        end
+        items.map { |item| Starry.serialize_item(item) }
       end
 
       def parse_structured_dictionary(str, field_name = nil)

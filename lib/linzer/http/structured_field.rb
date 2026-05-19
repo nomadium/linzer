@@ -10,11 +10,14 @@ module Linzer
     # @see https://www.rfc-editor.org/rfc/rfc8941 RFC 8941
     # @see https://www.rfc-editor.org/rfc/rfc9421 RFC 9421
     module StructuredField
-      # Serializes signature parameters to the RFC 8941 string format.
+      # Serializes HTTP Structured Field parameters according to RFC 8941.
       #
-      # Integers are bare, strings are double-quoted. This covers all
-      # parameter types used in RFC 9421 signatures (created, expires,
-      # keyid, nonce, alg, tag).
+      # This is primarily used for HTTP Message Signature parameters defined
+      # by RFC 9421.
+      #
+      # Serialization is delegated to `Starry.serialize_parameters` to ensure
+      # proper RFC-compliant encoding and quoting behavior for structured
+      # field values.
       #
       # @example Serialize signature parameters
       #   StructuredField.serialize_parameters(
@@ -24,24 +27,15 @@ module Linzer
       #   # => ';created=1700000000;keyid="my-key"'
       #
       # @param parameters [Hash{Symbol,String => Object}]
-      #   The parameters to serialize.
+      #   The parameters to serialize as structured field parameters.
       #
       # @return [String]
       #   The serialized structured field parameter string.
       #
+      # @see https://www.rfc-editor.org/rfc/rfc8941 RFC 8941
+      # @see https://www.rfc-editor.org/rfc/rfc9421 RFC 9421
       def self.serialize_parameters(parameters)
-        params_str = +""
-        parameters.each do |key, value|
-          params_str << case value
-          when Integer
-            ";#{key}=#{value}"
-          when String
-            ";#{key}=\"#{value}\""
-          else
-            ";#{key}=#{value}"
-          end
-        end
-        params_str
+        Starry.serialize_parameters(parameters)
       end
     end
   end
