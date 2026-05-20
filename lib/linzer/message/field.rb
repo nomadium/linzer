@@ -34,7 +34,7 @@ module Linzer
         # @raise [Error] If the component identifier is invalid
         def serialize
           raise Error, "Invalid component identifier: '#{field_name}'!" unless item
-          @serialized || Starry.serialize(@item)
+          @serialized || HTTP::StructuredField.serialize(@item)
         end
       end
 
@@ -113,7 +113,7 @@ module Linzer
                 # build the Item and serialized string directly,
                 # bypassing Starry.parse_item + Starry.serialize
                 quoted = "\"#{c}\""
-                item   = Starry::Item.new(c, {})
+                item   = HTTP::StructuredField::Item.new(c, {})
                 field_ids[i]  = FastIdentifier.new(quoted, item)
                 serialized[i] = quoted
               end
@@ -127,8 +127,8 @@ module Linzer
           # @return [Array<String>] Component names
           def deserialize_components(components)
             components.map do |c|
-              item = Starry.parse_item(c)
-              item.parameters.empty? ? item.value : Starry.serialize(item)
+              item = HTTP::StructuredField.parse_item(c)
+              item.parameters.empty? ? item.value : HTTP::StructuredField.serialize(item)
             end
           end
         end

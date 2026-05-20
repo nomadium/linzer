@@ -163,18 +163,16 @@ module Linzer
         def set_agent!(agent, label, message, components, overlay_headers)
           if message[SIGNATURE_AGENT] != agent
             overlay_headers[SIGNATURE_AGENT] =
-              Starry.serialize_dictionary(label => agent)
+              HTTP::StructuredField.serialize_dictionary(label => agent)
 
-            field = Starry::Item.new(SIGNATURE_AGENT, key: label)
-            serialized_field = Starry.serialize(field)
+            field = HTTP::StructuredField::Item.new(SIGNATURE_AGENT, key: label)
+            serialized_field = HTTP::StructuredField.serialize(field)
             if !components.include?(serialized_field)
               components << serialized_field
             end
           end
-        rescue Starry::SerializeError => ex
-          raise Error,
-                "Invalid #{SIGNATURE_AGENT} header value!",
-                cause: ex
+        rescue Error => ex
+          raise Error, "Invalid #{SIGNATURE_AGENT} header value!", cause: ex
         end
 
         # Validates that the context is compatible with Web Bot Auth.

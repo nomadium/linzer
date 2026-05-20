@@ -143,12 +143,12 @@ RSpec.describe Linzer::Signature::Profile::WebBotAuth do
           .with("signature-agent")
           .and_return(nil)
 
-        allow(Starry)
+        allow(Linzer::HTTP::StructuredField)
           .to receive(:serialize_dictionary)
           .with("sig1" => agent)
           .and_return('sig1="https://example.com/bot"')
 
-        allow(Starry)
+        allow(Linzer::HTTP::StructuredField)
           .to receive(:serialize)
           .and_return('"signature-agent";key="sig1"')
       end
@@ -198,19 +198,16 @@ RSpec.describe Linzer::Signature::Profile::WebBotAuth do
           .with("signature-agent")
           .and_return(nil)
 
-        allow(Starry)
+        allow(Linzer::HTTP::StructuredField)
           .to receive(:serialize_dictionary)
-          .and_raise(
-            Starry::SerializeError.new("boom")
-          )
+          .and_raise(Linzer::Error.new("boom"))
       end
 
       let(:params) { {label: "sig1"} }
 
       it "raises a Linzer::Error" do
         expect { apply_profile }
-          .to raise_error(
-            Linzer::Error,
+          .to raise_error(Linzer::Error,
             "Invalid signature-agent header value!"
           )
       end

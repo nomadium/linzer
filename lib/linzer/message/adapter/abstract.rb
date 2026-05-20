@@ -108,10 +108,16 @@ module Linzer
           if !has_signature?
             signature_headers.each { |h, v| set_header!(h, v) }
           else
-            signature_headers.each do |hdr, value|
-              merged = Starry.parse_dictionary(String(header(hdr)))
-              merged.merge!(Starry.parse_dictionary(value))
-              set_header!(hdr, Starry.serialize_dictionary(merged))
+            begin
+              signature_headers.each do |hdr, value|
+                merged = HTTP::StructuredField.parse_dictionary(String(header(hdr)))
+                merged.merge!(HTTP::StructuredField.parse_dictionary(value))
+                set_header!(hdr, HTTP::StructuredField.serialize_dictionary(merged))
+              end
+            rescue Error => ex
+              raise Error,
+                    "Cannot attach signature, invalid signature header(s)!",
+                    cause: ex
             end
           end
 
@@ -120,10 +126,6 @@ module Linzer
           end
 
           @operation
-        rescue Starry::ParseError => e
-          raise Error,
-                "Cannot attach signature, invalid signature header(s)!",
-                cause: e
         end
 
         private
@@ -208,8 +210,9 @@ module Linzer
           has_bs  = name.parameters["bs"]
 
           if has_req
-            request_field = Starry::Item.new(name.value,
-                                             name.parameters.except("req"))
+            request_field =
+              HTTP::StructuredField::Item.new(name.value,
+                                              name.parameters.except("req"))
             return req(request_field, method)
           end
 
@@ -231,18 +234,15 @@ module Linzer
         # @return [String] the serialized structured field value
         # @see https://www.rfc-editor.org/rfc/rfc9421.html#section-2.1.1
         def sf(value, key = nil)
-          dict = Starry.parse_dictionary(value)
+          dict = HTTP::StructuredField.parse_dictionary(value)
 
           if key
             obj = dict[key]
-            Starry.serialize(obj.is_a?(Starry::InnerList) ? [obj] : obj)
+            HTTP::StructuredField.serialize(obj.is_a?(HTTP::StructuredField::InnerList) ? [obj] : obj)
           else
-            Starry.serialize(dict)
+            HTTP::StructuredField.serialize(dict)
           end
-        rescue => _ex
-          # XXX: TODO: rescue Starry::ParseError once
-          # https://github.com/takemar/starry/pull/4 is released or
-          # Starry related method calls are refactored.
+        rescue Error => _ex
           nil
         end
 
@@ -252,7 +252,7 @@ module Linzer
         # @return [String] the serialized byte sequence
         # @see https://www.rfc-editor.org/rfc/rfc9421.html#section-2.1.3
         def bs(value)
-          Starry.serialize(value.encode(Encoding::ASCII_8BIT))
+          HTTP::StructuredField.serialize(value.encode(Encoding::ASCII_8BIT))
         end
 
         # Retrieves a trailer field value.
