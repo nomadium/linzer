@@ -120,7 +120,7 @@ RSpec.describe Linzer::Message::Adapter::Generic::Request do
 
         # There should be exactly one "sig1" entry, not two
         sig_headers = request.each_header.to_h.slice("signature", "signature-input")
-        parsed = Starry.parse_dictionary(sig_headers["signature"])
+        parsed = Linzer::HTTP::StructuredField.parse_dictionary(sig_headers["signature"])
 
         expect(parsed.keys).to eq(["sig1"])
       end

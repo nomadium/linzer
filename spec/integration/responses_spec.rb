@@ -19,7 +19,7 @@ RSpec.describe "Signature verification on responses", :integration do
   end
 
   def content_digest(data)
-    Starry.serialize("sha-256" => Digest::SHA256.digest(data))
+    Linzer::HTTP::StructuredField.serialize("sha-256" => Digest::SHA256.digest(data))
   end
 
   let(:port) { @web_server.port }

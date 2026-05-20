@@ -405,7 +405,7 @@ RSpec.describe "RFC9421" do
       serialized_params = '("@target-uri" "@authority" "date" "cache-control")' \
                           ';keyid="test-key-rsa-pss";alg="rsa-pss-sha512";' \
                           "created=1618884475;expires=1618884775"
-      signature_params = Starry.parse_list(serialized_params).shift
+      signature_params = Linzer::HTTP::StructuredField.parse_list(serialized_params).shift
 
       parameters = signature_params.parameters
       expect(parameters["keyid"]).to   eq("test-key-rsa-pss")
@@ -453,8 +453,8 @@ RSpec.describe "RFC9421" do
         '"@authority";req "@method";req "@path";req "content-digest";req)' \
         ';created=1618884479;keyid="test-key-ecc-p256"'
 
-      signature_params = Starry.parse_list(serialized_signature_params).shift
-      components = signature_params.value.map { |i| Starry.serialize(i) }
+      signature_params = Linzer::HTTP::StructuredField.parse_list(serialized_signature_params).shift
+      components = signature_params.value.map { |i| Linzer::HTTP::StructuredField.serialize(i) }
       parameters = signature_params.parameters
 
       expect(Linzer.signature_base(message, components, parameters))
@@ -501,7 +501,7 @@ RSpec.describe "RFC9421" do
       serialized_components = Linzer::FieldId.serialize_components(components)
 
       parameters = {"created" => 1618884473, "keyid" => "test-key-rsa-pss"}
-      signature_params = Starry.serialize_list([Starry::InnerList.new(components, parameters)])
+      signature_params = Linzer::HTTP::StructuredField.serialize_list([Linzer::HTTP::StructuredField::InnerList.new(components, parameters)])
 
       expected_content_digest = "sha-512=:WZDPaVn/7XgHaAy8pmojAkGWoRx2UFChF41A2svX" \
                                 "+TaPm+AbwAgBWnrIiYllu7BNNyealdVLvRwEmTHWXvJwew==:"
@@ -535,8 +535,8 @@ RSpec.describe "RFC9421" do
     def signature_headers(b64_signature, components = [], parameters = {}, label = "sig1")
       {
         "signature"       => Base64.strict_decode64(b64_signature),
-        "signature-input" => Starry::InnerList.new(components, parameters)
-      }.transform_values! { |v| Starry.serialize(String(label) => v) }
+        "signature-input" => Linzer::HTTP::StructuredField::InnerList.new(components, parameters)
+      }.transform_values! { |v| Linzer::HTTP::StructuredField.serialize(String(label) => v) }
     end
 
     it "example signature value" do

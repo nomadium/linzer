@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 def build_random_signature(label)
-  Starry.serialize_dictionary({label => SecureRandom.random_bytes(64)})
+  Linzer::HTTP::StructuredField.serialize_dictionary({label => SecureRandom.random_bytes(64)})
 end
 
 RSpec.describe "README usage" do

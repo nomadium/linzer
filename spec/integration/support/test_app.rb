@@ -53,7 +53,7 @@ module Linzer
         end
 
         def content_digest(data)
-          Starry.serialize("sha-256" => Digest::SHA256.digest(data))
+          Linzer::HTTP::StructuredField.serialize("sha-256" => Digest::SHA256.digest(data))
         end
 
         def keys_directory
