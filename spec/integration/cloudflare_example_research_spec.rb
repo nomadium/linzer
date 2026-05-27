@@ -138,7 +138,13 @@ RSpec.describe "Signed requests against cloudflare example server", :integration
     end
   end
 
-  context "debug server" do
+  #
+  # The behavior of
+  # https://http-message-signatures-example.research.cloudflare.com/debug
+  # endpoint changed starting on May 27th 2026.
+  # XXX: TO-DO: Take a look and check if it makes sense to keep these tests.
+  #
+  xcontext "debug server" do
     let(:uri) { URI(url + "/debug") }
 
     context "using Net::HTTP client" do
