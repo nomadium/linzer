@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+- Add ML-DSA-44, ML-DSA-65, and ML-DSA-87 support following the C2SP
+  post-quantum HTTP Message Signatures profile, including raw, DER, and PEM
+  key loading and strict parameter-set binding.
+- Due to the `ml_dsa` gemspec, the minimum Ruby version was bumped to 2.7.2.
+
 ## [0.8.0.beta2] - 2026-05-20
 
 - Add Web Bot Auth support, implementing the current IETF draft
