@@ -1,5 +1,13 @@
 ## [Unreleased]
 
+- Add ML-DSA-44, ML-DSA-65, and ML-DSA-87 support following the C2SP
+  post-quantum HTTP Message Signatures profile, including raw, DER, and PEM
+  key loading and strict parameter-set binding.
+  Pull request [#29](https://github.com/nomadium/linzer/pull/29)
+  by [soatok](https://github.com/soatok).
+
+- Due to the `ml_dsa` gemspec, the minimum Ruby version was bumped to 2.7.2.
+
 ## [0.8.0] - 2026-08-08
 
 (Only one change since the last beta: the Faraday bug fix below. Everything

@@ -11,7 +11,7 @@ Gem::Specification.new do |spec|
   spec.summary = "An implementation of HTTP Messages Signatures (RFC9421)"
   spec.homepage = "https://github.com/nomadium/linzer"
   spec.license = "MIT"
-  spec.required_ruby_version = ">= 2.6.0"
+  spec.required_ruby_version = ">= 2.7.2"
 
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = spec.homepage
@@ -33,6 +33,7 @@ Gem::Specification.new do |spec|
     spec.add_runtime_dependency "openssl", ">= 3", "< 5"
   end
   spec.add_runtime_dependency "starry", "~> 0.2"
+  spec.add_runtime_dependency "ml_dsa", "~> 0.1"
   spec.add_runtime_dependency "uri", "~> 1.0", ">= 1.0.2"
   spec.add_runtime_dependency "forwardable", "~> 1.3", ">= 1.3.3"
   spec.add_runtime_dependency "net-http", ">= 0.6", "< 0.10"

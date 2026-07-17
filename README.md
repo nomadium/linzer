@@ -554,6 +554,7 @@ Linzer currently supports the following signature algorithms:
 - HMAC-SHA256
 - Ed25519
 - ECDSA (P-256 and P-384 curves).
+- ML-DSA-44, ML-DSA-65, and ML-DSA-87 ([C2SP profile](https://c2sp.org/httpsig-pq))
 
 Of the JSON Web Signature (JWS) algorithms mentioned in RFC 9421,
 only Ed25519 is currently supported. Support for additional

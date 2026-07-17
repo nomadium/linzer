@@ -241,6 +241,58 @@ module Linzer
         Linzer::ECDSA::Key.new(key, id: key_id, digest: "SHA384")
       end
 
+      # Generates an ML-DSA-44 key pair.
+      #
+      # @param key_id [String, nil] Optional key identifier
+      # @return [MLDSA::Key] A new ML-DSA-44 key pair
+      # @see https://c2sp.org/httpsig-pq C2SP post-quantum HTTP signatures
+      def generate_ml_dsa_44_key(key_id = nil)
+        generate_ml_dsa_key("ml-dsa-44", key_id)
+      end
+
+      # Generates an ML-DSA-65 key pair.
+      #
+      # @param key_id [String, nil] Optional key identifier
+      # @return [MLDSA::Key] A new ML-DSA-65 key pair
+      def generate_ml_dsa_65_key(key_id = nil)
+        generate_ml_dsa_key("ml-dsa-65", key_id)
+      end
+
+      # Generates an ML-DSA-87 key pair.
+      #
+      # @param key_id [String, nil] Optional key identifier
+      # @return [MLDSA::Key] A new ML-DSA-87 key pair
+      def generate_ml_dsa_87_key(key_id = nil)
+        generate_ml_dsa_key("ml-dsa-87", key_id)
+      end
+
+      # Loads a raw, DER, or PEM ML-DSA-44 private or public key.
+      #
+      # @param material [String, MlDsa::SecretKey, MlDsa::PublicKey] Key material
+      # @param key_id [String, nil] Optional key identifier
+      # @return [MLDSA::Key] The loaded key
+      def new_ml_dsa_44_key(material, key_id = nil)
+        new_ml_dsa_key(material, "ml-dsa-44", key_id)
+      end
+
+      # Loads a raw, DER, or PEM ML-DSA-65 private or public key.
+      #
+      # @param material [String, MlDsa::SecretKey, MlDsa::PublicKey] Key material
+      # @param key_id [String, nil] Optional key identifier
+      # @return [MLDSA::Key] The loaded key
+      def new_ml_dsa_65_key(material, key_id = nil)
+        new_ml_dsa_key(material, "ml-dsa-65", key_id)
+      end
+
+      # Loads a raw, DER, or PEM ML-DSA-87 private or public key.
+      #
+      # @param material [String, MlDsa::SecretKey, MlDsa::PublicKey] Key material
+      # @param key_id [String, nil] Optional key identifier
+      # @return [MLDSA::Key] The loaded key
+      def new_ml_dsa_87_key(material, key_id = nil)
+        new_ml_dsa_key(material, "ml-dsa-87", key_id)
+      end
+
       # Generates a new JWS key for the specified algorithm.
       #
       # This method generates keys compatible with JSON Web Signature (JWS)
@@ -268,6 +320,47 @@ module Linzer
       #   key = Linzer.jwk_import(jwk)
       def jwk_import(key, params = {})
         Linzer::JWS.jwk_import(key, params)
+      end
+
+      private
+
+      def generate_ml_dsa_key(algorithm, key_id)
+        parameter_set = Linzer::MLDSA::ALGORITHMS.fetch(algorithm)
+        pair = MlDsa.keygen(parameter_set)
+        Linzer::MLDSA::Key.new(pair.secret_key, id: key_id, algorithm: algorithm)
+      rescue MlDsa::Error, ArgumentError, TypeError => e
+        raise Linzer::Error, e.message, cause: e
+      end
+
+      def new_ml_dsa_key(material, algorithm, key_id)
+        parameter_set = Linzer::MLDSA::ALGORITHMS.fetch(algorithm)
+        key = deserialize_ml_dsa_key(material, parameter_set)
+        Linzer::MLDSA::Key.new(key, id: key_id, algorithm: algorithm)
+      rescue MlDsa::Error, ArgumentError, TypeError => e
+        raise Linzer::Error, e.message, cause: e
+      end
+
+      def deserialize_ml_dsa_key(material, parameter_set)
+        return material if material.is_a?(MlDsa::PublicKey) || material.is_a?(MlDsa::SecretKey)
+        unless material.is_a?(String)
+          raise TypeError, "ML-DSA key material must be a String, MlDsa::PublicKey, or MlDsa::SecretKey"
+        end
+
+        if material.bytesize == parameter_set.public_key_bytes
+          MlDsa::PublicKey.from_bytes(material, parameter_set)
+        elsif material.bytesize == parameter_set.secret_key_bytes
+          MlDsa::SecretKey.from_bytes(material, parameter_set)
+        elsif material.start_with?("-----BEGIN PUBLIC KEY-----")
+          MlDsa::PublicKey.from_pem(material)
+        elsif material.start_with?("-----BEGIN PRIVATE KEY-----")
+          MlDsa::SecretKey.from_pem(material)
+        else
+          begin
+            MlDsa::SecretKey.from_der(material)
+          rescue MlDsa::Error::Deserialization
+            MlDsa::PublicKey.from_der(material)
+          end
+        end
       end
     end
   end

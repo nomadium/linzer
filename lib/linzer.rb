@@ -2,6 +2,7 @@
 
 require "starry"
 require "openssl"
+require "ml_dsa"
 require "uri"
 require "net/http"
 
@@ -26,6 +27,7 @@ require_relative "linzer/rsa_pss"
 require_relative "linzer/hmac"
 require_relative "linzer/ed25519"
 require_relative "linzer/ecdsa"
+require_relative "linzer/ml_dsa"
 require_relative "linzer/key/helper"
 require_relative "linzer/signer"
 require_relative "linzer/verifier"
@@ -33,7 +35,7 @@ require_relative "linzer/verifier"
 # Linzer is a Ruby library for HTTP Message Signatures as defined in RFC 9421.
 #
 # It provides functionality to sign and verify HTTP messages using various
-# cryptographic algorithms including RSA-PSS, HMAC-SHA256, ECDSA, and Ed25519.
+# cryptographic algorithms including RSA-PSS, HMAC-SHA256, ECDSA, Ed25519, and ML-DSA.
 #
 # @example Signing a request with Ed25519
 #   key = Linzer.generate_ed25519_key("my-key-id")
