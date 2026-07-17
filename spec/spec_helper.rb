@@ -15,6 +15,7 @@ SimpleCov.start do
   add_filter "/spec/verifier_spec.rb"
 end
 
+require "base64"
 require "securerandom"
 
 require "linzer"
