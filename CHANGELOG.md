@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+- Add ML-DSA-44 (FIPS 204) post-quantum signature algorithm support,
+  implementing the `ml-dsa-44` identifier from the C2SP httpsig-pq
+  specification. Includes raw FIPS 204 key import helpers alongside the
+  usual PEM-based ones. Requires OpenSSL 3.5+ with ML-DSA signature
+  algorithms enabled.
+
 ## [0.8.0.beta2] - 2026-05-20
 
 - Add Web Bot Auth support, implementing the current IETF draft

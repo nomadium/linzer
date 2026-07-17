@@ -241,6 +241,85 @@ module Linzer
         Linzer::ECDSA::Key.new(key, id: key_id, digest: "SHA384")
       end
 
+      # Generates a new ML-DSA-44 (FIPS 204) key pair.
+      #
+      # ML-DSA-44 is the NIST post-quantum signature standard's smallest
+      # parameter set. Requires OpenSSL 3.5+ with ML-DSA signature
+      # algorithms enabled.
+      #
+      # Uses the `ml-dsa-44` algorithm identifier.
+      #
+      # @param key_id [String, nil] Optional key identifier
+      # @return [MLDSA::Key] A new ML-DSA-44 key pair
+      #
+      # @example
+      #   key = Linzer.generate_ml_dsa_44_key("my-ml-dsa-key")
+      def generate_ml_dsa_44_key(key_id = nil)
+        material = OpenSSL::PKey.generate_key("ML-DSA-44")
+        Linzer::MLDSA::Key.new(material, id: key_id)
+      end
+
+      # Loads an ML-DSA-44 key from PEM-encoded material.
+      #
+      # Can load either a private key (for signing) or public key (for
+      # verification).
+      #
+      # @param material [String] PEM-encoded ML-DSA-44 key
+      # @param key_id [String, nil] Optional key identifier
+      # @return [MLDSA::Key] The loaded key
+      #
+      # @example Loading a private key for signing
+      #   key = Linzer.new_ml_dsa_44_key(File.read("ml_dsa_44.pem"), "my-key")
+      def new_ml_dsa_44_key(material, key_id = nil)
+        key = OpenSSL::PKey.read(material)
+        Linzer::MLDSA::Key.new(key, id: key_id)
+      end
+
+      # Loads an ML-DSA-44 public key from PEM-encoded material.
+      #
+      # This is an alias for {#new_ml_dsa_44_key} for clarity when loading
+      # public keys specifically.
+      #
+      # @param material [String] PEM-encoded ML-DSA-44 public key
+      # @param key_id [String, nil] Optional key identifier
+      # @return [MLDSA::Key] The loaded public key
+      #
+      # @example
+      #   pubkey = Linzer.new_ml_dsa_44_public_key(File.read("ml_dsa_44_pub.pem"), "my-key")
+      def new_ml_dsa_44_public_key(material, key_id = nil)
+        new_ml_dsa_44_key(material, key_id)
+      end
+
+      # Loads an ML-DSA-44 public key from a raw FIPS 204 public key
+      # encoding, as used on the wire by the C2SP httpsig-pq specification
+      # (the `alg=ml-dsa-44` public key is not PEM/DER, but the raw 1312-byte
+      # FIPS 204 encoding).
+      #
+      # @param raw_public_key [String] 1312-byte raw FIPS 204 public key
+      # @param key_id [String, nil] Optional key identifier
+      # @return [MLDSA::Key] The loaded public key
+      #
+      # @example
+      #   pubkey = Linzer.new_ml_dsa_44_raw_public_key(raw_bytes, "my-key")
+      def new_ml_dsa_44_raw_public_key(raw_public_key, key_id = nil)
+        key = Linzer::MLDSA.wrap_raw_public_key(raw_public_key)
+        Linzer::MLDSA::Key.new(key, id: key_id)
+      end
+
+      # Loads an ML-DSA-44 private key from a raw FIPS 204 private key
+      # encoding (the 2560-byte expanded private key, not the 32-byte seed).
+      #
+      # @param raw_private_key [String] 2560-byte raw FIPS 204 private key
+      # @param key_id [String, nil] Optional key identifier
+      # @return [MLDSA::Key] The loaded key
+      #
+      # @example
+      #   key = Linzer.new_ml_dsa_44_raw_private_key(raw_bytes, "my-key")
+      def new_ml_dsa_44_raw_private_key(raw_private_key, key_id = nil)
+        key = Linzer::MLDSA.wrap_raw_private_key(raw_private_key)
+        Linzer::MLDSA::Key.new(key, id: key_id)
+      end
+
       # Generates a new JWS key for the specified algorithm.
       #
       # This method generates keys compatible with JSON Web Signature (JWS)

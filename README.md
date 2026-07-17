@@ -553,13 +553,31 @@ Linzer currently supports the following signature algorithms:
 - RSASSA-PKCS1-v1_5 (SHA-256)
 - HMAC-SHA256
 - Ed25519
-- ECDSA (P-256 and P-384 curves).
+- ECDSA (P-256 and P-384 curves)
+- ML-DSA-44 (post-quantum, [FIPS 204](https://csrc.nist.gov/pubs/fips/204/final))
 
 Of the JSON Web Signature (JWS) algorithms mentioned in RFC 9421,
 only Ed25519 is currently supported. Support for additional
 algorithms is planned and should be straightforward to add.
 
 The goal is to support as much of the RFC as possible before the 1.0 release.
+
+> [!NOTE]
+>
+> ML-DSA-44 ([`alg=ml-dsa-44`](https://github.com/C2SP/C2SP/blob/httpsig-pq/v0.2.0/httpsig-pq.md))
+> requires OpenSSL 3.5+ with ML-DSA signature algorithms enabled. Some
+> distributions ship OpenSSL 3.5+ with these disabled by crypto policy, so
+> having a recent enough OpenSSL *version* is necessary but not always
+> sufficient, check for a raised `OpenSSL::PKey::PKeyError` when generating
+> or loading an ML-DSA-44 key to detect this at runtime.
+
+```ruby
+key = Linzer.generate_ml_dsa_44_key("my-key-id")
+# or load an existing key with:
+# key = Linzer.new_ml_dsa_44_key(IO.read("key.pem"), "my-key-id")
+
+Linzer.sign!(request, key: key, components: %w[@method @request-target date])
+```
 
 ## Documentation
 

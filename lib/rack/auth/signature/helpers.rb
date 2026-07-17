@@ -193,7 +193,8 @@ module Rack
               "hmac-sha256"       => :new_hmac_sha256_key,
               "ecdsa-p256-sha256" => :new_ecdsa_p256_sha256_key,
               "ecdsa-p384-sha384" => :new_ecdsa_p384_sha384_key,
-              "ed25519"           => :new_ed25519_public_key
+              "ed25519"           => :new_ed25519_public_key,
+              "ml-dsa-44"         => :new_ml_dsa_44_public_key
             }
             method = key_methods[alg]
 
