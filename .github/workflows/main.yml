@@ -46,3 +46,26 @@ jobs:
       run: bundle exec rake integration
     - name: Run the default task
       run: bundle exec rake
+
+  ml-dsa:
+    name: ML-DSA-44 (requires OpenSSL 3.5+)
+    runs-on: ubuntu-latest
+    # ML-DSA (FIPS 204) needs OpenSSL 3.5+, which ubuntu-latest's system
+    # libssl doesn't provide yet. Debian trixie ships OpenSSL 3.5+, so this
+    # job runs the full suite (ML-DSA specs included) in that container
+    # instead of via ruby/setup-ruby's matrix above.
+    container: debian:trixie-slim
+
+    steps:
+    - name: Install Ruby and build dependencies
+      run: |
+        apt-get update -qq
+        apt-get install -y -qq ruby ruby-dev build-essential libssl-dev git pkg-config
+        gem install --no-document bundler
+    - uses: actions/checkout@v5
+    - name: Work around git's dubious ownership check inside the container
+      run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+    - name: Install gem dependencies
+      run: bundle install
+    - name: Run the default task
+      run: bundle exec rake
