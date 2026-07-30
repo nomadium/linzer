@@ -1,5 +1,22 @@
 ## [Unreleased]
 
+- Fix Faraday adapter deriving URI components from a re-encoded query
+  string, which could differ from the URI faraday actually sent and fail
+  verification at the origin. Affected `@target-uri`, `@request-target`
+  and `@query`. The query is now encoded with the request's own
+  `params_encoder`, so it tracks the URL faraday puts on the wire:
+
+  - Spaces no longer always encode as `+`. Faraday honours the
+    process-wide `Faraday::Utils.default_space_encoding`, which other
+    gems may set (the `oauth2` gem sets it to `"%20"` on load), so a
+    query value containing a space signed a URI the verifier could not
+    reproduce.
+
+  - A request with no query parameters no longer appends a stray `?`.
+
+  - A `params_encoder` configured on the connection or request is now
+    preserved, instead of being replaced with the default encoder.
+
 ## [0.8.0.beta2] - 2026-05-20
 
 - Add Web Bot Auth support, implementing the current IETF draft

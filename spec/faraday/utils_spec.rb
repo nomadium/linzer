@@ -25,5 +25,26 @@ RSpec.describe "Linzer::Faraday::Utils" do
       expect(request.path).to        eq(url)
       expect(request.headers).to     eq(headers)
     end
+
+    it "preserves the request options from the environment" do
+      env = Faraday::Env.new
+      env.method  = :get
+      env.url     = URI("https://www.example.com/")
+      env.request = Faraday::RequestOptions.from(params_encoder: Faraday::FlatParamsEncoder)
+
+      request = utils.create_request(env)
+
+      expect(request.options.params_encoder).to eq(Faraday::FlatParamsEncoder)
+    end
+
+    it "falls back to default request options when the environment has none" do
+      env = Faraday::Env.new
+      env.method = :get
+      env.url    = URI("https://www.example.com/")
+
+      request = utils.create_request(env)
+
+      expect(request.options).to be_a(Faraday::RequestOptions)
+    end
   end
 end
