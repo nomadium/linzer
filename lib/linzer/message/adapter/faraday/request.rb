@@ -37,10 +37,24 @@ module Linzer
 
           # Builds the full URI including query parameters.
           #
+          # Encodes the query with the request's own +params_encoder+,
+          # mirroring how faraday builds the URL it puts on the wire
+          # (+Faraday::Connection#build_env+). Encoding it independently
+          # here would diverge from the URI actually sent: notably
+          # +URI.encode_www_form+ always encodes a space as +++, while
+          # faraday honours the process-wide
+          # +Faraday::Utils.default_space_encoding+, which other gems may
+          # set to +%20+. The signer would then cover a +@target-uri+ the
+          # verifier cannot reproduce from the request it received.
+          #
+          # An empty query is left as +nil+ rather than +""+, as assigning
+          # +""+ would append a stray +?+ that faraday does not send.
+          #
           # @return [URI] the complete request URI with encoded query string
           def uri
             uri = @operation.path.dup
-            uri.query = URI.encode_www_form(@operation.params)
+            query = @operation.params.to_query(@operation.options.params_encoder)
+            uri.query = query unless query.empty?
             uri
           end
 

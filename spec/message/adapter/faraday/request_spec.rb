@@ -49,6 +49,35 @@ RSpec.describe Linzer::Message::Adapter::Faraday::Request do
         adapter = described_class.new(request)
         expect(adapter["@target-uri"]).to eq("https://www.example.com/path?param=value")
       end
+
+      it "omits the query separator when the request has no query params" do
+        uri = URI("https://www.example.com/path")
+        request_attrs = {method: :get, url: uri}
+        request = Linzer::Test::FaradayHelper.new_request(request_attrs)
+        adapter = described_class.new(request)
+        expect(adapter["@target-uri"]).to eq("https://www.example.com/path")
+      end
+
+      it "encodes spaces the way faraday does, not as `+`" do
+        # Faraday writes the wire URL honouring the process-wide
+        # `default_space_encoding`; encoding independently here would sign a
+        # URI that differs from the one actually sent.
+        Linzer::Test::FaradayHelper.with_space_encoding("%20") do
+          uri = URI("https://www.example.com/search?q=Kate%20Smith")
+          request_attrs = {method: :get, url: uri}
+          request = Linzer::Test::FaradayHelper.new_request(request_attrs)
+          adapter = described_class.new(request)
+          expect(adapter["@target-uri"]).to eq("https://www.example.com/search?q=Kate%20Smith")
+        end
+      end
+
+      it "encodes the query with the request's own params_encoder" do
+        uri = URI("https://www.example.com/search?q=a&q=b")
+        request_attrs = {method: :get, url: uri, request: {params_encoder: Faraday::FlatParamsEncoder}}
+        request = Linzer::Test::FaradayHelper.new_request(request_attrs)
+        adapter = described_class.new(request)
+        expect(adapter["@target-uri"]).to eq("https://www.example.com/search?q=a&q=b")
+      end
     end
 
     context "@authority" do

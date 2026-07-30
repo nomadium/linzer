@@ -242,4 +242,54 @@ RSpec.describe "Faraday::HttpSignature::Middleware" do
       end
     end
   end
+
+  context "signing URI-derived components" do
+    before(:all) { require "linzer/rack" }
+
+    let(:key) { Linzer.generate_ed25519_key("test-key") }
+    let(:components) { %w[@method @target-uri @request-target @query] }
+
+    # Signs a request through the middleware and re-verifies the signature
+    # against the URL that was actually put on the wire, as an origin server
+    # would: the signed URI-derived components must match the request sent.
+    def verify_round_trip(path, params = nil, request_options: nil)
+      wire_url = nil
+      conn = Faraday.new(url: "http://example.com", request: request_options) do |b|
+        b.request :http_signature, key: key, components: components
+        b.adapter :test do |stub|
+          stub.get(/.*/) do |env|
+            wire_url = env.url.to_s.dup
+            [200, {}, "ok"]
+          end
+        end
+      end
+
+      headers = conn.get(path, params).env.request_headers
+      env = Rack::MockRequest.env_for(wire_url, method: "GET").merge(
+        headers.to_h { |name, value| ["HTTP_#{name.tr("-", "_").upcase}", value] }
+      )
+      message = Linzer::Message.new(Rack::Request.new(env))
+
+      Linzer.verify(key, message, Linzer::Signature.build(headers))
+    end
+
+    it "verifies against the URI sent when a param value contains a space" do
+      # `URI.encode_www_form` renders a space as `+`, but faraday honours the
+      # process-wide `default_space_encoding`, which gems such as oauth2 set
+      # to "%20". The signed URI must follow whatever faraday sent.
+      Linzer::Test::FaradayHelper.with_space_encoding("%20") do
+        expect(verify_round_trip("/search", {q: "Kate Smith"})).to eq(true)
+      end
+    end
+
+    it "verifies against the URI sent when the request has no query params" do
+      expect(verify_round_trip("/search")).to eq(true)
+    end
+
+    it "verifies against the URI sent under a custom params_encoder" do
+      expect(
+        verify_round_trip("/search", {q: %w[a b]}, request_options: {params_encoder: Faraday::FlatParamsEncoder})
+      ).to eq(true)
+    end
+  end
 end
