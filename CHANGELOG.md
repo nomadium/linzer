@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+## [0.8.1.beta1] - 2026-08-08
+
 - Add ML-DSA-44, ML-DSA-65, and ML-DSA-87 support following the C2SP
   post-quantum HTTP Message Signatures profile, including raw, DER, and PEM
   key loading and strict parameter-set binding.
