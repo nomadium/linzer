@@ -1,5 +1,25 @@
 ## [Unreleased]
 
+## [0.8.0] - 2026-08-08
+
+(Only one change since the last beta: the Faraday bug fix below. Everything
+else shipped in earlier 0.8.0 betas.)
+
+- Optimize signature parsing, serialization, and validation performance
+  across signing and verifying flows, improving `sign!` throughput by
+  473% and `verify!` by 136% by minimizing Starry usage in hot paths
+  where possible.
+
+- Add comprehensive benchmarking and profiling infrastructure across all
+  supported algorithms.
+
+- Make Rack an optional dependency.
+
+- Add Web Bot Auth support, implementing the current IETF draft
+  (draft-meunier-web-bot-auth-architecture-05).
+  Includes recommended signature parameter defaults, nonce generation,
+  and optional Signature-Agent header handling.
+
 - Fix Faraday adapter deriving URI components from a re-encoded query
   string, which could differ from the URI faraday actually sent and fail
   verification at the origin. Affected `@target-uri`, `@request-target`
