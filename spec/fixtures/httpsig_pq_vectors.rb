@@ -5,7 +5,7 @@ require "json"
 module Linzer
   module Test
     # Test vectors published in c2sp.org/httpsig-pq v0.2.0.
-    HTTPSIG_PQ_VECTORS = JSON.parse(<<~JSON, symbolize_names: true).freeze
+    HTTPSIG_PQ_VECTORS = JSON.parse(<<~'JSON', symbolize_names: true).freeze
       [
         {
           "parameter_set": "44",

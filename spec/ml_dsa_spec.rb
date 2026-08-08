@@ -59,7 +59,7 @@ RSpec.describe "ML-DSA HTTP Message Signatures" do
         )
 
         expected_input =
-          %(sig1=("@method" "@target-uri" "host" "date");created=1783368000;) \
+          %(sig1=("@method" "@target-uri" "host" "date");created=1783368000;) +
           %(keyid="#{key_id}";alg="#{algorithm}")
 
         expect(signature.to_h["signature-input"]).to eq(expected_input)
@@ -74,9 +74,9 @@ RSpec.describe "ML-DSA HTTP Message Signatures" do
           req["date"] = "Mon, 06 Jul 2026 20:00:01 GMT"
         end
 
-        expect(
+        expect {
           Linzer.verify(public_key, Linzer::Message.new(modified_request), published_signature)
-        ).to eq(false)
+        }.to raise_error(Linzer::VerifyError, /Invalid signature/)
       end
 
       it "rejects the C2SP missing-covered-component case" do
