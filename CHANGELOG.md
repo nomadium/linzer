@@ -37,6 +37,9 @@ else shipped in earlier 0.8.0 betas.)
   - A `params_encoder` configured on the connection or request is now
     preserved, instead of being replaced with the default encoder.
 
+  Pull request [#31](https://github.com/nomadium/linzer/pull/31)
+  by [Aupajo](https://github.com/Aupajo).
+
 ## [0.8.0.beta2] - 2026-05-20
 
 - Add Web Bot Auth support, implementing the current IETF draft
