@@ -60,7 +60,7 @@ module Linzer
       ctx = Signature::Context.new(
         message:    Message.new(request_or_response),
         key:        key,
-        label:      label,
+        label:      label || Signer::DEFAULT_LABEL,
         components: Array(components),
         params:     Hash(params)
       )
