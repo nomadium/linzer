@@ -39,6 +39,28 @@ RSpec.describe Linzer::JWS do
   end
 end
 
+RSpec.describe Linzer::JWS::Key do
+  describe "#jwk_thumbprint" do
+    # Test vector from RFC 8037 Appendix A.3 (JWK Thumbprint Canonicalization):
+    # https://www.rfc-editor.org/rfc/rfc8037#appendix-A.3
+    #
+    # Computed directly here (not delegated to jwt-eddsa's own key_digest)
+    # because jwt-eddsa (<= 0.9.0) computes that value over the wrong JWK
+    # members for OKP keys; see Linzer::JWS::Key#jwk_thumbprint docs.
+    let(:jwk) { {kty: "OKP", crv: "Ed25519", x: "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo"} }
+    let(:key) { Linzer::JWS.jwk_import(jwk) }
+
+    it "matches the RFC 7638 JWK thumbprint of the crv/kty/x members" do
+      expect(key.jwk_thumbprint).to eq("kPrK_qmxVWaYVA9wwBF6Iuo3vVzz7TxHCTwXBygrS4k")
+    end
+
+    it "raises for unsupported JWK key types" do
+      rsa_key = Linzer::JWS.jwk_import(JWT::JWK.new(OpenSSL::PKey::RSA.new(2048)))
+      expect { rsa_key.jwk_thumbprint }.to raise_error(Linzer::Error, /Unsupported JWK kty/)
+    end
+  end
+end
+
 RSpec.describe Linzer::Signer do
   context "with JWS EdDSA algorithm" do
     let(:request) do

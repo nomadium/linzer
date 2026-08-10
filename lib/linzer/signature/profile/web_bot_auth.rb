@@ -139,7 +139,7 @@ module Linzer
           #
           params[:expires] ||= Time.now.to_i + 3600
           params[:tag]     ||= "web-bot-auth"
-          params[:keyid]   ||= key.material.key_digest
+          params[:keyid]   ||= key.jwk_thumbprint
         end
 
         # Injects and signs the Signature-Agent header.

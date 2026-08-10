@@ -67,7 +67,7 @@ RSpec.describe Linzer::Signature::Profile::WebBotAuth do
         apply_profile
 
         expect(params[:tag]).to     eq("web-bot-auth")
-        expect(params[:keyid]).to   eq(key.material.key_digest)
+        expect(params[:keyid]).to   eq(key.jwk_thumbprint)
         expect(params[:expires]).to eq(Time.now.to_i + 3600)
       end
 

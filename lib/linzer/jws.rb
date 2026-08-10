@@ -3,6 +3,8 @@
 require "jwt"
 require "jwt/eddsa"
 require "ed25519"
+require "digest"
+require "base64"
 
 module Linzer
   # JSON Web Signature (JWS) compatible key support.
@@ -99,6 +101,40 @@ module Linzer
         validate_verify_key
         algo = resolve_algorithm
         algo.verify(data: data, signature: signature, verification_key: verify_key)
+      end
+
+      # Computes the RFC 7638 JWK SHA-256 Thumbprint for this key's public
+      # material.
+      #
+      # This is computed directly from the exported JWK rather than
+      # delegating to the underlying jwt-eddsa gem's own thumbprint/kid
+      # generation: jwt-eddsa (<= 0.9.0) has a bug where its OKP JWK class
+      # computes that value over the wrong members (an RSA-shaped {kty, n,
+      # x} instead of the RFC 8037-correct {crv, kty, x}), which silently
+      # produces a keyid that a spec-compliant verifier will reject.
+      #
+      # @return [String] base64url-encoded (no padding) SHA-256 thumbprint
+      # @raise [Error] if this key's JWK "kty" is not supported
+      #
+      # @see https://www.rfc-editor.org/rfc/rfc7638 RFC 7638 - JSON Web Key (JWK) Thumbprint
+      # @see https://www.rfc-editor.org/rfc/rfc8037 RFC 8037 - EdDSA for JWS/JWK
+      def jwk_thumbprint
+        # XXX: drop this method custom implementation and just
+        # return material.key_digest
+        # once https://github.com/jwt/ruby-jwt-eddsa/pull/26 is resolved
+        #
+        exported = material.export
+
+        members =
+          case exported[:kty]
+          when "OKP"
+            {crv: exported[:crv], kty: exported[:kty], x: exported[:x]}
+          else
+            raise Error, "Unsupported JWK kty for thumbprint: #{exported[:kty]}"
+          end
+
+        digest = Digest::SHA256.digest(JWT::JSON.generate(members))
+        Base64.urlsafe_encode64(digest, padding: false)
       end
 
       private

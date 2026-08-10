@@ -23,7 +23,7 @@ RSpec.describe "Linzer.sign!" do
       expect(signature.parameters).to          include("created")
       expect(signature.parameters).to          include("expires" => be > Time.now.utc.to_i)
       expect(signature.parameters["tag"]).to   eq("web-bot-auth")
-      expect(signature.parameters["keyid"]).to eq(key.material.key_digest)
+      expect(signature.parameters["keyid"]).to eq(key.jwk_thumbprint)
       expect(signature.parameters).to          have_key("nonce")
       expect(signature.metadata).to            include('"@authority"').or include('"@target-uri"')
       expect(headers["signature-agent"]).to    eq("my-sig=\"https://example.com/someagent\"")
