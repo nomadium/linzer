@@ -2,7 +2,6 @@
 
 require "starry"
 require "openssl"
-require "ml_dsa"
 require "uri"
 require "net/http"
 
@@ -27,7 +26,6 @@ require_relative "linzer/rsa_pss"
 require_relative "linzer/hmac"
 require_relative "linzer/ed25519"
 require_relative "linzer/ecdsa"
-require_relative "linzer/ml_dsa"
 require_relative "linzer/key/helper"
 require_relative "linzer/signer"
 require_relative "linzer/verifier"
