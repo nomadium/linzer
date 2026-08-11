@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
-require "ml_dsa"
-require "linzer/ml_dsa"
+require "linzer/ml_dsa/gem_key"
 require_relative "fixtures/httpsig_pq_vectors"
 
 ml_dsa_vectors = Linzer::Test::HTTPSIG_PQ_VECTORS.to_h do |vector|

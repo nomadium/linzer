@@ -322,12 +322,58 @@ module Linzer
         Linzer::JWS.jwk_import(key, params)
       end
 
+      # NOTE: this method needs to be moved to the OpenSSL specific module.
+      # This should not be a public method, probably users should not be aware
+      # of this.
+      #
+      # Loads an ML-DSA-44 public key from a raw FIPS 204 public key
+      # encoding, as used on the wire by the C2SP httpsig-pq specification
+      # (the `alg=ml-dsa-44` public key is not PEM/DER, but the raw 1312-byte
+      # FIPS 204 encoding). Backed by {Linzer::MLDSA::OpenSSLKey} -- requires
+      # OpenSSL 3.5+ with ML-DSA signature algorithms enabled.
+      #
+      # @param raw_public_key [String] 1312-byte raw FIPS 204 public key
+      # @param key_id [String, nil] Optional key identifier
+      # @return [MLDSA::OpenSSLKey] The loaded public key
+      #
+      # @example
+      #   pubkey = Linzer.new_ml_dsa_44_raw_public_key(raw_bytes, "my-key")
+      def new_ml_dsa_44_raw_public_key(raw_public_key, key_id = nil)
+        key = Linzer::MLDSA.wrap_raw_public_key(raw_public_key)
+        Linzer::MLDSA::OpenSSLKey.new(key, id: key_id)
+      end
+
+      # NOTE: this method needs to be moved to the OpenSSL specific module.
+      # This should not be a public method, probably users should not be aware
+      # of this.
+      #
+      # Loads an ML-DSA-44 private key from a raw FIPS 204 private key
+      # encoding (the 2560-byte expanded private key, not the 32-byte seed).
+      # Backed by {Linzer::MLDSA::OpenSSLKey} -- requires OpenSSL 3.5+ with
+      # ML-DSA signature algorithms enabled.
+      #
+      # @param raw_private_key [String] 2560-byte raw FIPS 204 private key
+      # @param key_id [String, nil] Optional key identifier
+      # @return [MLDSA::OpenSSLKey] The loaded key
+      #
+      # @example
+      #   key = Linzer.new_ml_dsa_44_raw_private_key(raw_bytes, "my-key")
+      def new_ml_dsa_44_raw_private_key(raw_private_key, key_id = nil)
+        key = Linzer::MLDSA.wrap_raw_private_key(raw_private_key)
+        Linzer::MLDSA::OpenSSLKey.new(key, id: key_id)
+      end
+
       private
 
+      # NOTE: gem_key.rb (Linzer::MLDSA::GemKey, ml_dsa-gem-backed) is what
+      # generate_ml_dsa_44_key/_65_key/_87_key and new_ml_dsa_44_key/_65_key/
+      # _87_key currently dispatch to, unconditionally. Wiring these to
+      # prefer Linzer::MLDSA::OpenSSLKey when available (with an explicit
+      # `backend:` override) is deliberately deferred.
       def generate_ml_dsa_key(algorithm, key_id)
         parameter_set = Linzer::MLDSA::ALGORITHMS.fetch(algorithm)
         pair = MlDsa.keygen(parameter_set)
-        Linzer::MLDSA::Key.new(pair.secret_key, id: key_id, algorithm: algorithm)
+        Linzer::MLDSA::GemKey.new(pair.secret_key, id: key_id, algorithm: algorithm)
       rescue MlDsa::Error, ArgumentError, TypeError => e
         raise Linzer::Error, e.message, cause: e
       end
@@ -335,7 +381,7 @@ module Linzer
       def new_ml_dsa_key(material, algorithm, key_id)
         parameter_set = Linzer::MLDSA::ALGORITHMS.fetch(algorithm)
         key = deserialize_ml_dsa_key(material, parameter_set)
-        Linzer::MLDSA::Key.new(key, id: key_id, algorithm: algorithm)
+        Linzer::MLDSA::GemKey.new(key, id: key_id, algorithm: algorithm)
       rescue MlDsa::Error, ArgumentError, TypeError => e
         raise Linzer::Error, e.message, cause: e
       end
