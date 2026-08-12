@@ -9,6 +9,14 @@ module Linzer
     OPENSSL_ML_DSA_44_OID = "2.16.840.1.101.3.4.3.17"
     private_constant :OPENSSL_ML_DSA_44_OID
 
+    # Linzer algorithm identifiers (lowercase, e.g. "ml-dsa-44") that this
+    # OpenSSL-backed implementation actually has construction/OID support
+    # for today. {openssl_supported?} treats anything outside this set as
+    # unsupported without ever asking OpenSSL about it.
+    # @return [Array<String>]
+    IMPLEMENTED_ALGORITHMS = %w[ml-dsa-44].freeze
+    private_constant :IMPLEMENTED_ALGORITHMS
+
     # ML-DSA-44 (FIPS 204) signing/verification backed directly by OpenSSL
     # 3.5+, with no additional gem dependency.
     #
@@ -62,6 +70,43 @@ module Linzer
     end
 
     class << self
+      # Checks whether this OpenSSL build can actually perform ML-DSA
+      # signing/verification for the given algorithm.
+      #
+      # Returns true only when the algorithm is *both* something this
+      # OpenSSL-backed implementation has actually implemented (see
+      # {IMPLEMENTED_ALGORITHMS}) *and* something the underlying OpenSSL
+      # library itself supports. This is needed mostly because a
+      # version-number check alone isn't reliable and some distributions ship
+      # OpenSSL 3.5+ with ML-DSA disabled by crypto policy (see
+      # https://github.com/ruby/openssl/issues/1075), so this actually
+      # attempts a throwaway key generation rather than inspecting
+      # `OpenSSL::OPENSSL_VERSION`.
+      #
+      # Memoized per algorithm after the first check, so repeated calls are
+      # free. Unknown or not-yet-implemented algorithm identifiers return
+      # `false` rather than raising.
+      #
+      # @param algorithm [String] Linzer's lowercase algorithm identifier,
+      #   e.g. `"ml-dsa-44"`
+      # @return [Boolean]
+      def openssl_supported?(algorithm)
+        cache = (@openssl_supported ||= {})
+        return cache[algorithm] if cache.key?(algorithm)
+
+        cache[algorithm] =
+          if IMPLEMENTED_ALGORITHMS.include?(algorithm)
+            begin
+              OpenSSL::PKey.generate_key(algorithm.upcase)
+              true
+            rescue OpenSSL::PKey::PKeyError
+              false
+            end
+          else
+            false
+          end
+      end
+
       # Reconstructs an OpenSSL key from a raw FIPS 204 ML-DSA-44 public key.
       #
       # The `openssl` gem does not yet accept `"ML-DSA-44"` in
