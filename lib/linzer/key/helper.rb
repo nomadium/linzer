@@ -258,9 +258,9 @@ module Linzer
       #
       # @param key_id [String, nil] Optional key identifier
       # @param backend [Symbol] :auto, :openssl, or :ml_dsa, see
-      #   {#generate_ml_dsa_44_key}. Only :ml_dsa is actually available for
-      #   this parameter set today.
-      # @return [MLDSA::GemKey] A new ML-DSA-65 key pair
+      #   {#generate_ml_dsa_44_key}
+      # @return [MLDSA::OpenSSLKey, MLDSA::GemKey] A new ML-DSA-65 key pair
+      # @raise [Error] If the requested backend can't actually be used
       def generate_ml_dsa_65_key(key_id = nil, backend: :auto)
         generate_ml_dsa_key("ml-dsa-65", key_id, backend)
       end
@@ -269,9 +269,9 @@ module Linzer
       #
       # @param key_id [String, nil] Optional key identifier
       # @param backend [Symbol] :auto, :openssl, or :ml_dsa, see
-      #   {#generate_ml_dsa_44_key}. Only :ml_dsa is actually available for
-      #   this parameter set today.
-      # @return [MLDSA::GemKey] A new ML-DSA-87 key pair
+      #   {#generate_ml_dsa_44_key}
+      # @return [MLDSA::OpenSSLKey, MLDSA::GemKey] A new ML-DSA-87 key pair
+      # @raise [Error] If the requested backend can't actually be used
       def generate_ml_dsa_87_key(key_id = nil, backend: :auto)
         generate_ml_dsa_key("ml-dsa-87", key_id, backend)
       end
@@ -292,9 +292,8 @@ module Linzer
       # @param material [String, MlDsa::SecretKey, MlDsa::PublicKey] Key material
       # @param key_id [String, nil] Optional key identifier
       # @param backend [Symbol] :auto, :openssl, or :ml_dsa, see
-      #   {#generate_ml_dsa_44_key}. Only :ml_dsa is actually available for
-      #   this parameter set today.
-      # @return [MLDSA::GemKey] The loaded key
+      #   {#generate_ml_dsa_44_key}
+      # @return [MLDSA::OpenSSLKey, MLDSA::GemKey] The loaded key
       def new_ml_dsa_65_key(material, key_id = nil, backend: :auto)
         new_ml_dsa_key(material, "ml-dsa-65", key_id, backend)
       end
@@ -304,9 +303,8 @@ module Linzer
       # @param material [String, MlDsa::SecretKey, MlDsa::PublicKey] Key material
       # @param key_id [String, nil] Optional key identifier
       # @param backend [Symbol] :auto, :openssl, or :ml_dsa, see
-      #   {#generate_ml_dsa_44_key}. Only :ml_dsa is actually available for
-      #   this parameter set today.
-      # @return [MLDSA::GemKey] The loaded key
+      #   {#generate_ml_dsa_44_key}
+      # @return [MLDSA::OpenSSLKey, MLDSA::GemKey] The loaded key
       def new_ml_dsa_87_key(material, key_id = nil, backend: :auto)
         new_ml_dsa_key(material, "ml-dsa-87", key_id, backend)
       end
@@ -346,7 +344,7 @@ module Linzer
         case resolve_ml_dsa_backend(algorithm, backend)
         when :openssl
           material = OpenSSL::PKey.generate_key(algorithm.upcase)
-          Linzer::MLDSA::OpenSSLKey.new(material, id: key_id)
+          Linzer::MLDSA::OpenSSLKey.new(material, id: key_id, algorithm: algorithm)
         when :ml_dsa
           ensure_ml_dsa_gem_key_available!
           generate_ml_dsa_key_via_gem(algorithm, key_id)
@@ -356,8 +354,8 @@ module Linzer
       def new_ml_dsa_key(material, algorithm, key_id, backend)
         case resolve_ml_dsa_backend(algorithm, backend)
         when :openssl
-          key = Linzer::MLDSA.deserialize_raw_or_encoded_key(material)
-          Linzer::MLDSA::OpenSSLKey.new(key, id: key_id)
+          key = Linzer::MLDSA.deserialize_raw_or_encoded_key(material, algorithm)
+          Linzer::MLDSA::OpenSSLKey.new(key, id: key_id, algorithm: algorithm)
         when :ml_dsa
           ensure_ml_dsa_gem_key_available!
           new_ml_dsa_key_via_gem(material, algorithm, key_id)
@@ -392,7 +390,8 @@ module Linzer
       # been wired up to handle this algorithm. An explicit :openssl request
       # is held to the same standard: it's rejected up front, with a clear
       # error, rather than silently attempted for an algorithm OpenSSLKey
-      # doesn't fully support yet (today, anything but ml-dsa-44).
+      # doesn't support (e.g. an unimplemented future parameter set, or a
+      # build without ML-DSA enabled).
       #
       # @return [Symbol] :openssl or :ml_dsa
       # @raise [Error] If backend is :openssl but unavailable for algorithm,

@@ -23,8 +23,9 @@ module Linzer
     # Gemfile and `require "linzer/ml_dsa/gem_key"` themselves, which
     # requires `ml_dsa` in turn.
     #
-    # @see Linzer::MLDSA::OpenSSLKey for the dependency-free, ML-DSA-44-only
-    #   alternative backed directly by OpenSSL 3.5+.
+    # @see Linzer::MLDSA::OpenSSLKey for the dependency-free alternative
+    #   backed directly by OpenSSL 3.5+, also supporting all three
+    #   parameter sets.
     class GemKey < Linzer::Key
       attr_reader :algorithm
 
