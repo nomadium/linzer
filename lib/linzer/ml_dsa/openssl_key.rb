@@ -17,6 +17,17 @@ module Linzer
     IMPLEMENTED_ALGORITHMS = %w[ml-dsa-44].freeze
     private_constant :IMPLEMENTED_ALGORITHMS
 
+    # FIPS 204 ML-DSA-44 raw key sizes, used to sniff raw key material in
+    # {deserialize_raw_or_encoded_key} the same way {GemKey} does for the
+    # gem backend.
+    # @return [Integer]
+    ML_DSA_44_RAW_PUBLIC_KEY_BYTES = 1312
+    private_constant :ML_DSA_44_RAW_PUBLIC_KEY_BYTES
+
+    # @return [Integer]
+    ML_DSA_44_RAW_PRIVATE_KEY_BYTES = 2560
+    private_constant :ML_DSA_44_RAW_PRIVATE_KEY_BYTES
+
     # ML-DSA-44 (FIPS 204) signing/verification backed directly by OpenSSL
     # 3.5+, with no additional gem dependency.
     #
@@ -35,6 +46,25 @@ module Linzer
     #   C2SP httpsig-pq: Post-Quantum Algorithms for HTTP Message Signatures
     # @see https://csrc.nist.gov/pubs/fips/204/final FIPS 204
     class OpenSSLKey < Linzer::Key
+      # @return [String] "ml-dsa-44" -- the only algorithm this backend
+      #   implements today
+      def algorithm
+        "ml-dsa-44"
+      end
+
+      # Validates that the HTTP `alg` parameter matches this key's algorithm.
+      #
+      # @param parameters [Hash] HTTP signature parameters
+      # @return [true] If `alg` is absent or matches this key
+      # @raise [VerifyError] If `alg` selects a different algorithm
+      def validate_signature_parameters(parameters)
+        supplied_algorithm = parameters["alg"] || parameters[:alg]
+        return true if supplied_algorithm.nil? || supplied_algorithm == algorithm
+
+        raise VerifyError,
+          "Signature algorithm #{supplied_algorithm} does not match key algorithm #{algorithm}"
+      end
+
       # Signs data using the ML-DSA-44 private key.
       #
       # @param data [String] The data to sign (typically the signature base)
@@ -54,6 +84,11 @@ module Linzer
       def verify(signature, data)
         validate_verify_key
         material.verify(nil, signature, data)
+      end
+
+      # @return [Symbol] :openssl -- which backend produced this key
+      def backend
+        :openssl
       end
 
       private
@@ -148,6 +183,25 @@ module Linzer
           OpenSSL::ASN1::OctetString.new(expanded_key_choice)
         ])
         OpenSSL::PKey.read(one_asymmetric_key.to_der)
+      end
+
+      # Builds an OpenSSL key from ML-DSA-44 material of unknown shape:
+      # raw FIPS 204 bytes (sniffed by exact byte length, the same
+      # approach {Linzer::MLDSA::GemKey} uses for the gem backend) or an
+      # OpenSSL-encoded PEM/DER key, handled as a fallback.
+      #
+      # @param material [String] Raw FIPS 204 bytes, or a PEM/DER-encoded key
+      # @return [OpenSSL::PKey::PKey]
+      # @api private
+      def deserialize_raw_or_encoded_key(material)
+        case material.bytesize
+        when ML_DSA_44_RAW_PUBLIC_KEY_BYTES
+          wrap_raw_public_key(material)
+        when ML_DSA_44_RAW_PRIVATE_KEY_BYTES
+          wrap_raw_private_key(material)
+        else
+          OpenSSL::PKey.read(material)
+        end
       end
 
       private

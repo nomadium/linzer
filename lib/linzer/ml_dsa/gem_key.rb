@@ -74,6 +74,11 @@ module Linzer
         false
       end
 
+      # @return [Symbol] :ml_dsa -- which backend produced this key
+      def backend
+        :ml_dsa
+      end
+
       private
 
       def validate

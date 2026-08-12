@@ -133,6 +133,9 @@ RSpec.describe "ML-DSA HTTP Message Signatures" do
       end
 
       it "rejects the C2SP non-empty-context case" do
+        skip "no non-empty-context signing/verification API on the OpenSSL backend" unless
+          public_key.backend == :ml_dsa
+
         expect(
           public_key.material.verify(
             vector.fetch(:signature_base),
