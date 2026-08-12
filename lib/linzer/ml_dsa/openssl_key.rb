@@ -142,49 +142,6 @@ module Linzer
           end
       end
 
-      # Reconstructs an OpenSSL key from a raw FIPS 204 ML-DSA-44 public key.
-      #
-      # The `openssl` gem does not yet accept `"ML-DSA-44"` in
-      # {OpenSSL::PKey.new_raw_public_key} (there is no upstream issue
-      # tracking this as of this writing), so this wraps the raw bytes in a
-      # minimal DER SubjectPublicKeyInfo structure that {OpenSSL::PKey.read}
-      # does accept. Verified byte-identical to OpenSSL's own
-      # `public_to_der` output, across multiple independently generated
-      # keys, against OpenSSL 3.5.6.
-      #
-      # @param raw_public_key [String] 1312-byte raw FIPS 204 public key
-      # @return [OpenSSL::PKey::PKey]
-      # @api private
-      def wrap_raw_public_key(raw_public_key)
-        spki = OpenSSL::ASN1::Sequence.new([
-          ml_dsa_44_algorithm_identifier,
-          OpenSSL::ASN1::BitString.new(raw_public_key)
-        ])
-        OpenSSL::PKey.read(spki.to_der)
-      end
-
-      # Builds an OpenSSL key from a raw FIPS 204 ML-DSA-44 private key.
-      #
-      # {OpenSSL::PKey.new_raw_private_key} doesn't accept "ML-DSA-44" yet,
-      # and unlike the public key, a fixed DER prefix won't work here:
-      # OpenSSL's PKCS8 encoding embeds a per-key 32-byte seed alongside the
-      # expanded key. This builds the seed-free "expandedKey" alternative of
-      # the ML-DSA private key CHOICE instead (an untagged OCTET STRING),
-      # which carries no per-key data.
-      #
-      # @param raw_private_key [String] 2560-byte raw FIPS 204 private key
-      # @return [OpenSSL::PKey::PKey]
-      # @api private
-      def wrap_raw_private_key(raw_private_key)
-        expanded_key_choice = OpenSSL::ASN1::OctetString.new(raw_private_key).to_der
-        one_asymmetric_key = OpenSSL::ASN1::Sequence.new([
-          OpenSSL::ASN1::Integer(0),
-          ml_dsa_44_algorithm_identifier,
-          OpenSSL::ASN1::OctetString.new(expanded_key_choice)
-        ])
-        OpenSSL::PKey.read(one_asymmetric_key.to_der)
-      end
-
       # Builds an OpenSSL key from ML-DSA-44 material of unknown shape:
       # raw FIPS 204 bytes (sniffed by exact byte length, the same
       # approach {Linzer::MLDSA::GemKey} uses for the gem backend) or an
@@ -205,6 +162,47 @@ module Linzer
       end
 
       private
+
+      # Reconstructs an OpenSSL key from a raw FIPS 204 ML-DSA-44 public key.
+      #
+      # The `openssl` gem does not yet accept `"ML-DSA-44"` in
+      # {OpenSSL::PKey.new_raw_public_key} (there is no upstream issue
+      # tracking this as of this writing), so this wraps the raw bytes in a
+      # minimal DER SubjectPublicKeyInfo structure that {OpenSSL::PKey.read}
+      # does accept. Verified byte-identical to OpenSSL's own
+      # `public_to_der` output, across multiple independently generated
+      # keys, against OpenSSL 3.5.6.
+      #
+      # @param raw_public_key [String] 1312-byte raw FIPS 204 public key
+      # @return [OpenSSL::PKey::PKey]
+      def wrap_raw_public_key(raw_public_key)
+        spki = OpenSSL::ASN1::Sequence.new([
+          ml_dsa_44_algorithm_identifier,
+          OpenSSL::ASN1::BitString.new(raw_public_key)
+        ])
+        OpenSSL::PKey.read(spki.to_der)
+      end
+
+      # Builds an OpenSSL key from a raw FIPS 204 ML-DSA-44 private key.
+      #
+      # {OpenSSL::PKey.new_raw_private_key} doesn't accept "ML-DSA-44" yet,
+      # and unlike the public key, a fixed DER prefix won't work here:
+      # OpenSSL's PKCS8 encoding embeds a per-key 32-byte seed alongside the
+      # expanded key. This builds the seed-free "expandedKey" alternative of
+      # the ML-DSA private key CHOICE instead (an untagged OCTET STRING),
+      # which carries no per-key data.
+      #
+      # @param raw_private_key [String] 2560-byte raw FIPS 204 private key
+      # @return [OpenSSL::PKey::PKey]
+      def wrap_raw_private_key(raw_private_key)
+        expanded_key_choice = OpenSSL::ASN1::OctetString.new(raw_private_key).to_der
+        one_asymmetric_key = OpenSSL::ASN1::Sequence.new([
+          OpenSSL::ASN1::Integer(0),
+          ml_dsa_44_algorithm_identifier,
+          OpenSSL::ASN1::OctetString.new(expanded_key_choice)
+        ])
+        OpenSSL::PKey.read(one_asymmetric_key.to_der)
+      end
 
       # @return [OpenSSL::ASN1::Sequence] the ML-DSA-44 AlgorithmIdentifier
       def ml_dsa_44_algorithm_identifier
