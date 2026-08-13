@@ -556,6 +556,45 @@ Linzer currently supports the following signature algorithms:
 - ECDSA (P-256 and P-384 curves).
 - ML-DSA-44, ML-DSA-65, and ML-DSA-87 ([C2SP profile](https://c2sp.org/httpsig-pq))
 
+### ML-DSA
+
+ML-DSA (FIPS 204, post-quantum) is backed by two interchangeable
+implementations. By default, Linzer uses OpenSSL 3.5+'s native ML-DSA
+support when available, with no extra dependency:
+
+```ruby
+key = Linzer.generate_ml_dsa_44_key # or _65_key / _87_key
+# => #<Linzer::MLDSA::OpenSSLKey:0x00000fe13e9bd208
+# or load an existing key with:
+# key = Linzer.new_ml_dsa_44_key(IO.read("key"), "mykeyid")
+
+key.backend # => :openssl, or :ml_dsa if this build fell back to it
+```
+
+Older OpenSSL builds aren't the only reason to reach for it: even on a fully
+capable build, you can opt into the [`ml_dsa`](https://rubygems.org/gems/ml_dsa)
+gem (a C extension bundling the PQClean implementation) explicitly via
+`backend: :ml_dsa`, for example, if you'd rather not depend on OpenSSL's ML-DSA
+support for a given deployment. Either way, you need to add the gem to your own
+Gemfile:
+
+```ruby
+# Gemfile
+gem "ml_dsa"
+```
+
+```ruby
+require "linzer/ml_dsa/gem_key"
+
+key = Linzer.generate_ml_dsa_44_key
+```
+
+Pass `backend: :openssl` or `backend: :ml_dsa` to any `generate_ml_dsa_*`/
+`new_ml_dsa_*` method to force a specific implementation instead of
+relying on auto-selection.
+
+### JSON Web Signature (JWS) algorithms
+
 Of the JSON Web Signature (JWS) algorithms mentioned in RFC 9421,
 only Ed25519 is currently supported. Support for additional
 algorithms is planned and should be straightforward to add.

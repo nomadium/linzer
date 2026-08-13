@@ -1,5 +1,20 @@
 ## [Unreleased]
 
+- Add an OpenSSL-native ML-DSA backend, preferred by default over the
+  `ml_dsa` gem whenever this build's OpenSSL actually supports it (all
+  three FIPS 204 parameter sets: ML-DSA-44, ML-DSA-65, ML-DSA-87). Pass
+  `backend: :openssl` or `backend: :ml_dsa` to any
+  `generate_ml_dsa_*_key`/`new_ml_dsa_*_key` method to select
+  explicitly instead of relying on auto-selection; `key.backend`
+  reports which one produced a given key.
+  Pull request [#33](https://github.com/nomadium/linzer/pull/33).
+
+- The `ml_dsa` gem is no longer a hard runtime dependency, it's an
+  optional backend now, a real behavior change from beta1. To keep
+  using it (e.g. on older OpenSSL builds, or explicitly via
+  `backend: :ml_dsa`), add it to your own Gemfile and
+  `require "linzer/ml_dsa/gem_key"` before use.
+
 ## [0.8.1.beta1] - 2026-08-08
 
 - Add ML-DSA-44, ML-DSA-65, and ML-DSA-87 support following the C2SP
