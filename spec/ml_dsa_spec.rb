@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "open3"
 require "linzer/ml_dsa"
 require_relative "fixtures/httpsig_pq_vectors"
 
@@ -161,6 +162,69 @@ RSpec.describe "ML-DSA HTTP Message Signatures" do
           end
         end
       end
+    end
+  end
+
+  context "ML-DSA gem-backend error handling when unavailable" do
+    # Both scenarios need a genuinely fresh Ruby process: RSpec's loading
+    # phase already requires "linzer/ml_dsa" (via ml_dsa_spec.rb
+    # and ml_dsa_cross_backend_spec.rb) before any example runs, so
+    # Linzer::MLDSA::GemKey is already a defined constant, and the file's
+    # own top-level `require "ml_dsa"` has already succeeded, process-wide,
+    # by the time this spec's examples run. Neither condition can be
+    # reproduced again in the same process.
+    def run_in_fresh_process(script)
+      Open3.capture2e("ruby", "-Ilib", "-e", script)
+    end
+
+    it "raises a clear error for backend: :ml_dsa when linzer/ml_dsa was never required" do
+      script = <<~'RUBY'
+        require "linzer"
+        begin
+          Linzer.generate_ml_dsa_44_key(backend: :ml_dsa)
+          exit 1
+        rescue Linzer::Error => e
+          puts e.message
+          exit 0
+        rescue => e
+          puts "WRONG ERROR CLASS: #{e.class}: #{e.message}"
+          exit 2
+        end
+      RUBY
+
+      output, status = run_in_fresh_process(script)
+
+      expect(status).to be_success, "expected a clean exit, got:\n#{output}"
+      expect(output).to include('require "linzer/ml_dsa" first')
+    end
+
+    it "raises a clear error from gem_key.rb's own require when the ml_dsa gem itself is unavailable" do
+      script = <<~'RUBY'
+        module Kernel
+          alias_method :__original_require_for_test, :require
+          def require(name)
+            raise LoadError, "cannot load such file -- ml_dsa" if name == "ml_dsa"
+            __original_require_for_test(name)
+          end
+        end
+
+        require "linzer"
+        begin
+          require "linzer/ml_dsa"
+          exit 1
+        rescue Linzer::Error => e
+          puts e.message
+          exit 0
+        rescue => e
+          puts "WRONG ERROR CLASS: #{e.class}: #{e.message}"
+          exit 2
+        end
+      RUBY
+
+      output, status = run_in_fresh_process(script)
+
+      expect(status).to be_success, "expected a clean exit, got:\n#{output}"
+      expect(output).to include("ml_dsa gem must be installed")
     end
   end
 end
