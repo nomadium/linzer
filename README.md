@@ -593,6 +593,14 @@ Pass `backend: :openssl` or `backend: :ml_dsa` to any `generate_ml_dsa_*`/
 `new_ml_dsa_*` method to force a specific implementation instead of
 relying on auto-selection.
 
+Keys are portable between the two backends: raw public/private key
+bytes produced by one load correctly via the other, so switching
+`backend:` -- or moving a key between hosts with different OpenSSL
+capabilities -- doesn't require regenerating anything. (The raw-byte
+extraction methods behind this, `Linzer::MLDSA::OpenSSLKey.unwrap_raw_public_key`/
+`unwrap_raw_private_key`, are available for advanced use but not yet a
+stable public API.)
+
 ### JSON Web Signature (JWS) algorithms
 
 Of the JSON Web Signature (JWS) algorithms mentioned in RFC 9421,
