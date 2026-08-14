@@ -285,4 +285,60 @@ RSpec.describe "ML-DSA HTTP Message Signatures" do
       end
     end
   end
+
+  context "ML-DSA backend selection and capability probing" do
+    describe "backend: argument validation" do
+      it "raises a clear error for an unrecognized backend value" do
+        expect {
+          Linzer.generate_ml_dsa_44_key(backend: :bogus)
+        }.to raise_error(Linzer::Error, /Unknown ML-DSA backend: :bogus/)
+      end
+
+      it "raises a clear error when backend: :openssl is requested but unsupported" do
+        skip "OpenSSL supports ml-dsa-44 on this build" if
+          Linzer::MLDSA.openssl_supported?("ml-dsa-44")
+
+        expect {
+          Linzer.generate_ml_dsa_44_key(backend: :openssl)
+        }.to raise_error(Linzer::Error, /OpenSSL-backed ML-DSA is not available for ml-dsa-44/)
+      end
+    end
+
+    describe "Linzer::MLDSA.openssl_supported?" do
+      it "returns false for an unknown algorithm identifier" do
+        expect(Linzer::MLDSA.openssl_supported?("not-a-real-algorithm")).to eq(false)
+      end
+
+      it "returns false for nil" do
+        expect(Linzer::MLDSA.openssl_supported?(nil)).to eq(false)
+      end
+
+      it "is stable/memoized across repeated calls for the same algorithm" do
+        first = Linzer::MLDSA.openssl_supported?("ml-dsa-44")
+
+        expect(Linzer::MLDSA.openssl_supported?("ml-dsa-44")).to eq(first)
+      end
+    end
+
+    describe "Linzer::MLDSA::OpenSSLKey.unwrap_raw_private_key" do
+      before do
+        skip "OpenSSL doesn't support ml-dsa-44 on this build" unless
+          Linzer::MLDSA.openssl_supported?("ml-dsa-44")
+      end
+
+      it "raises cleanly, not a crash, for a key built via the expandedKey-only CHOICE" do
+        openssl_key = Linzer.generate_ml_dsa_44_key(backend: :openssl)
+        raw_private = Linzer::MLDSA::OpenSSLKey.unwrap_raw_private_key(openssl_key.material)
+        # new_ml_dsa_44_key on raw bytes goes through wrap_raw_private_key,
+        # which builds the seed-free expandedKey-only CHOICE, the one
+        # shape unwrap_raw_private_key can't extract a seed+expandedKey
+        # pair from.
+        reloaded = Linzer.new_ml_dsa_44_key(raw_private, backend: :openssl)
+
+        expect {
+          Linzer::MLDSA::OpenSSLKey.unwrap_raw_private_key(reloaded.material)
+        }.to raise_error(Linzer::Error, /Unsupported ML-DSA private key encoding/)
+      end
+    end
+  end
 end

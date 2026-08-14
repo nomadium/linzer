@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "linzer/rack"
+require "linzer/ml_dsa"
 
 RSpec.describe Rack::Auth::Signature do
   let(:code) { 0 }
@@ -306,6 +307,28 @@ RSpec.describe Rack::Auth::Signature do
 
       response = signature(app, **settings).call(env)
       expect(response[code]).to eq(200)
+    end
+
+    %w[44 65 87].each do |n|
+      it "allows the request to proceed [ml-dsa-#{n}]" do
+        key = Linzer.public_send("generate_ml_dsa_#{n}_key", keyid)
+        # Raw bytes work as `material` regardless of which backend :auto
+        # picked, new_ml_dsa_*_key sniffs the format either way, so
+        # this doesn't need to special-case OpenSSLKey vs GemKey.
+        raw_public =
+          (key.backend == :openssl) ? Linzer::MLDSA::OpenSSLKey.unwrap_raw_public_key(key.material) : key.material.public_key.to_bytes
+        settings[:keys][keyid.to_sym] = {alg: "ml-dsa-#{n}", material: raw_public}
+
+        signature = Linzer.sign(key, message, fields)
+        env = Rack::MockRequest.env_for.merge(request.env)
+        env.delete("rack.input")
+
+        env["HTTP_SIGNATURE"]       = signature.to_h["signature"]
+        env["HTTP_SIGNATURE_INPUT"] = signature.to_h["signature-input"]
+
+        response = signature(app, **settings).call(env)
+        expect(response[code]).to eq(200)
+      end
     end
 
     context "when signature checks are customized" do
