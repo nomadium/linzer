@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+## [0.8.1.beta2] - 2026-08-14
+
 - Add an OpenSSL-native ML-DSA backend, preferred by default over the
   `ml_dsa` gem whenever this build's OpenSSL actually supports it (all
   three FIPS 204 parameter sets: ML-DSA-44, ML-DSA-65, ML-DSA-87). Pass
