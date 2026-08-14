@@ -227,4 +227,62 @@ RSpec.describe "ML-DSA HTTP Message Signatures" do
       expect(output).to include("ml_dsa gem must be installed")
     end
   end
+
+  context "ML-DSA backend error-handling consistency" do
+    # Not a per-parameter-set concern, the error-handling contract doesn't
+    # vary by 44/65/87, so this only exercises ml-dsa-44.
+
+    shared_examples "requires OpenSSL ML-DSA support" do
+      before do
+        skip "OpenSSL doesn't support ml-dsa-44 on this build" unless
+          Linzer::MLDSA.openssl_supported?("ml-dsa-44")
+      end
+    end
+
+    describe "#verify with malformed input" do
+      include_examples "requires OpenSSL ML-DSA support"
+
+      let(:openssl_key) { Linzer.generate_ml_dsa_44_key(backend: :openssl) }
+
+      it "returns false (not a raise) for a nil signature" do
+        expect(openssl_key.verify(nil, "data")).to eq(false)
+      end
+
+      it "returns false (not a raise) for a non-String signature" do
+        expect(openssl_key.verify(12345, "data")).to eq(false)
+      end
+    end
+
+    describe "constructing a key from bad material" do
+      include_examples "requires OpenSSL ML-DSA support"
+
+      it "raises Linzer::Error, not a raw OpenSSL::PKey::PKeyError, for garbage bytes" do
+        expect {
+          Linzer.new_ml_dsa_44_key("not a valid key" * 10, backend: :openssl)
+        }.to raise_error(Linzer::Error)
+      end
+
+      it "raises Linzer::Error, not a raw TypeError, for non-String material" do
+        expect {
+          Linzer.new_ml_dsa_44_key(12345, backend: :openssl)
+        }.to raise_error(Linzer::Error)
+      end
+    end
+
+    describe "parity with the ml_dsa backend" do
+      # No OpenSSL ML-DSA support needed here, these exercise :ml_dsa only,
+      # so they should (and do) pass regardless of host OpenSSL version.
+      let(:gem_key) { Linzer.generate_ml_dsa_44_key(backend: :ml_dsa) }
+
+      it "also returns false (not a raise) for a nil signature" do
+        expect(gem_key.verify(nil, "data")).to eq(false)
+      end
+
+      it "also raises Linzer::Error, not a raw gem error, for garbage bytes" do
+        expect {
+          Linzer.new_ml_dsa_44_key("not a valid key" * 10, backend: :ml_dsa)
+        }.to raise_error(Linzer::Error)
+      end
+    end
+  end
 end

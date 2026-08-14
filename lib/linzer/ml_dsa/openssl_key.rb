@@ -92,10 +92,13 @@ module Linzer
       #
       # @param data [String] The data to sign (typically the signature base)
       # @return [String] The FIPS 204 signature
-      # @raise [SigningError] If this key does not contain private key material
+      # @raise [SigningError] If this key does not contain private key
+      #   material, or the underlying OpenSSL signing operation fails
       def sign(data)
         validate_signing_key
         material.sign(nil, data)
+      rescue OpenSSL::PKey::PKeyError => e
+        raise SigningError, e.message, cause: e
       end
 
       # Verifies a signature using the ML-DSA public key.
@@ -103,10 +106,16 @@ module Linzer
       # @param signature [String] The signature bytes to verify
       # @param data [String] The data that was signed
       # @return [Boolean] true if the signature is valid, false otherwise
+      #   (including malformed or non-String `signature`/`data` input,
+      #   matching {Linzer::MLDSA::GemKey#verify}'s contract)
       # @raise [VerifyError] If this key does not contain public key material
       def verify(signature, data)
         validate_verify_key
+        return false unless signature.is_a?(String)
+
         material.verify(nil, signature, data)
+      rescue OpenSSL::PKey::PKeyError, ArgumentError, TypeError
+        false
       end
 
       # @return [Symbol] :openssl -- which backend produced this key
@@ -129,8 +138,11 @@ module Linzer
         # @param algorithm [String] Linzer's lowercase algorithm identifier,
         #   e.g. `"ml-dsa-44"`
         # @return [OpenSSL::PKey::PKey]
+        # @raise [TypeError] If `material` isn't a String
         # @api private
         def deserialize_raw_or_encoded_key(material, algorithm)
+          raise TypeError, "ML-DSA key material must be a String" unless material.is_a?(String)
+
           case material.bytesize
           when RAW_PUBLIC_KEY_BYTES.fetch(algorithm)
             wrap_raw_public_key(material, algorithm)

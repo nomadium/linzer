@@ -349,6 +349,8 @@ module Linzer
           ensure_ml_dsa_gem_key_available!
           generate_ml_dsa_key_via_gem(algorithm, key_id)
         end
+      rescue OpenSSL::PKey::PKeyError, OpenSSL::ASN1::ASN1Error => e
+        raise Linzer::Error, e.message, cause: e
       end
 
       def new_ml_dsa_key(material, algorithm, key_id, backend)
@@ -360,6 +362,8 @@ module Linzer
           ensure_ml_dsa_gem_key_available!
           new_ml_dsa_key_via_gem(material, algorithm, key_id)
         end
+      rescue OpenSSL::PKey::PKeyError, OpenSSL::ASN1::ASN1Error, TypeError => e
+        raise Linzer::Error, e.message, cause: e
       end
 
       # NOTE: ensure_ml_dsa_gem_key_available! must run in the caller, not
