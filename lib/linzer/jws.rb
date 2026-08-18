@@ -104,13 +104,6 @@ module Linzer
       # Computes the RFC 7638 JWK SHA-256 Thumbprint for this key's public
       # material.
       #
-      # This is computed directly from the exported JWK rather than
-      # delegating to the underlying jwt-eddsa gem's own thumbprint/kid
-      # generation: jwt-eddsa (<= 0.9.0) has a bug where its OKP JWK class
-      # computes that value over the wrong members (an RSA-shaped {kty, n,
-      # x} instead of the RFC 8037-correct {crv, kty, x}), which silently
-      # produces a keyid that a spec-compliant verifier will reject.
-      #
       # @return [String] base64url-encoded (no padding) SHA-256 thumbprint
       # @raise [Error] if this key's JWK "kty" is not supported
       #
