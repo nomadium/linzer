@@ -584,7 +584,7 @@ gem "ml_dsa"
 ```
 
 ```ruby
-require "linzer/ml_dsa/gem_key"
+require "linzer/ml_dsa"
 
 key = Linzer.generate_ml_dsa_44_key
 ```

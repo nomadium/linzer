@@ -20,7 +20,7 @@ module Linzer
     # Supports all three FIPS 204 parameter sets. Optional: not required
     # by `linzer.rb` itself, and not a runtime dependency of the gemspec,
     # callers who want this backend must add `ml_dsa` to their own
-    # Gemfile and `require "linzer/ml_dsa/gem_key"` themselves, which
+    # Gemfile and `require "linzer/ml_dsa"` themselves, which
     # requires `ml_dsa` in turn.
     #
     # @see Linzer::MLDSA::OpenSSLKey for the dependency-free alternative

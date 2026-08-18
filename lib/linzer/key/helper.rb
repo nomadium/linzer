@@ -413,13 +413,15 @@ module Linzer
       end
 
       # @raise [Error] If Linzer::MLDSA::GemKey isn't loaded (the ml_dsa
-      #   gem backend is opt-in, see lib/linzer/ml_dsa/gem_key.rb)
+      #   gem backend is opt-in via `require "linzer/ml_dsa"`, see
+      #   lib/linzer/ml_dsa.rb)
       def ensure_ml_dsa_gem_key_available!
         return if defined?(Linzer::MLDSA::GemKey)
 
         raise Linzer::Error,
           "ML-DSA gem backend not available: " \
-          'require "linzer/ml_dsa/gem_key" first'
+          'require "linzer/ml_dsa" first (needs the ml_dsa gem installed; ' \
+          'plain require "linzer" only gets you the OpenSSL backend)'
       end
 
       def deserialize_ml_dsa_key(material, parameter_set)
