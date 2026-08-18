@@ -21,7 +21,7 @@ group :test do
   gem "sinatra",   require: false
   gem "webrick",   require: false
   gem "rackup",    require: false
-  gem "jwt-eddsa", require: false
+  gem "jwt-eddsa", "~> 1.0", require: false
   gem "faraday",  ">= 2.0", require: false
   gem "stringio", "~> 3.1", ">= 3.1.2", require: false
   gem "rack",     ">= 2.2", "< 4.0"

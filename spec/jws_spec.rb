@@ -44,9 +44,6 @@ RSpec.describe Linzer::JWS::Key do
     # Test vector from RFC 8037 Appendix A.3 (JWK Thumbprint Canonicalization):
     # https://www.rfc-editor.org/rfc/rfc8037#appendix-A.3
     #
-    # Computed directly here (not delegated to jwt-eddsa's own key_digest)
-    # because jwt-eddsa (<= 0.9.0) computes that value over the wrong JWK
-    # members for OKP keys; see Linzer::JWS::Key#jwk_thumbprint docs.
     let(:jwk) { {kty: "OKP", crv: "Ed25519", x: "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo"} }
     let(:key) { Linzer::JWS.jwk_import(jwk) }
 

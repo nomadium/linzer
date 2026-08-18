@@ -3,8 +3,6 @@
 require "jwt"
 require "jwt/eddsa"
 require "ed25519"
-require "digest"
-require "base64"
 
 module Linzer
   # JSON Web Signature (JWS) compatible key support.
@@ -119,22 +117,13 @@ module Linzer
       # @see https://www.rfc-editor.org/rfc/rfc7638 RFC 7638 - JSON Web Key (JWK) Thumbprint
       # @see https://www.rfc-editor.org/rfc/rfc8037 RFC 8037 - EdDSA for JWS/JWK
       def jwk_thumbprint
-        # XXX: drop this method custom implementation and just
-        # return material.key_digest
-        # once https://github.com/jwt/ruby-jwt-eddsa/pull/26 is resolved
-        #
         exported = material.export
 
-        members =
-          case exported[:kty]
-          when "OKP"
-            {crv: exported[:crv], kty: exported[:kty], x: exported[:x]}
-          else
-            raise Error, "Unsupported JWK kty for thumbprint: #{exported[:kty]}"
-          end
+        if exported[:kty] != "OKP"
+          raise Error, "Unsupported JWK kty for thumbprint: #{exported[:kty]}"
+        end
 
-        digest = Digest::SHA256.digest(JWT::JSON.generate(members))
-        Base64.urlsafe_encode64(digest, padding: false)
+        material.key_digest
       end
 
       private
