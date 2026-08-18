@@ -4,6 +4,18 @@ require "jwt"
 require "jwt/eddsa"
 require "ed25519"
 
+# jwt-eddsa isn't a runtime dependency of this gemspec, callers who want
+# JWS/EdDSA support add it to their own Gemfile. jwt-eddsa <= 0.9.0 has a
+# bug where its OKP JWK class computes thumbprints over the wrong members
+# (see Linzer::JWS::Key#jwk_thumbprint, which delegates to it), so guard
+# against a too-old version actually being resolved instead of silently
+# producing wrong keyids.
+if Gem::Version.new(JWT::EdDSA::VERSION) < Gem::Version.new("1.0")
+  raise Linzer::Error,
+    "linzer requires jwt-eddsa >= 1.0 (found #{JWT::EdDSA::VERSION}); " \
+    "versions <= 0.9.0 compute OKP JWK thumbprints incorrectly"
+end
+
 module Linzer
   # JSON Web Signature (JWS) compatible key support.
   #
