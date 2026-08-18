@@ -2,6 +2,8 @@
 
 SimpleCov.command_name "test:integration"
 
+require_relative "support/test_http_clients"
+
 #
 # https://blog.cloudflare.com/web-bot-auth/
 # https://http-message-signatures-example.research.cloudflare.com
@@ -9,6 +11,8 @@ SimpleCov.command_name "test:integration"
 # https://github.com/thibmeu/http-message-signatures-directory
 #
 RSpec.describe "Signed requests against cloudflare example server", :integration do
+  include Linzer::Test::HTTPClients
+
   before(:all) do
     require "linzer/http/signature_feature"
     require "linzer/jws"
@@ -39,21 +43,6 @@ RSpec.describe "Signed requests against cloudflare example server", :integration
   end
 
   let(:other_key) { Linzer.generate_jws_key(algorithm: "EdDSA") }
-
-  def net_http_client(uri)
-    http = Net::HTTP.new(uri.host, uri.port)
-    http.use_ssl = uri.scheme == "https"
-    http
-  end
-
-  def linzer_http_get(uri, key)
-    Linzer::HTTP.get(uri,
-      key:    key,
-      debug:  debug,
-      covered_components: %w[@authority signature-agent],
-      headers:            headers,
-      profile:            :web_bot_auth)
-  end
 
   def http_gem_client(key)
     http_signature_opts = {
