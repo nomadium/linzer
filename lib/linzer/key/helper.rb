@@ -354,7 +354,7 @@ module Linzer
       def new_ml_dsa_key(material, algorithm, key_id, backend)
         case resolve_ml_dsa_backend(algorithm, backend)
         when :openssl
-          key = Linzer::MLDSA.deserialize_raw_or_encoded_key(material, algorithm)
+          key = Linzer::MLDSA::OpenSSLKey.deserialize_raw_or_encoded_key(material, algorithm)
           Linzer::MLDSA::OpenSSLKey.new(key, id: key_id, algorithm: algorithm)
         when :ml_dsa
           ensure_ml_dsa_gem_key_available!
