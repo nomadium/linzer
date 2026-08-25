@@ -141,6 +141,45 @@ module Linzer
           end
         end
 
+        # Extracts the raw FIPS 204 public key bytes from an OpenSSL key's
+        # own SubjectPublicKeyInfo encoding -- the inverse of
+        # {wrap_raw_public_key}. Used to hand a key generated (or loaded)
+        # via this backend to the `ml_dsa` gem backend instead.
+        #
+        # @param key [OpenSSL::PKey::PKey] A public or private ML-DSA key
+        # @return [String] Raw FIPS 204 public key bytes
+        # @api private
+        def unwrap_raw_public_key(key)
+          spki = OpenSSL::ASN1.decode(key.public_to_der)
+          spki.value[1].value
+        end
+
+        # Extracts the raw (expanded, seed-free) FIPS 204 private key bytes
+        # from an OpenSSL key's own PKCS8 encoding -- the inverse of
+        # {wrap_raw_private_key}. Used to hand a key generated via this
+        # backend to the `ml_dsa` gem backend instead.
+        #
+        # OpenSSL's own generated keys always use the "both" alternative of
+        # the ML-DSA private key CHOICE (a seed alongside the expanded key,
+        # confirmed empirically -- see the strategy notes), so this only
+        # handles that shape; anything else raises rather than silently
+        # returning the wrong bytes.
+        #
+        # @param key [OpenSSL::PKey::PKey] A private ML-DSA key
+        # @return [String] Raw FIPS 204 expanded private key bytes
+        # @raise [Error] If the key's private key CHOICE isn't the expected
+        #   seed+expandedKey SEQUENCE
+        # @api private
+        def unwrap_raw_private_key(key)
+          one_asymmetric_key = OpenSSL::ASN1.decode(key.private_to_der)
+          private_key_choice = OpenSSL::ASN1.decode(one_asymmetric_key.value[2].value)
+          unless private_key_choice.is_a?(OpenSSL::ASN1::Sequence)
+            raise Error, "Unsupported ML-DSA private key encoding (expected seed+expandedKey)"
+          end
+
+          private_key_choice.value[1].value
+        end
+
         private
 
         # Reconstructs an OpenSSL key from a raw FIPS 204 ML-DSA public key.
