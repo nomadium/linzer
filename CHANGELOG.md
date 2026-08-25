@@ -1,5 +1,65 @@
 ## [Unreleased]
 
+## [0.8.1] - 2026-08-25
+
+(No major changes since the last beta release, this stable release
+bundles the ML-DSA/post-quantum work from both 0.8.1 betas
+(`ml_dsa`-gem-backed in beta1, OpenSSL-native and default-preferred in
+beta2), completing post-quantum HTTP Message Signatures support and
+closing [#28](https://github.com/nomadium/linzer/issues/28), plus a few
+unrelated Web Bot Auth fixes.)
+
+- Add ML-DSA-44, ML-DSA-65, and ML-DSA-87 support following the C2SP
+  post-quantum HTTP Message Signatures profile, including raw, DER, and PEM
+  key loading and strict parameter-set binding.
+  Pull request [#29](https://github.com/nomadium/linzer/pull/29)
+  by [soatok](https://github.com/soatok).
+  It can be used explicitly via `backend: :ml_dsa` by adding the `ml_dsa`
+  gem to your own Gemfile and `require "linzer/ml_dsa"` before use.
+
+- Add an OpenSSL-native ML-DSA backend, preferred by default over the
+  `ml_dsa` gem whenever this build's OpenSSL actually supports it (all
+  three FIPS 204 parameter sets: ML-DSA-44, ML-DSA-65, ML-DSA-87). Pass
+  `backend: :openssl` or `backend: :ml_dsa` to any
+  `generate_ml_dsa_*_key`/`new_ml_dsa_*_key` method to select
+  explicitly instead of relying on auto-selection; `key.backend`
+  reports which one produced a given key.
+  Pull request [#33](https://github.com/nomadium/linzer/pull/33)
+  by [nomadium](https://github.com/nomadium).
+  Since OpenSSL is now the default backend for ML-DSA, `ml_dsa` is no
+  longer a hard runtime dependency, so the minimum Ruby version moves
+  back down to 2.7.0.
+
+- ML-DSA keys generated or loaded with one backend can now be moved to
+  the other: raw public/private key bytes round-trip correctly between
+  the OpenSSL-native and `ml_dsa` gem backends. The raw-byte extraction
+  methods behind this (`Linzer::MLDSA::OpenSSLKey.unwrap_raw_public_key`/
+  `unwrap_raw_private_key`) are available for advanced use, though not
+  yet a stable public API.
+
+- Fix Web Bot Auth's `keyid` being computed incorrectly for
+  Ed25519/OKP keys: jwt-eddsa <= 0.9.0 computed the RFC 7638 JWK
+  thumbprint over the wrong members, so the derived `keyid` didn't
+  match what a spec-compliant verifier expects. Linzer now computes it
+  independently via the new `Linzer::JWS::Key#jwk_thumbprint`.
+
+- `Linzer::JWS::Key#jwk_thumbprint` now delegates to jwt-eddsa's own
+  `key_digest` instead of a local RFC 7638 workaround, now that
+  jwt-eddsa >= 1.0 computes it correctly for OKP keys. Linzer now
+  requires jwt-eddsa >= 1.0 for JWS/EdDSA support and raises a clear
+  error at `require "linzer/jws"` time on older versions.
+
+- Fix `Signer.sign!`'s signature `label` defaulting to
+  `"sig1"` too late — after `profile.apply(ctx)` already ran, breaking
+  any profile (like Web Bot Auth's `Signature-Agent` header) that needs
+  a real label at apply time. The default now applies before any
+  profile runs.
+
+- Fix `Signature-Agent` being sent as a bare, unquoted URL,
+  which isn't valid per draft-meunier-web-bot-auth-architecture
+  Appendix A.1.3. Now quoted as a proper RFC 8941 Structured Field
+  string.
+
 ## [0.8.1.beta2] - 2026-08-14
 
 - Add an OpenSSL-native ML-DSA backend, preferred by default over the
