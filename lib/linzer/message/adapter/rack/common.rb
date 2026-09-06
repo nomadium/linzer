@@ -41,11 +41,11 @@ module Linzer
             raise ArgumentError.new, "Blank header name." if name.empty?
             name.to_str
           rescue => ex
-            # :nocov:
+            # simplecov:disable
             # XXX: this block of code seems to be unreachable
             err_msg = "Invalid header name: '#{name}'"
             raise Linzer::Error, err_msg, cause: ex
-            # :nocov:
+            # simplecov:enable
           end
 
           # Converts an HTTP header name to Rack's environment key format.

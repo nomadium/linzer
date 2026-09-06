@@ -44,13 +44,13 @@ module Linzer
       # on older versions.
       #
       # @api private
-      # :nocov:
+      # simplecov:disable
       if Gem::Version.new(RUBY_VERSION) < Gem::Version.new("3.2.0")
         class Identifier < Struct.new(:field_name, keyword_init: true); end
       else
         class Identifier < Data.define(:field_name); end
       end
-      # :nocov:
+      # simplecov:enable
 
       Identifier.include Message::Field::IdentifierMethods
 
