@@ -109,4 +109,39 @@ RSpec.describe Linzer::HTTP do
         headers: headers)
     end
   end
+
+  describe "::query" do
+    before do
+      skip "net-http #{Net::HTTP::VERSION} does not support QUERY" unless query_supported
+    end
+
+    it "sends a signed QUERY request" do
+      net_http = instance_double("Net::HTTP")
+      allow(Net::HTTP).to receive(:new).and_return(net_http)
+
+      data = '{"filter": "name eq \"linzer\""}'
+
+      expect(net_http).to receive(:use_ssl=).with(true)
+      expect(net_http).to receive(:query).with(
+        uri,
+        data,
+        satisfy do |hsh|
+          hsh.key?("signature") && hsh.key?("signature-input") && hsh.key?("date")
+        end
+      )
+
+      http.query(uri,
+        data:    data,
+        key:     Linzer.generate_ed25519_key,
+        headers: headers)
+    end
+
+    it "raises error if no request body is provided" do
+      expect do
+        http.query(uri,
+          key: Linzer.generate_ed25519_key,
+          headers: headers)
+      end.to raise_error(Linzer::Error, /Missing request body/)
+    end
+  end
 end
