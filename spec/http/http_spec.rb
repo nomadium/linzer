@@ -4,8 +4,17 @@ RSpec.describe Linzer::HTTP do
   let(:http)         { Linzer::HTTP }
   let(:uri)          { "https://www.example.com/api/service" }
   let(:headers)      { {"date" => Time.now.utc.to_s} }
-  let(:http_verbs)   { %w[DELETE GET HEAD OPTIONS PATCH POST PUT QUERY TRACE] }
   let(:webdav_verbs) { %w[COPY LOCK MKCOL MOVE PROPFIND PROPPATCH UNLOCK] }
+
+  # QUERY (draft-ietf-httpbis-safe-method-w-body) is only known to
+  # net-http >= 0.10.0, older releases do not define Net::HTTP::Query.
+  let(:query_supported) { defined?(Net::HTTP::Query) ? true : false }
+
+  let(:http_verbs) do
+    verbs = %w[DELETE GET HEAD OPTIONS PATCH POST PUT TRACE]
+    verbs << "QUERY" if query_supported
+    verbs
+  end
 
   describe "::known_http_methods" do
     it "returns a list of known (by Net::HTTP module) HTTP methods/verbs" do
@@ -18,6 +27,11 @@ RSpec.describe Linzer::HTTP do
     http.known_http_methods.each do |m|
       expect(http).to respond_to(m.downcase.to_sym)
     end
+  end
+
+  it "does not define a QUERY method when net-http does not support it" do
+    skip "net-http #{Net::HTTP::VERSION} supports QUERY" if query_supported
+    expect(http).not_to respond_to(:query)
   end
 
   it "raises error on unsupported or unknown HTTP request verb" do
