@@ -4,7 +4,7 @@ RSpec.describe Linzer::HTTP do
   let(:http)         { Linzer::HTTP }
   let(:uri)          { "https://www.example.com/api/service" }
   let(:headers)      { {"date" => Time.now.utc.to_s} }
-  let(:http_verbs)   { %w[DELETE GET HEAD OPTIONS PATCH POST PUT TRACE]   }
+  let(:http_verbs)   { %w[DELETE GET HEAD OPTIONS PATCH POST PUT QUERY TRACE] }
   let(:webdav_verbs) { %w[COPY LOCK MKCOL MOVE PROPFIND PROPPATCH UNLOCK] }
 
   describe "::known_http_methods" do
