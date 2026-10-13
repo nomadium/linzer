@@ -16,7 +16,7 @@ RSpec.describe Linzer::HTTP do
 
   it "has a method for every known HTTP request verb" do
     http.known_http_methods.each do |m|
-      expect(http.respond_to?(m.downcase.to_sym))
+      expect(http).to respond_to(m.downcase.to_sym)
     end
   end
 
