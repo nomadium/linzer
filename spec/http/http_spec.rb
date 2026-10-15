@@ -6,8 +6,8 @@ RSpec.describe Linzer::HTTP do
   let(:headers)      { {"date" => Time.now.utc.to_s} }
   let(:webdav_verbs) { %w[COPY LOCK MKCOL MOVE PROPFIND PROPPATCH UNLOCK] }
 
-  # QUERY (draft-ietf-httpbis-safe-method-w-body) is only known to
-  # net-http >= 0.10.0, older releases do not define Net::HTTP::Query.
+  # QUERY (RFC 10008) is only known to net-http >= 0.10.0, older
+  # releases do not define Net::HTTP::Query.
   let(:query_supported) { defined?(Net::HTTP::Query) ? true : false }
 
   let(:http_verbs) do

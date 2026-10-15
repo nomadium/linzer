@@ -4,11 +4,13 @@
   [#34](https://github.com/nomadium/linzer/pull/34) by
   [dependabot](https://github.com/apps/dependabot).
   When net-http 0.10 or later is installed, `Linzer::HTTP.query` is
-  available to send signed `QUERY` requests, since that is the first
-  net-http release supporting the method; it's not defined with older
-  releases. Note that net-http 0.10 also rejects header names containing
-  control characters or colons with `ArgumentError`, including the ones
-  passed to `Linzer::Message#with_headers`.
+  available to send signed `QUERY` requests
+  ([RFC 10008](https://www.rfc-editor.org/rfc/rfc10008.html)), since
+  that is the first net-http release supporting the method; it's not
+  defined with older releases. Note that net-http 0.10 also rejects
+  header names containing control characters or colons with
+  `ArgumentError`, including the ones passed to
+  `Linzer::Message#with_headers`.
 
 - Run unit tests also against the oldest supported net-http release (0.6).
 
