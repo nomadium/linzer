@@ -17,7 +17,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-24.04, ubuntu-26.04]
-        ruby: ['3.0', '3.1', '3.2', '3.3', '3.4', '4.0']
+        ruby: ['3.0', '3.1', '3.2', '3.3', '3.4', '4.0', '4.1.0-preview1']
         # '' resolves the latest net-http allowed by the gemspec. It must
         # be a matrix value so the include below adds a new job instead
         # of being merged into the existing Ruby 3.4 one.
