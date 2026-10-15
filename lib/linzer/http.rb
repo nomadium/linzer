@@ -167,7 +167,8 @@ module Linzer
     # Checks if the HTTP method typically carries a request body.
     #
     # @param verb [Symbol] the HTTP method
-    # @return [Boolean] +true+ for POST, PUT, PATCH, and WebDAV write methods
+    # @return [Boolean] +true+ for POST, PUT, PATCH, QUERY, and WebDAV
+    #   write methods
     def with_body?(verb)
       # common HTTP
       return false if %i[get head options trace delete].include?(verb)
@@ -175,7 +176,7 @@ module Linzer
       return false if %i[copy move].include?(verb)
 
       # everything else that could have a body:
-      # common HTTP: post, put, patch
+      # common HTTP: post, put, patch, query (net-http >= 0.10.0)
       # WebDAV:      lock, unlock, mkcol, propfind, proppatch
       true
     end
