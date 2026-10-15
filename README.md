@@ -284,6 +284,68 @@ put "/baz" do
 end
 ```
 
+#### Covering the message content (`Content-Digest`)
+
+A signature only protects the components it covers, and none of the
+default ones (`@method`, `@request-target`, `@authority`, `date`)
+include the message content. So, by default, a request body can be
+altered without invalidating the signature. This matters most for
+methods whose meaning is in the body: `POST`, `PUT`, `PATCH` and
+especially `QUERY` ([RFC 10008](https://www.rfc-editor.org/rfc/rfc10008.html)),
+where the body is the query itself.
+
+To protect the content, send a `Content-Digest` header
+([RFC 9530](https://www.rfc-editor.org/rfc/rfc9530.html)) and cover it
+in the signature:
+
+```ruby
+require "digest"
+require "time"
+
+body = '{"status": "open"}'
+content_digest =
+  Linzer::HTTP::StructuredField
+    .serialize_dictionary("sha-256" => Digest::SHA256.digest(body))
+# => "sha-256=:0Q+mqIIRDMBY3TV4HoaYEcXRNgBG4Mrv5OG0/GtJ+N8=:"
+
+response =
+  Linzer::HTTP
+    .query("https://example.org/api/tasks", # QUERY requires net-http >= 0.10
+           data: body,
+           key: key,
+           headers: {
+             "date"           => Time.now.httpdate,
+             "content-type"   => "application/json",
+             "content-digest" => content_digest
+           },
+           covered_components: %w[@method @request-target @authority
+                                  date content-type content-digest])
+```
+
+The same applies to any other client: set the `content-digest` header
+and add it to the signed components.
+
+Covering `content-digest` makes the signature protect the header, but
+not the body itself: Linzer does not check that the digest matches the
+body when verifying a signature. Receivers must do both:
+
+1. require `content-digest` to be covered by the signature (e.g. with
+   the `covered_components` option of `Rack::Auth::Signature`, if every
+   signed request to the app carries a body), and
+2. check the header against the body they actually received:
+
+```ruby
+def content_digest_valid?(header, body)
+  digests  = Linzer::HTTP::StructuredField.parse_dictionary(header)
+  expected = digests["sha-256"]&.value or return false
+  expected == Digest::SHA256.digest(body)
+rescue Linzer::Error # malformed header
+  false
+end
+
+content_digest_valid?(request.get_header("HTTP_CONTENT_DIGEST"), request.body.read)
+```
+
 ### Verifying HTTP signatures
 
 Linzer verifies incoming requests (or responses) by checking:
