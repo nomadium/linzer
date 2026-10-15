@@ -15,6 +15,11 @@ gem "securerandom", ">= 0.3.2"
 
 gem "standard", "~> 1.3"
 
+# Allow CI to exercise the gem with an older net-http release than the
+# latest one allowed by the gemspec, e.g.: NET_HTTP_VERSION="~> 0.6.0"
+net_http_version = ENV.fetch("NET_HTTP_VERSION", "")
+gem "net-http", net_http_version unless net_http_version.empty?
+
 group :test do
   gem "http", ">= 5.0", "< 7.0", require: false
   gem "simplecov", require: false
