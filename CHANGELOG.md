@@ -1,5 +1,17 @@
 ## [Unreleased]
 
+- Allow net-http 0.10. Pull request
+  [#34](https://github.com/nomadium/linzer/pull/34) by
+  [dependabot](https://github.com/apps/dependabot).
+  When net-http 0.10 or later is installed, `Linzer::HTTP.query` is
+  available to send signed `QUERY` requests, since that is the first
+  net-http release supporting the method; it's not defined with older
+  releases. Note that net-http 0.10 also rejects header names containing
+  control characters or colons with `ArgumentError`, including the ones
+  passed to `Linzer::Message#with_headers`.
+
+- Run unit tests also against the oldest supported net-http release (0.6).
+
 ## [0.8.1] - 2026-08-25
 
 (No major changes since the last beta release, this stable release
